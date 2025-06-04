@@ -1,0 +1,1 @@
+export type DisruptionCategory = 'Undefined' | 'RealTime' | 'PlannedWork' | 'Information' | 'Event' | 'Crowding' | 'StatusAlert';
