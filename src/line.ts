@@ -4,156 +4,209 @@ import {
   TflApiPresentationEntitiesLine as TflLine,
   TflApiPresentationEntitiesDisruption as TflDisruption,
   TflApiPresentationEntitiesCrowding as TflCrowding,
-  TflApiPresentationEntitiesMode as TflMode,
+  TflApiPresentationEntitiesMode as TflApiMode,
   TflApiPresentationEntitiesStatusSeverity as TflStatusSeverity,
-  TflApiPresentationEntitiesRouteSearchResponse as TflRouteSearchResponse,
-  ServiceTypesEnum as ServiceType,
-  TflApiPresentationEntitiesDisruptionCategoryEnum as DisruptionCategory
+  TflApiPresentationEntitiesRouteSearchResponse as TflRouteSearchResponse
 } from './tfl';
+import { BatchRequest } from './utils/batchRequest';
+import { ModeName, ServiceType, DisruptionCategory } from './types';
+import { TflLineId, LINE_NAMES } from './types/LineId';
 
-
-/** Base interface for line queries */
+/**
+ * Query options for line-related requests
+ * @example
+ * // Get all tube lines
+ * const tubeLines = await client.line.get({ modes: ['tube'] });
+ * 
+ * // Get specific lines by ID
+ * const specificLines = await client.line.get({ ids: ['central', 'victoria'] });
+ */
 interface BaseLineQuery {
-  ids?: string[];
-  modes?: string[];
+  /** Array of line IDs (e.g., 'central', 'victoria', 'jubilee') */
+  ids?: TflLineId[];
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr') */
+  modes?: ModeName[];
 }
 
-/** Interface for line route queries */
+/**
+ * Query options for line route requests
+ * @example
+ * // Most common: Get routes for specific lines
+ * const routes = await client.line.getRoute({ 
+ *   ids: ['central', 'victoria'],
+ *   serviceTypes: ['Regular']
+ * });
+ * 
+ * // Common: Get routes for all lines of a specific mode
+ * const tubeRoutes = await client.line.getRoute({ 
+ *   modes: ['tube'],
+ *   serviceTypes: ['Regular', 'Night']
+ * });
+ * 
+ * // Less common: Get all routes (use with caution - returns large dataset)
+ * const allRoutes = await client.line.getRoute();
+ */
 interface LineRouteQuery extends BaseLineQuery {
-  serviceTypes?: string[];
+  /** Array of service types to filter by (e.g., 'Regular', 'Night') */
+  serviceTypes?: ServiceType[];
 }
 
-/** Interface for line status queries */
+/**
+ * Query options for line status requests
+ * @example
+ * // Get status for specific lines
+ * const status = await client.line.getStatus({ 
+ *   ids: ['central', 'victoria'],
+ *   severity: 10
+ * });
+ */
 interface LineStatusQuery extends BaseLineQuery {
+  /** Filter by status severity level (1-20) */
   severity?: number;
+  /** Filter by date range */
   dateRange?: {
+    /** Start date in ISO format */
     startDate: string;
+    /** End date in ISO format */
     endDate: string;
   };
 }
 
-/** Interface for line search queries */
+/**
+ * Query options for line search requests
+ * @example
+ * // Search for lines containing "victoria"
+ * const results = await client.line.search({ 
+ *   query: "victoria",
+ *   modes: ['tube']
+ * });
+ */
 interface LineSearchQuery {
+  /** Search query string */
   query: string;
-  modes?: string[];
+  /** Filter by transport modes */
+  modes?: ModeName[];
 }
 
-type DefaultValue<T> = {
-  [K in keyof T]: T[K] extends Array<infer U>
-    ? U extends object
-      ? DefaultValue<U>[]
-      : U[]
-    : T[K] extends object
-    ? DefaultValue<T[K]>
-    : T[K] extends string
-    ? string
-    : T[K] extends number
-    ? number
-    : T[K];
-};
+/**
+ * Line information returned by the TfL API
+ * @example
+ * {
+ *   id: "central",
+ *   name: "Central",
+ *   modeName: "tube",
+ *   created: "2024-01-01T00:00:00Z",
+ *   lineStatuses: [
+ *     {
+ *       statusSeverity: 10,
+ *       statusSeverityDescription: "Good Service",
+ *       reason: "No issues reported"
+ *     }
+ *   ]
+ * }
+ */
+export interface LineInfo {
+  /** Unique identifier for the line */
+  id: string;
+  /** Display name of the line */
+  name: string;
+  /** Transport mode (e.g., 'tube', 'bus') */
+  modeName: ModeName;
+  /** Creation date of the line */
+  created: string;
+  /** Current status information */
+  lineStatuses?: TflLineStatus[];
+  /** Additional line information */
+  [key: string]: any;
+}
 
-const getDefaultValue = <T>(value: T): T => {
-  if (Array.isArray(value)) return [] as unknown as T;
-  switch (typeof value) {
-    case 'string': return '' as unknown as T;
-    case 'number': return 0 as unknown as T;
-    case 'boolean': return false as unknown as T;
-    case 'object': return {} as T;
-    default: return value;
-  }
-};
+/**
+ * Line class for interacting with TfL Line API endpoints
+ * @example
+ * // Get all tube lines
+ * const tubeLines = await client.line.get({ modes: ['tube'] });
+ * 
+ * // Get status for specific lines
+ * const status = await client.line.getStatus({ ids: ['central', 'victoria'] });
+ * 
+ * // Search for lines
+ * const results = await client.line.search({ query: "victoria" });
+ */
+export class Line {
+  private batchRequest: BatchRequest;
 
-const mapToType = <T extends object>(data: any, template: T): DefaultValue<T> => {
-  if (!data) return {} as DefaultValue<T>;
-  
-  return Object.keys(template).reduce((acc: any, key) => {
-    const templateValue = template[key as keyof T];
-    const dataValue = data[key];
+  /** Map of line IDs to their display names */
+  public readonly LINE_NAMES = LINE_NAMES;
 
-    if (Array.isArray(templateValue)) {
-      acc[key] = (dataValue || []).map((item: any) =>
-        typeof templateValue[0] === 'object'
-          ? mapToType(item, templateValue[0])
-          : item || getDefaultValue(templateValue[0])
-      );
-    } else if (typeof templateValue === 'object' && templateValue !== null) {
-      acc[key] = mapToType(dataValue, templateValue as object);
-    } else {
-      acc[key] = dataValue || getDefaultValue(templateValue);
-    }
-
-    return acc;
-  }, {} as DefaultValue<T>);
-};
-
-const mapLineStatus = (status: any): TflLine => {
-  const template: TflLine = {
-    id: '',
-    name: '',
-    modeName: '',
-    disruptions: [],
-    created: '',
-    modified: '',
-    lineStatuses: [{
-      id: 0,
-      lineId: '',
-      statusSeverity: 0,
-      statusSeverityDescription: '',
-      reason: '',
-      created: '',
-      modified: '',
-      validityPeriods: [{
-        fromDate: '',
-        toDate: '',
-        isNow: false
-      }],
-      disruption: {
-        category: 'Undefined',
-        type: '',
-        description: ''
-      } as TflDisruption
-    }] as TflLineStatus[],
-    routeSections: [],
-    serviceTypes: [],
-    crowding: {
-      crowdingDescription: '',
-      crowdingLevel: 0
-    } as TflCrowding
-  };
-
-  return mapToType(status, template);
-};
-
-class Line {
-  private api: Api<{}>;
-
-  /**
-   * Creates an instance of Line service.
-   * @param api - The TfL API instance
-   */
-  constructor(api: Api<{}>) {
-    this.api = api;
+  constructor(private api: Api<{}>) {
+    this.batchRequest = new BatchRequest(api);
   }
 
   /**
    * Get line information
+   * @param options - Query options for filtering lines
+   * @returns Promise resolving to an array of line information
+   * @example
+   * // Get all lines
+   * const allLines = await client.line.get();
+   * 
+   * // Get tube lines
+   * const tubeLines = await client.line.get({ modes: ['tube'] });
+   * 
+   * // Get specific lines
+   * const specificLines = await client.line.get({ 
+   *   ids: ['central', 'victoria', 'jubilee'] 
+   * });
    */
-  async get(options: BaseLineQuery = {}): Promise<TflLine[]> {
-    const { ids, modes } = options;
+  async get(options?: BaseLineQuery): Promise<LineInfo[]> {
+    const { ids, modes } = options || {};
 
     if (ids?.length) {
-      return this.api.line.lineGet(ids).then(response => response.data);
+      const response = await this.batchRequest.processBatch(
+        ids,
+        async (chunk) => this.api.line.lineGet(chunk).then(response => response.data)
+      );
+      return response as LineInfo[];
     }
 
     if (modes?.length) {
-      return this.api.line.lineGetByMode(modes).then(response => response.data);
+      const response = await this.batchRequest.processBatch(
+        modes,
+        async (chunk) => this.api.line.lineGetByMode(chunk).then(response => response.data)
+      );
+      return response as LineInfo[];
     }
 
-    return this.api.line.lineGet([]).then(response => response.data);
+    const response = await this.api.line.lineGet([]).then(response => response.data);
+    return response as LineInfo[];
   }
 
   /**
-   * Get line route information
+   * Get detailed route information for TfL lines
+   * 
+   * This method returns comprehensive route information including:
+   * - Route sections with start and end stations
+   * - Service types (Regular/Night)
+   * - Direction (inbound/outbound)
+   * - Valid date ranges
+   * 
+   * @param options - Query options for filtering routes
+   * @returns Promise resolving to an array of line route information
+   * @example
+   * // Most common: Get routes for specific lines
+   * const specificRoutes = await client.line.getRoute({ 
+   *   ids: ['central', 'victoria'],
+   *   serviceTypes: ['Regular']
+   * });
+   * 
+   * // Common: Get routes for all lines of a specific mode
+   * const tubeRoutes = await client.line.getRoute({ 
+   *   modes: ['tube'],
+   *   serviceTypes: ['Regular', 'Night']
+   * });
+   * 
+   * // Less common: Get all routes (use with caution - returns large dataset)
+   * const allRoutes = await client.line.getRoute();
    */
   async getRoute(options: LineRouteQuery = {}): Promise<TflLine[]> {
     const { ids, modes } = options;
@@ -175,32 +228,33 @@ class Line {
   async getStatus(options: LineStatusQuery = {}): Promise<TflLine[]> {
     const { ids, modes, severity, dateRange } = options;
 
-    // Handle date range specific status
     if (dateRange && ids?.length) {
-      return this.api.line.lineStatus(
-        { ids, startDate: dateRange.startDate, endDate: dateRange.endDate }
-      ).then(response => response.data);
+      return this.batchRequest.processBatch(
+        ids,
+        async (chunk) => this.api.line.lineStatus({
+          ids: chunk,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate
+        }).then(response => response.data)
+      );
     }
 
-    // Handle severity specific status
-    if (typeof severity === 'number') {
-      return this.api.line.lineStatusBySeverity(severity).then(response => response.data);
+    if (ids?.length) {
+      return this.batchRequest.processBatch(
+        ids,
+        async (chunk) => this.api.line.lineStatusByIds({ ids: chunk }).then(response => response.data)
+      );
     }
 
     // Handle mode specific status
     if (modes?.length) {
-      return this.api.line.lineStatusByMode({ modes, ...options }).then(response => response.data);
-    }
-
-    // Handle id specific status
-    if (ids?.length) {
-      return this.api.line.lineStatusByIds({ ids, ...options }).then(response => response.data);
+      return this.api.line.lineStatusByMode({ modes: modes as string[] }).then(response => response.data);
     }
 
     // Default: get all modes first, then get status for all modes
     const allModes = await this.api.line.lineMetaModes().then(response => response.data);
     const modeNames = allModes.map(mode => mode.modeName).filter((name): name is string => name !== undefined);
-    return this.api.line.lineStatusByMode({ modes: modeNames, ...options }).then(response => response.data);
+    return this.api.line.lineStatusByMode({ modes: modeNames }).then(response => response.data);
   }
 
   /**
@@ -214,7 +268,7 @@ class Line {
     }
 
     if (modes?.length) {
-      return this.api.line.lineDisruptionByMode(modes).then(response => response.data);
+      return this.api.line.lineDisruptionByMode(modes as string[]).then(response => response.data);
     }
 
     return this.api.line.lineMetaDisruptionCategories().then(response => 
@@ -230,7 +284,7 @@ class Line {
    * Get line metadata
    */
   async getMeta(): Promise<{
-    modes: TflMode[];
+    modes: TflApiMode[];
     severities: TflStatusSeverity[];
     disruptionCategories: string[];
     serviceTypes: string[];
@@ -255,9 +309,12 @@ class Line {
    */
   async search(options: LineSearchQuery): Promise<TflRouteSearchResponse> {
     const { query, modes } = options;
-    return this.api.line.lineSearch({ query, modes }).then(response => response.data);
+    return this.api.line.lineSearch({ 
+      query, 
+      modes: modes as string[] 
+    }).then(response => response.data);
   }
 }
 
 // Export the Line module
-export { Line, BaseLineQuery, LineRouteQuery, LineStatusQuery, LineSearchQuery };
+export { BaseLineQuery, LineRouteQuery, LineStatusQuery, LineSearchQuery };

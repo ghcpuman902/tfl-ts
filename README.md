@@ -10,6 +10,9 @@ A TypeScript SDK for the Transport for London (TfL) API with auto-generated type
 - 📦 Zero dependencies (except TypeScript)
 - 🧪 Comprehensive test coverage
 - 🔍 Support for all TfL API endpoints
+- 🎮 Interactive playground for exploring the API
+- 🎨 Modern, user-friendly interface with simplified response types
+- ✨ Dynamic type generation for TfL-specific values (line IDs, modes, etc.)
 
 ## Installation
 
@@ -27,17 +30,10 @@ pnpm add tfl-api-ts
 import TflClient from 'tfl-api-ts';
 
 // Initialize the client with your TfL API credentials
-// You can either pass them directly:
 const client = new TflClient({
   appId: 'your-app-id',
   appKey: 'your-app-key'
 });
-
-// Or use environment variables:
-// Create a .env file in your project root with:
-// TFL_APP_ID=your-app-id
-// TFL_APP_KEY=your-app-key
-const client = new TflClient();
 
 // Get line status for the tube
 const tubeStatus = await client.line.getStatus({ modes: ['tube'] });
@@ -50,6 +46,119 @@ const busArrivals = await client.stopPoint.getArrivals({
 });
 console.log(busArrivals);
 ```
+
+## TypeScript Support
+
+The SDK is written in TypeScript and provides full type support with simplified interfaces:
+
+```typescript
+import { TflLine, TflStopPoint, TflLineId, ModeName } from 'tfl-api-ts';
+
+// All responses are properly typed with simplified interfaces
+const lines: TflLine[] = await client.line.getStatus();
+
+// Get autocompletion for line IDs
+const specificLines = await client.line.get({ 
+  ids: ['central', 'victoria'] // TypeScript will ensure these are valid line IDs
+});
+
+// Get autocompletion for transport modes
+const tubeLines = await client.line.get({ 
+  modes: ['tube', 'dlr'] // TypeScript will ensure these are valid modes
+});
+
+// Access line information
+const lineName = client.line.LINE_NAMES['central']; // "Central"
+const lineInfo = client.line.LINE_INFO['central']; // Full line information
+```
+
+### Dynamic Type Generation
+
+The SDK automatically generates TypeScript types from the TfL API, ensuring your code is always up-to-date with the latest TfL data:
+
+```typescript
+// These types are generated from the TfL API
+type TflLineId = 'bakerloo' | 'central' | 'circle' | /* ... */;
+type ModeName = 'tube' | 'bus' | 'dlr' | /* ... */;
+
+// Constants are also generated
+const LINE_NAMES: Record<TflLineId, string> = {
+  'bakerloo': 'Bakerloo',
+  'central': 'Central',
+  // ...
+};
+```
+
+To update the generated types:
+
+```bash
+# Generate types from TfL API
+npm run generate-enums
+
+# Or if you're using pnpm
+pnpm generate-enums
+```
+
+### Documentation Strategy
+
+The SDK uses a hybrid approach to documentation that combines the best of both worlds:
+
+1. **Swagger-Generated Types**: We use the official TfL Swagger API to generate our base TypeScript types, ensuring accuracy and completeness of the API interface.
+
+2. **Enhanced Wrapper Documentation**: Our wrapper classes add comprehensive JSDoc documentation that includes:
+   - Clear parameter descriptions
+   - Return type documentation
+   - Real-world usage examples
+   - Type-safe interfaces
+
+Example of our enhanced documentation:
+
+```typescript
+/**
+ * Get line information
+ * @param options - Query options for filtering lines
+ * @returns Promise resolving to an array of line information
+ * @example
+ * // Get all lines
+ * const allLines = await client.line.get();
+ * 
+ * // Get tube lines  
+ * const tubeLines = await client.line.get({ modes: ['tube'] });
+ * 
+ * // Get specific lines
+ * const specificLines = await client.line.get({ 
+ *   ids: ['central', 'victoria', 'jubilee'] 
+ * });
+ */
+async get(options?: BaseLineQuery): Promise<LineInfo[]>
+```
+
+### Architectural Decisions
+
+The SDK is built with several key architectural decisions:
+
+1. **Dynamic Type Generation**:
+   - Types are generated from live TfL API data
+   - Includes line IDs, modes, service types, and more
+   - Ensures types stay current with TfL's data
+
+2. **Enhanced Wrapper Layer**:
+   - Batch processing with automatic request chunking
+   - Unified filtering across multiple endpoints
+   - Rich TypeScript JSDoc documentation
+   - Type-safe constants and enums
+
+3. **Developer Experience**:
+   - Comprehensive error handling
+   - Automatic retry mechanism
+   - Parallel processing support
+   - Type-safe constants exported independently
+
+4. **Performance Optimizations**:
+   - Efficient batch processing
+   - Automatic request chunking
+   - Rate limiting protection
+   - Response caching where appropriate
 
 ## API Credentials
 
@@ -74,81 +183,106 @@ You can provide your API credentials in two ways:
    });
    ```
 
-## Available Endpoints
+## Playground
 
-The SDK provides access to all TfL API endpoints:
+The SDK includes an interactive Express-based playground to explore the TfL API data through a web interface.
 
-- Line Status
-- Stop Points
-- Journey Planner
-- Air Quality
-- Bike Points
-- Road Status
-- And more...
+### Running the Playground
 
-## TypeScript Support
+1. **Clone the repository and install dependencies:**
+   ```bash
+   git clone https://github.com/manglekuo/tfl-api-ts.git
+   cd tfl-api-ts
+   pnpm install
+   ```
 
-The SDK is written in TypeScript and provides full type support:
+2. **Set up your TfL API credentials:**
+   Create a `.env` file in the project root:
+   ```
+   TFL_APP_ID=your-app-id
+   TFL_APP_KEY=your-app-key
+   ```
 
-```typescript
-import { TflLine, TflStopPoint } from 'tfl-api-ts';
+3. **Generate types:**
+   ```bash
+   pnpm generate-enums
+   ```
 
-// All responses are properly typed
-const lines: TflLine[] = await client.line.getStatus();
-const stops: TflStopPoint[] = await client.stopPoint.getByMode({ modes: ['tube'] });
-```
+4. **Start the playground:**
+   ```bash
+   pnpm run playground
+   ```
 
-## Error Handling
+5. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-The SDK includes proper error handling:
+### Playground Features
 
-```typescript
-try {
-  const status = await client.line.getStatus();
-} catch (error) {
-  if (error instanceof TflApiError) {
-    console.error('TfL API Error:', error.message);
-  }
-}
-```
+The interactive playground allows you to:
 
-## Development Timeline
-
-### Phase 1 - Core Features (Current)
-- ✅ Basic SDK structure
-- ✅ Type generation from TfL Swagger API
-- ✅ Line status endpoints
-- ✅ Stop point endpoints
-- ✅ Basic error handling
-- ✅ TypeScript support
-- ✅ Initial test coverage
-
-### Phase 2 - Enhanced Features (Next)
-- 🔄 Caching layer implementation
-- 🔄 Rate limiting
-- 🔄 Retry mechanism
-- 🔄 Advanced error handling
-- 🔄 Additional endpoint coverage
-- 🔄 Extended test coverage
-
-### Phase 3 - Advanced Features (Future)
-- 📅 Real-time data streaming
-- 📅 WebSocket support
-- 📅 Advanced querying capabilities
-- 📅 Performance optimizations
-- 📅 Documentation improvements
-- 📅 Example applications
-
-### Phase 4 - Enterprise Features (Future)
-- 📅 Authentication improvements
-- 📅 Analytics integration
-- 📅 Enterprise support
-- 📅 Advanced monitoring
-- 📅 Custom endpoint support
+- 🔍 **Explore Transport Modes**: Browse all available transport modes (tube, bus, DLR, etc.)
+- 🚇 **View Routes**: See all routes/lines for each transport mode
+- 📊 **Route Details**: Get comprehensive information about specific routes including:
+  - Basic route information (ID, name, mode)
+  - Real-time status and disruptions
+  - Full API response data
+- 🎨 **Clean UI**: Modern, responsive interface built with vanilla HTML/CSS
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Here's how to get started:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/manglekuo/tfl-api-ts.git
+   cd tfl-api-ts
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up your TfL API credentials:**
+   Create a `.env` file in the project root:
+   ```
+   TFL_APP_ID=your-app-id
+   TFL_APP_KEY=your-app-key
+   ```
+
+4. **Generate types:**
+   ```bash
+   pnpm generate-enums
+   ```
+   This will:
+   - Fetch the latest data from TfL API
+   - Generate TypeScript types in `src/types/`
+   - Update type definitions for line IDs, modes, etc.
+
+5. **Run tests:**
+   ```bash
+   pnpm test
+   ```
+
+6. **Start the playground:**
+   ```bash
+   pnpm run playground
+   ```
+
+7. **Make your changes and submit a PR!**
+
+### Development Timeline
+
+| Feature | Status | Date |
+|---------|--------|------|
+| Basic SDK structure | ✅ | 2024-03-20 |
+| Type generation from TfL Swagger API | ✅ | 2024-03-20 |
+| Dynamic type generation for TfL values | ✅ | 2024-03-20 |
+| Line status endpoints | ✅ | 2024-03-20 |
+| Stop point endpoints | ✅ | 2024-03-20 |
+| Basic error handling | ✅ | 2024-03-20 |
+| TypeScript support | ✅ | 2024-03-20 |
+| Initial test coverage | ✅ | 2024-03-20 |
 
 ## License
 

@@ -15,6 +15,14 @@ interface ModeItem {
     modeName: string;
 }
 
+interface LineItem {
+    id: string;
+    name: string;
+    modeName: string;
+    created: string;
+    modified: string;
+}
+
 // Fetch transport modes from the TfL API
 async function fetchModes(): Promise<ModeItem[]> {
     try {
@@ -23,6 +31,18 @@ async function fetchModes(): Promise<ModeItem[]> {
         return await response.json();
     } catch (error) {
         console.error('Failed to fetch modes:', error);
+        throw error;
+    }
+}
+
+// Fetch all lines from the TfL API
+async function fetchLines(): Promise<LineItem[]> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Line`);
+        if (!response.ok) throw new Error(`Error fetching lines: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch lines:', error);
         throw error;
     }
 }
@@ -118,6 +138,33 @@ export const modeMetadata = {
 };`;
 }
 
+// Helper function to create line-related types
+function createLineTypes(lines: LineItem[]): string {
+    const lineIds = lines.map(line => `'${line.id}'`).join(' | ');
+    const lineNames = lines.reduce((acc, line) => {
+        acc[line.id] = line.name;
+        return acc;
+    }, {} as Record<string, string>);
+
+    return `// Generated from TfL API Line data
+export type TflLineId = ${lineIds};
+
+export const LINE_NAMES: Record<TflLineId, string> = ${JSON.stringify(lineNames, null, 2)} as const;
+
+export interface LineInfo {
+    id: TflLineId;
+    name: string;
+    modeName: string;
+    created: string;
+    modified: string;
+}
+
+export const LINE_INFO: Record<TflLineId, LineInfo> = ${JSON.stringify(lines.reduce((acc, line) => {
+        acc[line.id] = line;
+        return acc;
+    }, {} as Record<string, LineInfo>), null, 2)} as const;`;
+}
+
 // Generate TypeScript types based on data
 async function generateTypeScriptDefinitions() {
     const outputDir = path.join(__dirname, 'types');
@@ -125,6 +172,7 @@ async function generateTypeScriptDefinitions() {
 
     try {
         const modes = await fetchModes();
+        const lines = await fetchLines();
         const serviceTypes = await fetchServiceTypes();
         const disruptionCategories = await fetchDisruptionCategories();
         const severityItems = await fetchSeverityCodes();
@@ -132,6 +180,10 @@ async function generateTypeScriptDefinitions() {
         // Create mode-related types
         const modesTypeContent = createModeTypes(modes);
         fs.writeFileSync(path.join(outputDir, 'Mode.ts'), modesTypeContent.trim());
+
+        // Create line-related types
+        const linesTypeContent = createLineTypes(lines);
+        fs.writeFileSync(path.join(outputDir, 'LineId.ts'), linesTypeContent.trim());
 
         // Create a union type for Service Types
         const serviceTypesContent = `export type ServiceType = ${toUnionType(serviceTypes.map(type => type))};
@@ -169,6 +221,7 @@ export {
     ModeMetadata,
     modeMetadata
 } from './Mode';
+export { TflLineId, LINE_NAMES, LineInfo, LINE_INFO } from './LineId';
 export { ServiceType } from './ServiceType';
 export { DisruptionCategory } from './DisruptionCategory';
 export { SeverityDescription, SeverityByMode } from './SeverityDescription';

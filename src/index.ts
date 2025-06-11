@@ -2,6 +2,76 @@ import { Api } from './tfl'; // Previously set up to automatically add credentia
 import { Line } from './line';
 import { AccidentStats } from './accidentStats';
 import { AirQuality } from './airQuality';
+import { Journey } from './journey';
+import { StopPoint } from './stopPoint';
+import { Mode } from './mode';
+import { Road } from './road';
+import { 
+  ModeName, 
+  TflServiceMode, 
+  ServiceType, 
+  DisruptionCategory,
+  SeverityDescription,
+  modeMetadata
+} from './types';
+
+// TfL Line IDs
+const LINE_IDS = {
+  tube: {
+    BAKERLOO: 'bakerloo',
+    CENTRAL: 'central',
+    CIRCLE: 'circle',
+    DISTRICT: 'district',
+    HAMMERSMITH_CITY: 'hammersmith-city',
+    JUBILEE: 'jubilee',
+    METROPOLITAN: 'metropolitan',
+    NORTHERN: 'northern',
+    PICCADILLY: 'piccadilly',
+    VICTORIA: 'victoria',
+    WATERLOO_CITY: 'waterloo-city',
+    ELIZABETH: 'elizabeth'
+  },
+  dlr: {
+    DLR: 'dlr'
+  },
+  overground: {
+    OVERGROUND: 'london-overground'
+  },
+  tram: {
+    TRAM: 'tram'
+  },
+  bus: {
+    BUS: 'bus'
+  }
+} as const;
+
+// TfL Transport Modes
+const MODES = modeMetadata;
+
+// TfL Service Types
+const SERVICE_TYPES = {
+  REGULAR: 'Regular' as ServiceType,
+  NIGHT: 'Night' as ServiceType
+} as const;
+
+// TfL Direction Types
+const DIRECTIONS = {
+  INBOUND: 'inbound',
+  OUTBOUND: 'outbound',
+  ALL: 'all'
+} as const;
+
+// Type for line IDs
+export type TflLineId = typeof LINE_IDS[keyof typeof LINE_IDS][keyof typeof LINE_IDS[keyof typeof LINE_IDS]];
+
+// Type for transport modes
+export type TflMode = keyof typeof MODES;
+
+// Type for service types
+export type TflServiceType = typeof SERVICE_TYPES[keyof typeof SERVICE_TYPES];
+
+// Type for directions
+export type TflDirection = typeof DIRECTIONS[keyof typeof DIRECTIONS];
 
 interface TflClientConfig {
   appId?: string;
@@ -10,8 +80,40 @@ interface TflClientConfig {
 
 class TflClient {
   private api: Api<{}>;
+  
+  /**
+   * Access all London Underground, Elizabeth line, DLR, Overground, Tram, and other TfL line data.
+   */
   public line: Line;
+
+  /**
+   * Access all TfL stop points (stations, bus stops, piers, etc).
+   */
+  public stopPoint: StopPoint;
+
+  /**
+   * Plan journeys across all supported TfL modes (tube, bus, rail, etc).
+   */
+  public journey: Journey;
+
+  /**
+   * Access all available transport modes and their metadata.
+   */
+  public mode: Mode;
+
+  /**
+   * Access all London road corridors and road status/disruption info.
+   */
+  public road: Road;
+  
+  /**
+   * Access accident statistics for London roads.
+   */
   public accidentStats: AccidentStats;
+
+  /**
+   * Access real-time air quality data for London.
+   */
   public airQuality: AirQuality;
 
   constructor(config?: TflClientConfig) {
@@ -40,10 +142,24 @@ class TflClient {
       }
     });
 
-    this.line = new Line(this.api); // Instantiate specific domain module
+    // Initialize core transport services
+    this.line = new Line(this.api);
+    this.stopPoint = new StopPoint(this.api);
+    this.journey = new Journey(this.api);
+    this.mode = new Mode(this.api);
+    this.road = new Road(this.api);
+
+    // Initialize additional services
     this.accidentStats = new AccidentStats(this.api);
     this.airQuality = new AirQuality(this.api);
   }
 }
 
 export default TflClient;
+export {
+  LINE_IDS,
+  MODES,
+  SERVICE_TYPES,
+  DIRECTIONS
+};
+export type { ModeName, TflServiceMode, ServiceType, DisruptionCategory, SeverityDescription };
