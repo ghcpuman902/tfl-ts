@@ -4,9 +4,8 @@ import TflClient, { ModeName, TflLineId } from '../src/index';
 
 config();
 
-// Initialize TfL client
+// Initialize Tfl client
 const client = new TflClient();
-client.line.get
 
 // Enhanced wrapper functions showcasing our added value
 export const getAvailableModes = async (): Promise<string[]> => {
@@ -72,7 +71,7 @@ app.get('/', async (req, res) => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>TfL API Playground</title>
+        <title>Tfl API Playground</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
           .form-group { margin: 20px 0; }
@@ -108,7 +107,7 @@ app.get('/', async (req, res) => {
       </head>
       <body>
         <div class="header">
-          <h1>🚇 TfL API Playground</h1>
+          <h1>🚇 Tfl API Playground</h1>
           <p>Explore Transport for London API data with enhanced features</p>
         </div>
         
@@ -395,6 +394,6 @@ app.get('/route', async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log('🚇 TfL API Playground running at http://localhost:3000');
-  console.log('Make sure you have your TfL API credentials set up in .env file or environment variables');
+  console.log('🚇 Tfl API Playground running at http://localhost:3000');
+  console.log('Make sure you have your Tfl API credentials set up in .env file or environment variables');
 }); 

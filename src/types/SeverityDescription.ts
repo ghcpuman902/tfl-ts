@@ -1,4 +1,4 @@
-// Generated from TfL API Severity data
+// Generated from Tfl API Severity data
 export type cablecarSeverity =
   | { level: 0; description: 'Special Service' }
   | { level: 1; description: 'Closed' }

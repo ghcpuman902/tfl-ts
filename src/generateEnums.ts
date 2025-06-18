@@ -23,7 +23,7 @@ interface LineItem {
     modified: string;
 }
 
-// Fetch transport modes from the TfL API
+// Fetch transport modes from the Tfl API
 async function fetchModes(): Promise<ModeItem[]> {
     try {
         const response = await fetch(`${API_BASE_URL}/Line/Meta/Modes`);
@@ -35,7 +35,7 @@ async function fetchModes(): Promise<ModeItem[]> {
     }
 }
 
-// Fetch all lines from the TfL API
+// Fetch all lines from the Tfl API
 async function fetchLines(): Promise<LineItem[]> {
     try {
         const response = await fetch(`${API_BASE_URL}/Line`);
@@ -47,7 +47,7 @@ async function fetchLines(): Promise<LineItem[]> {
     }
 }
 
-// Fetch service types from the TfL API
+// Fetch service types from the Tfl API
 async function fetchServiceTypes(): Promise<string[]> {
     try {
         const response = await fetch(`${API_BASE_URL}/Line/Meta/ServiceTypes`);
@@ -59,7 +59,7 @@ async function fetchServiceTypes(): Promise<string[]> {
     }
 }
 
-// Fetch disruption categories from the TfL API
+// Fetch disruption categories from the Tfl API
 async function fetchDisruptionCategories(): Promise<string[]> {
     try {
         const response = await fetch(`${API_BASE_URL}/Line/Meta/DisruptionCategories`);
@@ -77,7 +77,7 @@ interface SeverityItem {
     description: string;
 }
 
-// Fetch severity codes from the TfL API
+// Fetch severity codes from the Tfl API
 async function fetchSeverityCodes(): Promise<SeverityItem[]> {
     try {
         const response = await fetch(`${API_BASE_URL}/Line/Meta/Severity`);
@@ -110,7 +110,7 @@ function createModeTypes(modes: ModeItem[]): string {
     const farePayingModes = modes.filter(mode => mode.isFarePaying).map(mode => `'${mode.modeName}'`).join(' | ');
     const scheduledServiceModes = modes.filter(mode => mode.isScheduledService).map(mode => `'${mode.modeName}'`).join(' | ');
 
-    return `// Generated from TfL API Mode data
+    return `// Generated from Tfl API Mode data
 export type ModeName = ${allModes};
 
 export type TflServiceMode = ${tflServiceModes};
@@ -146,7 +146,7 @@ function createLineTypes(lines: LineItem[]): string {
         return acc;
     }, {} as Record<string, string>);
 
-    return `// Generated from TfL API Line data
+    return `// Generated from Tfl API Line data
 export type TflLineId = ${lineIds};
 
 export const LINE_NAMES: Record<TflLineId, string> = ${JSON.stringify(lineNames, null, 2)} as const;
@@ -165,7 +165,43 @@ export const LINE_INFO: Record<TflLineId, LineInfo> = ${JSON.stringify(lines.red
     }, {} as Record<string, LineInfo>), null, 2)} as const;`;
 }
 
-// Generate TypeScript types based on data
+// Fetch StopPoint categories from the Tfl API
+async function fetchStopPointCategories(): Promise<string[]> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/StopPoint/Meta/Categories`);
+        if (!response.ok) throw new Error(`Error fetching StopPoint categories: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch StopPoint categories:', error);
+        throw error;
+    }
+}
+
+// Fetch StopPoint types from the Tfl API
+async function fetchStopPointTypes(): Promise<string[]> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/StopPoint/Meta/StopTypes`);
+        if (!response.ok) throw new Error(`Error fetching StopPoint types: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch StopPoint types:', error);
+        throw error;
+    }
+}
+
+// Fetch StopPoint modes from the Tfl API
+async function fetchStopPointModes(): Promise<string[]> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/StopPoint/Meta/Modes`);
+        if (!response.ok) throw new Error(`Error fetching StopPoint modes: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch StopPoint modes:', error);
+        throw error;
+    }
+}
+
+// Generate TypeScript definitions based on data
 async function generateTypeScriptDefinitions() {
     const outputDir = path.join(__dirname, 'types');
     fs.mkdirSync(outputDir, { recursive: true });
@@ -176,6 +212,9 @@ async function generateTypeScriptDefinitions() {
         const serviceTypes = await fetchServiceTypes();
         const disruptionCategories = await fetchDisruptionCategories();
         const severityItems = await fetchSeverityCodes();
+        const stopPointCategories = await fetchStopPointCategories();
+        const stopPointTypes = await fetchStopPointTypes();
+        const stopPointModes = await fetchStopPointModes();
 
         // Create mode-related types
         const modesTypeContent = createModeTypes(modes);
@@ -198,7 +237,7 @@ async function generateTypeScriptDefinitions() {
         // Create severity types for each unique mode in severityItems
         const uniqueModes = [...new Set(severityItems.map(item => item.modeName))];
         const severityContent = uniqueModes.map(modeName => createSeverityTypeForMode(severityItems, modeName)).join('\n\n');
-        const severityDescriptionsContent = `// Generated from TfL API Severity data
+        const severityDescriptionsContent = `// Generated from Tfl API Severity data
 ${severityContent}
 
 export type SeverityByMode = {
@@ -210,7 +249,17 @@ export type SeverityDescription = ${toUnionType([...new Set(severityItems.map(it
 `;
         fs.writeFileSync(path.join(outputDir, 'SeverityDescription.ts'), severityDescriptionsContent.trim());
 
-        // Generate the index file
+        // Create StopPoint meta types
+        const stopPointMetaContent = `// Generated from Tfl API StopPoint Meta data
+export type StopPointCategory = ${toUnionType(stopPointCategories)};
+
+export type StopPointType = ${toUnionType(stopPointTypes)};
+
+export type StopPointMode = ${toUnionType(stopPointModes)};
+`;
+        fs.writeFileSync(path.join(outputDir, 'StopPointMeta.ts'), stopPointMetaContent.trim());
+
+        // Update the index file
         const indexContent = `
 export { 
     ModeName,
@@ -225,6 +274,7 @@ export { TflLineId, LINE_NAMES, LineInfo, LINE_INFO } from './LineId';
 export { ServiceType } from './ServiceType';
 export { DisruptionCategory } from './DisruptionCategory';
 export { SeverityDescription, SeverityByMode } from './SeverityDescription';
+export { StopPointCategory, StopPointType, StopPointMode } from './StopPointMeta';
 `.trim();
 
         fs.writeFileSync(path.join(outputDir, 'index.ts'), indexContent);

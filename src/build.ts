@@ -92,7 +92,7 @@ function extractRelevantData(swaggerJson: SwaggerJson): Record<string, any> {
 
 // Enhanced type generation
 function generateTypeDefinitions(data: Record<string, any>): string {
-  let typeDefinitions = `// Generated TypeScript definitions for TfL API
+  let typeDefinitions = `// Generated TypeScript definitions for Tfl API
 // Generated on ${new Date().toISOString()}
 
 export interface TflResponse {

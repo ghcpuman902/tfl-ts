@@ -11,7 +11,7 @@ class AccidentStats {
 
   /**
    * Creates an instance of AccidentStats service.
-   * @param api - The TfL API instance
+   * @param api - The Tfl API instance
    */
   constructor(api: Api<{}>) {
     this.api = api;

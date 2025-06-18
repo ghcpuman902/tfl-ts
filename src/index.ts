@@ -1,4 +1,4 @@
-import { Api } from './tfl'; // Previously set up to automatically add credentials
+import { Api } from './tfl';
 import { Line } from './line';
 import { AccidentStats } from './accidentStats';
 import { AirQuality } from './airQuality';
@@ -15,7 +15,7 @@ import {
   modeMetadata
 } from './types';
 
-// TfL Line IDs
+// Tfl Line IDs
 const LINE_IDS = {
   tube: {
     BAKERLOO: 'bakerloo',
@@ -45,16 +45,16 @@ const LINE_IDS = {
   }
 } as const;
 
-// TfL Transport Modes
+// Tfl Transport Modes
 const MODES = modeMetadata;
 
-// TfL Service Types
+// Tfl Service Types
 const SERVICE_TYPES = {
   REGULAR: 'Regular' as ServiceType,
   NIGHT: 'Night' as ServiceType
 } as const;
 
-// TfL Direction Types
+// Tfl Direction Types
 const DIRECTIONS = {
   INBOUND: 'inbound',
   OUTBOUND: 'outbound',
@@ -82,17 +82,17 @@ class TflClient {
   private api: Api<{}>;
   
   /**
-   * Access all London Underground, Elizabeth line, DLR, Overground, Tram, and other TfL line data.
+   * Access all London Underground, Elizabeth line, DLR, Overground, Tram, and other Tfl line data.
    */
   public line: Line;
 
   /**
-   * Access all TfL stop points (stations, bus stops, piers, etc).
+   * Access all Tfl stop points (stations, bus stops, piers, etc).
    */
   public stopPoint: StopPoint;
 
   /**
-   * Plan journeys across all supported TfL modes (tube, bus, rail, etc).
+   * Plan journeys across all supported Tfl modes (tube, bus, rail, etc).
    */
   public journey: Journey;
 

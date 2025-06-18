@@ -1,18 +1,47 @@
-# TfL API TypeScript SDK
+# Tfl API TypeScript Wrapper
 
-A TypeScript SDK for the Transport for London (TfL) API with auto-generated types and real-time data support.
+A typescript wrapper for the Transport for London (Tfl) API.
+- expose all info following the tfl api swagger by default from https://api.tfl.gov.uk/swagger/docs/v1
+- additional hand written information for common apis to provide more useful information overwriting the generated types
+- predownload enums for line ids, modes, service types, etc.
+
+The goal is for VS code autocomplete and AI coding tools to work so well you don't need to read the docs.
+
+additional features:
+- batch processing of requests
+- parallel processing of requests
+
+
+# for developers
+- to update the types, run `pnpm generate-types`
+- to run the playground, run `pnpm playground`
+- to run the tests, run `pnpm test`
+- to run the lint, run `pnpm lint`
+- to run the format, run `pnpm format`
+
+please edit each file under src/ to add additional features or overwrite the generated types.
+
+Behind the scenes, it uses the [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) to generate the types.
+
+
+
+
+
+
+
+
 
 ## Features
 
-- 🚇 Full TypeScript support with auto-generated types from TfL's Swagger API
+- 🚇 Full TypeScript support with auto-generated types from Tfl's Swagger API
 - 🔄 Real-time data fetching for London transport
 - 🎯 Type-safe API calls with proper error handling
 - 📦 Zero dependencies (except TypeScript)
 - 🧪 Comprehensive test coverage
-- 🔍 Support for all TfL API endpoints
+- 🔍 Support for all Tfl API endpoints
 - 🎮 Interactive playground for exploring the API
 - 🎨 Modern, user-friendly interface with simplified response types
-- ✨ Dynamic type generation for TfL-specific values (line IDs, modes, etc.)
+- ✨ Dynamic type generation for Tfl-specific values (line IDs, modes, etc.)
 
 ## Installation
 
@@ -29,7 +58,7 @@ pnpm add tfl-api-ts
 ```typescript
 import TflClient from 'tfl-api-ts';
 
-// Initialize the client with your TfL API credentials
+// Initialize the client with your Tfl API credentials
 const client = new TflClient({
   appId: 'your-app-id',
   appKey: 'your-app-key'
@@ -74,10 +103,10 @@ const lineInfo = client.line.LINE_INFO['central']; // Full line information
 
 ### Dynamic Type Generation
 
-The SDK automatically generates TypeScript types from the TfL API, ensuring your code is always up-to-date with the latest TfL data:
+The SDK automatically generates TypeScript types from the Tfl API, ensuring your code is always up-to-date with the latest Tfl data:
 
 ```typescript
-// These types are generated from the TfL API
+// These types are generated from the Tfl API
 type TflLineId = 'bakerloo' | 'central' | 'circle' | /* ... */;
 type ModeName = 'tube' | 'bus' | 'dlr' | /* ... */;
 
@@ -92,7 +121,7 @@ const LINE_NAMES: Record<TflLineId, string> = {
 To update the generated types:
 
 ```bash
-# Generate types from TfL API
+# Generate types from Tfl API
 npm run generate-enums
 
 # Or if you're using pnpm
@@ -103,7 +132,7 @@ pnpm generate-enums
 
 The SDK uses a hybrid approach to documentation that combines the best of both worlds:
 
-1. **Swagger-Generated Types**: We use the official TfL Swagger API to generate our base TypeScript types, ensuring accuracy and completeness of the API interface.
+1. **Swagger-Generated Types**: We use the official Tfl Swagger API to generate our base TypeScript types, ensuring accuracy and completeness of the API interface.
 
 2. **Enhanced Wrapper Documentation**: Our wrapper classes add comprehensive JSDoc documentation that includes:
    - Clear parameter descriptions
@@ -138,9 +167,9 @@ async get(options?: BaseLineQuery): Promise<LineInfo[]>
 The SDK is built with several key architectural decisions:
 
 1. **Dynamic Type Generation**:
-   - Types are generated from live TfL API data
+   - Types are generated from live Tfl API data
    - Includes line IDs, modes, service types, and more
-   - Ensures types stay current with TfL's data
+   - Ensures types stay current with Tfl's data
 
 2. **Enhanced Wrapper Layer**:
    - Batch processing with automatic request chunking
@@ -162,7 +191,7 @@ The SDK is built with several key architectural decisions:
 
 ## API Credentials
 
-To use the TfL API, you need to register for an API key at the [TfL API Portal](https://api-portal.tfl.gov.uk/).
+To use the Tfl API, you need to register for an API key at the [Tfl API Portal](https://api-portal.tfl.gov.uk/).
 
 You can provide your API credentials in two ways:
 
@@ -185,7 +214,7 @@ You can provide your API credentials in two ways:
 
 ## Playground
 
-The SDK includes an interactive Express-based playground to explore the TfL API data through a web interface.
+The SDK includes an interactive Express-based playground to explore the Tfl API data through a web interface.
 
 ### Running the Playground
 
@@ -196,7 +225,7 @@ The SDK includes an interactive Express-based playground to explore the TfL API 
    pnpm install
    ```
 
-2. **Set up your TfL API credentials:**
+2. **Set up your Tfl API credentials:**
    Create a `.env` file in the project root:
    ```
    TFL_APP_ID=your-app-id
@@ -243,41 +272,57 @@ Contributions are welcome! Here's how to get started:
    pnpm install
    ```
 
-3. **Set up your TfL API credentials:**
+3. **Set up your Tfl API credentials:**
    Create a `.env` file in the project root:
    ```
    TFL_APP_ID=your-app-id
    TFL_APP_KEY=your-app-key
    ```
 
-4. **Generate types:**
+4. **Build the project:**
    ```bash
-   pnpm generate-enums
+   pnpm build
    ```
    This will:
-   - Fetch the latest data from TfL API
-   - Generate TypeScript types in `src/types/`
-   - Update type definitions for line IDs, modes, etc.
+   - Generate TypeScript types from Tfl API
+   - Compile the TypeScript code
+   - Create the distribution files
 
 5. **Run tests:**
    ```bash
-   pnpm test
+   pnpm test        # Run tests once
+   pnpm test:watch  # Run tests in watch mode
    ```
 
 6. **Start the playground:**
    ```bash
-   pnpm run playground
+   pnpm playground
    ```
 
-7. **Make your changes and submit a PR!**
+7. **Code quality:**
+   ```bash
+   pnpm lint   # Run ESLint
+   pnpm format # Format code with Prettier
+   ```
+
+8. **Make your changes and submit a PR!**
+
+### Available Scripts
+
+- `build`: Generates types from Tfl API and builds the project
+- `test`: Runs the test suite
+- `test:watch`: Runs tests in watch mode
+- `playground`: Starts the interactive playground
+- `lint`: Runs ESLint for code quality
+- `format`: Formats code with Prettier
 
 ### Development Timeline
 
 | Feature | Status | Date |
 |---------|--------|------|
 | Basic SDK structure | ✅ | 2024-03-20 |
-| Type generation from TfL Swagger API | ✅ | 2024-03-20 |
-| Dynamic type generation for TfL values | ✅ | 2024-03-20 |
+| Type generation from Tfl Swagger API | ✅ | 2024-03-20 |
+| Dynamic type generation for Tfl values | ✅ | 2024-03-20 |
 | Line status endpoints | ✅ | 2024-03-20 |
 | Stop point endpoints | ✅ | 2024-03-20 |
 | Basic error handling | ✅ | 2024-03-20 |

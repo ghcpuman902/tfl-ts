@@ -9,6 +9,7 @@ import {
   TflApiPresentationEntitiesRouteSearchResponse as TflRouteSearchResponse
 } from './tfl';
 import { BatchRequest } from './utils/batchRequest';
+import { stripTypeFields } from './utils/stripTypes';
 import { ModeName, ServiceType, DisruptionCategory } from './types';
 import { TflLineId, LINE_NAMES } from './types/LineId';
 
@@ -26,6 +27,8 @@ interface BaseLineQuery {
   ids?: TflLineId[];
   /** Array of transport modes (e.g., 'tube', 'bus', 'dlr') */
   modes?: ModeName[];
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
 }
 
 /**
@@ -89,7 +92,7 @@ interface LineSearchQuery {
 }
 
 /**
- * Line information returned by the TfL API
+ * Line information returned by the Tfl API
  * @example
  * {
  *   id: "central",
@@ -121,7 +124,7 @@ export interface LineInfo {
 }
 
 /**
- * Line class for interacting with TfL Line API endpoints
+ * Line class for interacting with Tfl Line API endpoints
  * @example
  * // Get all tube lines
  * const tubeLines = await client.line.get({ modes: ['tube'] });
@@ -159,14 +162,14 @@ export class Line {
    * });
    */
   async get(options?: BaseLineQuery): Promise<LineInfo[]> {
-    const { ids, modes } = options || {};
+    const { ids, modes, keepTflTypes } = options || {};
 
     if (ids?.length) {
       const response = await this.batchRequest.processBatch(
         ids,
         async (chunk) => this.api.line.lineGet(chunk).then(response => response.data)
       );
-      return response as LineInfo[];
+      return stripTypeFields(response, keepTflTypes) as LineInfo[];
     }
 
     if (modes?.length) {
@@ -174,15 +177,15 @@ export class Line {
         modes,
         async (chunk) => this.api.line.lineGetByMode(chunk).then(response => response.data)
       );
-      return response as LineInfo[];
+      return stripTypeFields(response, keepTflTypes) as LineInfo[];
     }
 
     const response = await this.api.line.lineGet([]).then(response => response.data);
-    return response as LineInfo[];
+    return stripTypeFields(response, keepTflTypes) as LineInfo[];
   }
 
   /**
-   * Get detailed route information for TfL lines
+   * Get detailed route information for Tfl lines
    * 
    * This method returns comprehensive route information including:
    * - Route sections with start and end stations
@@ -209,24 +212,27 @@ export class Line {
    * const allRoutes = await client.line.getRoute();
    */
   async getRoute(options: LineRouteQuery = {}): Promise<TflLine[]> {
-    const { ids, modes } = options;
+    const { ids, modes, keepTflTypes } = options;
 
     if (ids?.length) {
-      return this.api.line.lineLineRoutesByIds({ ids, serviceTypes: options.serviceTypes as ServiceType[] }).then(response => response.data);
+      return this.api.line.lineLineRoutesByIds({ ids, serviceTypes: options.serviceTypes as ServiceType[] })
+        .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
     if (modes?.length) {
-      return this.api.line.lineRouteByMode({ modes, serviceTypes: options.serviceTypes as ServiceType[] }).then(response => response.data);
+      return this.api.line.lineRouteByMode({ modes, serviceTypes: options.serviceTypes as ServiceType[] })
+        .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
-    return this.api.line.lineRoute({ serviceTypes: options.serviceTypes as ServiceType[] }).then(response => response.data);
+    return this.api.line.lineRoute({ serviceTypes: options.serviceTypes as ServiceType[] })
+      .then(response => stripTypeFields(response.data, keepTflTypes));
   }
 
   /**
    * Get line status information
    */
   async getStatus(options: LineStatusQuery = {}): Promise<TflLine[]> {
-    const { ids, modes, severity, dateRange } = options;
+    const { ids, modes, severity, dateRange, keepTflTypes } = options;
 
     if (dateRange && ids?.length) {
       return this.batchRequest.processBatch(
@@ -235,55 +241,59 @@ export class Line {
           ids: chunk,
           startDate: dateRange.startDate,
           endDate: dateRange.endDate
-        }).then(response => response.data)
+        }).then(response => stripTypeFields(response.data, keepTflTypes))
       );
     }
 
     if (ids?.length) {
       return this.batchRequest.processBatch(
         ids,
-        async (chunk) => this.api.line.lineStatusByIds({ ids: chunk }).then(response => response.data)
+        async (chunk) => this.api.line.lineStatusByIds({ ids: chunk })
+          .then(response => stripTypeFields(response.data, keepTflTypes))
       );
     }
 
     // Handle mode specific status
     if (modes?.length) {
-      return this.api.line.lineStatusByMode({ modes: modes as string[] }).then(response => response.data);
+      return this.api.line.lineStatusByMode({ modes: modes as string[] })
+        .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
     // Default: get all modes first, then get status for all modes
     const allModes = await this.api.line.lineMetaModes().then(response => response.data);
     const modeNames = allModes.map(mode => mode.modeName).filter((name): name is string => name !== undefined);
-    return this.api.line.lineStatusByMode({ modes: modeNames }).then(response => response.data);
+    return this.api.line.lineStatusByMode({ modes: modeNames })
+      .then(response => stripTypeFields(response.data, keepTflTypes));
   }
 
   /**
    * Get line disruption information
    */
   async getDisruption(options: BaseLineQuery = {}): Promise<TflDisruption[]> {
-    const { ids, modes } = options;
+    const { ids, modes, keepTflTypes } = options;
 
     if (ids?.length) {
-      return this.api.line.lineDisruption(ids).then(response => response.data);
+      return this.api.line.lineDisruption(ids)
+        .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
     if (modes?.length) {
-      return this.api.line.lineDisruptionByMode(modes as string[]).then(response => response.data);
+      return this.api.line.lineDisruptionByMode(modes as string[])
+        .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
-    return this.api.line.lineMetaDisruptionCategories().then(response => 
-      response.data.map(category => ({
+    return this.api.line.lineMetaDisruptionCategories()
+      .then(response => stripTypeFields(response.data.map(category => ({
         category: category as DisruptionCategory,
         type: '',
         description: '',
-      }))
-    );
+      })), keepTflTypes));
   }
 
   /**
    * Get line metadata
    */
-  async getMeta(): Promise<{
+  async getMeta(options: { keepTflTypes?: boolean } = {}): Promise<{
     modes: TflApiMode[];
     severities: TflStatusSeverity[];
     disruptionCategories: string[];
@@ -297,22 +307,22 @@ export class Line {
     ]);
 
     return {
-      modes,
-      severities,
-      disruptionCategories: disruptions,
-      serviceTypes
+      modes: stripTypeFields(modes, options.keepTflTypes),
+      severities: stripTypeFields(severities, options.keepTflTypes),
+      disruptionCategories: stripTypeFields(disruptions, options.keepTflTypes),
+      serviceTypes: stripTypeFields(serviceTypes, options.keepTflTypes)
     };
   }
 
   /**
    * Search lines
    */
-  async search(options: LineSearchQuery): Promise<TflRouteSearchResponse> {
-    const { query, modes } = options;
+  async search(options: LineSearchQuery & { keepTflTypes?: boolean }): Promise<TflRouteSearchResponse> {
+    const { query, modes, keepTflTypes } = options;
     return this.api.line.lineSearch({ 
       query, 
       modes: modes as string[] 
-    }).then(response => response.data);
+    }).then(response => stripTypeFields(response.data, keepTflTypes));
   }
 }
 

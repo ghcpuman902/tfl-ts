@@ -1,7 +1,7 @@
 {
   "name": "tfl-api-ts",
   "version": "1.0.0",
-  "description": "TypeScript SDK for Transport for London (TfL) API with auto-generated types and real-time data support",
+  "description": "TypeScript SDK for Transport for London (Tfl) API with auto-generated types and real-time data support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -9,19 +9,16 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run generate-types && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:types": "tsc --noEmit",
-    "dev": "ts-node playground/index.ts",
     "playground": "ts-node playground/index.ts",
-    "generate-api": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src -n tfl.ts --union-enums --extract-request-params --patch --extract-enums",
-    "generate-enums": "ts-node src/generateEnums.ts",
-    "prepare": "npm run build",
-    "update-api": "npm run generate-api && npm run build",
-    "prepublishOnly": "npm run test && npm run build",
+    "demo": "ts-node playground/demo.ts",
     "lint": "eslint . --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "generate-types": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node src/generateEnums.ts",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "keywords": [
     "tfl",

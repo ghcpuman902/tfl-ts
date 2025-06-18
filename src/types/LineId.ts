@@ -1,5 +1,5 @@
 /**
- * Valid TfL Line IDs
+ * Valid Tfl Line IDs
  * @example
  * // Get specific lines
  * const lines = await client.line.get({ ids: ['central', 'victoria'] });
@@ -22,7 +22,7 @@ export type TflLineId =
   | 'dlr'
   // London Overground
   | 'london-overground'
-  // TfL Rail
+  // Tfl Rail
   | 'tfl-rail'
   // Tram
   | 'tram'
@@ -53,7 +53,7 @@ export const LINE_NAMES: Record<TflLineId, string> = {
   'waterloo-city': 'Waterloo & City',
   'dlr': 'DLR',
   'london-overground': 'London Overground',
-  'tfl-rail': 'TfL Rail',
+  'tfl-rail': 'Tfl Rail',
   'tram': 'Tram',
   'bus': 'Bus',
   'cable-car': 'Cable Car',

@@ -1,4 +1,4 @@
-// Generated from TfL API Mode data
+// Generated from Tfl API Mode data
 export type ModeName = 'bus' | 'cable-car' | 'coach' | 'cycle' | 'cycle-hire' | 'dlr' | 'elizabeth-line' | 'interchange-keep-sitting' | 'interchange-secure' | 'national-rail' | 'overground' | 'replacement-bus' | 'river-bus' | 'river-tour' | 'taxi' | 'tram' | 'tube' | 'walking';
 
 export type TflServiceMode = 'bus' | 'cable-car' | 'cycle-hire' | 'dlr' | 'elizabeth-line' | 'overground' | 'replacement-bus' | 'river-bus' | 'river-tour' | 'tram' | 'tube';
