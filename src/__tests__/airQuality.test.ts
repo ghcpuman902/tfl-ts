@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { AirQuality } from '../airQuality';
-import { Api, SystemObject } from '../tfl';
+import { Api, SystemObject } from '../generated/tfl';
 
 // Mock the environment variables
 config({ path: '.env.test' });

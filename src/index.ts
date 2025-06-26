@@ -1,4 +1,4 @@
-import { Api } from './tfl';
+import { Api } from './generated/tfl';
 import { Line } from './line';
 import { AccidentStats } from './accidentStats';
 import { AirQuality } from './airQuality';
@@ -6,14 +6,22 @@ import { Journey } from './journey';
 import { StopPoint } from './stopPoint';
 import { Mode } from './mode';
 import { Road } from './road';
-import { 
-  ModeName, 
-  TflServiceMode, 
-  ServiceType, 
-  DisruptionCategory,
-  SeverityDescription,
-  modeMetadata
-} from './types';
+import { Modes, ServiceTypes, DisruptionCategories } from './generated/meta/Meta';
+
+// Generate types from the generated meta data
+type ModeName = typeof Modes[number]['modeName'];
+type ServiceType = typeof ServiceTypes[number];
+type DisruptionCategory = typeof DisruptionCategories[number];
+
+// Create mode metadata from the generated Modes data
+const modeMetadata: Record<string, any> = Modes.reduce((acc, mode) => {
+  acc[mode.modeName] = {
+    isTflService: mode.isTflService,
+    isFarePaying: mode.isFarePaying,
+    isScheduledService: mode.isScheduledService
+  };
+  return acc;
+}, {} as Record<string, any>);
 
 // Tfl Line IDs
 const LINE_IDS = {
@@ -162,4 +170,4 @@ export {
   SERVICE_TYPES,
   DIRECTIONS
 };
-export type { ModeName, TflServiceMode, ServiceType, DisruptionCategory, SeverityDescription };
+export type { ModeName, ServiceType, DisruptionCategory };

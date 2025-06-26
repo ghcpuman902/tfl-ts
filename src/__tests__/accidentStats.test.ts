@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { AccidentStats } from '../accidentStats';
-import { Api } from '../tfl';
+import { Api } from '../generated/tfl';
 
 // Mock the environment variables
 config({ path: '.env.test' });

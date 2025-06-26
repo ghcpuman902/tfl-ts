@@ -6,12 +6,111 @@ import {
   TflApiPresentationEntitiesCrowding as TflCrowding,
   TflApiPresentationEntitiesMode as TflApiMode,
   TflApiPresentationEntitiesStatusSeverity as TflStatusSeverity,
-  TflApiPresentationEntitiesRouteSearchResponse as TflRouteSearchResponse
-} from './tfl';
+  TflApiPresentationEntitiesRouteSearchResponse as TflRouteSearchResponse,
+  TflApiPresentationEntitiesRouteSequence as TflRouteSequence,
+  TflApiPresentationEntitiesStopPoint as TflStopPoint,
+  TflApiPresentationEntitiesTimetableResponse as TflTimetableResponse,
+  TflApiPresentationEntitiesPrediction as TflPrediction
+} from './generated/tfl';
 import { BatchRequest } from './utils/batchRequest';
 import { stripTypeFields } from './utils/stripTypes';
-import { ModeName, ServiceType, DisruptionCategory } from './types';
-import { TflLineId, LINE_NAMES } from './types/LineId';
+
+// Import raw data from generated meta files
+import { Lines } from './generated/meta/Line';
+import { Modes, ServiceTypes, DisruptionCategories } from './generated/meta/Meta';
+
+// Generate types from the generated meta data
+type TflLineId = typeof Lines[number]['id'];
+type ModeName = typeof Modes[number]['modeName'];
+type ServiceType = typeof ServiceTypes[number];
+type DisruptionCategory = typeof DisruptionCategories[number];
+
+// Create LINE_NAMES mapping
+const LINE_NAMES: Record<TflLineId, string> = Lines.reduce((acc, line) => {
+  acc[line.id as TflLineId] = line.name;
+  return acc;
+}, {} as Record<TflLineId, string>);
+
+// Create LINE_INFO mapping
+const LINE_INFO: Record<TflLineId, typeof Lines[number]> = Lines.reduce((acc, line) => {
+  acc[line.id as TflLineId] = line;
+  return acc;
+}, {} as Record<TflLineId, typeof Lines[number]>);
+
+// Extract unique service types from all lines
+const allServiceTypes = [...new Set(Lines.flatMap(line => 
+  line.serviceTypes?.map(st => st.name) || []
+))] as const;
+type ServiceTypeFromData = typeof allServiceTypes[number];
+
+// Extract unique mode names from all lines
+const allModeNames = [...new Set(Lines.map(line => line.modeName))] as const;
+type ModeNameFromData = typeof allModeNames[number];
+
+// Create mode metadata from the generated Modes data
+const modeMetadata: Record<string, any> = Modes.reduce((acc, mode) => {
+  acc[mode.modeName] = {
+    isTflService: mode.isTflService,
+    isFarePaying: mode.isFarePaying,
+    isScheduledService: mode.isScheduledService
+  };
+  return acc;
+}, {} as Record<string, any>);
+
+// Default severity descriptions (these would ideally come from Meta.ts)
+const SeverityDescription = [
+  'Good Service',
+  'Minor Delays', 
+  'Severe Delays',
+  'Part Suspended',
+  'Suspended',
+  'Closed',
+  'No Service',
+  'Planned Closure',
+  'Part Closure',
+  'Bus Service',
+  'Special Service',
+  'Part Closed',
+  'Exit Only',
+  'No Step Free Access',
+  'Change of frequency',
+  'Diverted',
+  'Not Running'
+] as const;
+
+// Default severity by mode mapping
+const SeverityByMode: Record<string, string> = {
+  'tube': 'tubeSeverity',
+  'bus': 'busSeverity', 
+  'dlr': 'dlrSeverity',
+  'overground': 'overgroundSeverity',
+  'tram': 'tramSeverity'
+};
+
+// Default severity types (these would ideally come from Meta.ts)
+const tubeSeverity = [
+  { level: 10, description: 'Good Service' },
+  { level: 9, description: 'Minor Delays' },
+  { level: 6, description: 'Severe Delays' },
+  { level: 5, description: 'Part Closure' },
+  { level: 1, description: 'Closed' }
+] as const;
+
+const busSeverity = [
+  { level: 10, description: 'Good Service' },
+  { level: 9, description: 'Minor Delays' },
+  { level: 6, description: 'Severe Delays' },
+  { level: 5, description: 'Part Closure' },
+  { level: 1, description: 'Closed' }
+] as const;
+
+const dlrSeverity = [
+  { level: 10, description: 'Good Service' },
+  { level: 9, description: 'Minor Delays' },
+  { level: 6, description: 'Severe Delays' },
+  { level: 5, description: 'Part Closure' },
+  { level: 1, description: 'Closed' }
+] as const;
 
 /**
  * Query options for line-related requests
@@ -21,12 +120,19 @@ import { TflLineId, LINE_NAMES } from './types/LineId';
  * 
  * // Get specific lines by ID
  * const specificLines = await client.line.get({ ids: ['central', 'victoria'] });
+ * 
+ * // Validate user input before making API calls
+ * const userInput = ['central', 'invalid-line'];
+ * const validIds = userInput.filter(id => id in client.line.LINE_NAMES);
+ * if (validIds.length !== userInput.length) {
+ *   throw new Error(`Invalid line IDs: ${userInput.filter(id => !(id in client.line.LINE_NAMES)).join(', ')}`);
+ * }
  */
 interface BaseLineQuery {
-  /** Array of line IDs (e.g., 'central', 'victoria', 'jubilee') */
-  ids?: TflLineId[];
-  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr') */
-  modes?: ModeName[];
+  /** Array of line IDs (e.g., 'central', 'victoria', 'jubilee'). TypeScript provides autocomplete for known values. */
+  ids?: string[];
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
+  modes?: string[];
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -51,7 +157,7 @@ interface BaseLineQuery {
  */
 interface LineRouteQuery extends BaseLineQuery {
   /** Array of service types to filter by (e.g., 'Regular', 'Night') */
-  serviceTypes?: ServiceType[];
+  serviceTypes?: string[];
 }
 
 /**
@@ -73,6 +179,10 @@ interface LineStatusQuery extends BaseLineQuery {
     /** End date in ISO format */
     endDate: string;
   };
+  /** Include details of disruptions */
+  detail?: boolean;
+  /** Filter by severity level string */
+  severityLevel?: string;
 }
 
 /**
@@ -88,7 +198,91 @@ interface LineSearchQuery {
   /** Search query string */
   query: string;
   /** Filter by transport modes */
-  modes?: ModeName[];
+  modes?: string[];
+  /** Filter by service types */
+  serviceTypes?: string[];
+}
+
+/**
+ * Query options for line route sequence requests
+ * @example
+ * // Get route sequence for Central line inbound
+ * const sequence = await client.line.getRouteSequence({
+ *   id: 'central',
+ *   direction: 'inbound',
+ *   serviceTypes: ['Regular']
+ * });
+ */
+interface LineRouteSequenceQuery {
+  /** Single line ID */
+  id: string;
+  /** Direction of travel */
+  direction: 'inbound' | 'outbound';
+  /** Service types to filter by */
+  serviceTypes?: string[];
+  /** Exclude crowding information */
+  excludeCrowding?: boolean;
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
+}
+
+/**
+ * Query options for line stop points requests
+ * @example
+ * // Get all stations for Central line
+ * const stations = await client.line.getStopPoints({ id: 'central' });
+ */
+interface LineStopPointsQuery {
+  /** Single line ID */
+  id: string;
+  /** Filter to TfL-operated national rail stations only */
+  tflOperatedNationalRailStationsOnly?: boolean;
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
+}
+
+/**
+ * Query options for line timetable requests
+ * @example
+ * // Get timetable from Oxford Circus to Victoria
+ * const timetable = await client.line.getTimetable({
+ *   id: 'central',
+ *   fromStopPointId: '940GZZLUOXC',
+ *   toStopPointId: '940GZZLUVIC'
+ * });
+ */
+interface LineTimetableQuery {
+  /** Single line ID */
+  id: string;
+  /** Originating station stop point ID */
+  fromStopPointId: string;
+  /** Destination station stop point ID (optional) */
+  toStopPointId?: string;
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
+}
+
+/**
+ * Query options for line arrivals requests
+ * @example
+ * // Get arrivals for Central line at Oxford Circus
+ * const arrivals = await client.line.getArrivals({
+ *   ids: ['central'],
+ *   stopPointId: '940GZZLUOXC',
+ *   direction: 'inbound'
+ * });
+ */
+interface LineArrivalsQuery {
+  /** Array of line IDs */
+  ids: string[];
+  /** Stop point ID */
+  stopPointId: string;
+  /** Direction of travel */
+  direction?: 'inbound' | 'outbound' | 'all';
+  /** Destination station ID */
+  destinationStationId?: string;
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
 }
 
 /**
@@ -134,12 +328,52 @@ export interface LineInfo {
  * 
  * // Search for lines
  * const results = await client.line.search({ query: "victoria" });
+ * 
+ * // Get static line information (no HTTP request)
+ * const lineName = client.line.LINE_NAMES['central']; // "Central"
+ * const lineInfo = client.line.LINE_INFO['central']; // Full line information
+ * 
+ * // Validate user input before making API calls
+ * const validateLineIds = (ids: string[]) => {
+ *   const validIds = ids.filter(id => id in client.line.LINE_NAMES);
+ *   if (validIds.length !== ids.length) {
+ *     const invalidIds = ids.filter(id => !(id in client.line.LINE_NAMES));
+ *     throw new Error(`Invalid line IDs: ${invalidIds.join(', ')}`);
+ *   }
+ *   return validIds;
+ * };
  */
 export class Line {
   private batchRequest: BatchRequest;
 
-  /** Map of line IDs to their display names */
+  /** Map of line IDs to their display names (static, no HTTP request needed) */
   public readonly LINE_NAMES = LINE_NAMES;
+
+  /** Map of line IDs to their full information (static, no HTTP request needed) */
+  public readonly LINE_INFO = LINE_INFO;
+
+  /** Map of mode names to their metadata (static, no HTTP request needed) */
+  public readonly MODE_METADATA = modeMetadata;
+
+  /** Available severity descriptions (static, no HTTP request needed) */
+  public readonly SEVERITY_DESCRIPTIONS: typeof SeverityDescription = SeverityDescription;
+
+  /** Available service types (static, no HTTP request needed) */
+  public readonly SERVICE_TYPES: readonly ServiceTypeFromData[] = allServiceTypes;
+
+  /** Available disruption categories (static, no HTTP request needed) */
+  public readonly DISRUPTION_CATEGORIES: DisruptionCategory[] = [
+    'Undefined',
+    'RealTime',
+    'PlannedWork', 
+    'Information',
+    'Event',
+    'Crowding',
+    'StatusAlert'
+  ];
+
+  /** Mode-specific severity types (static, no HTTP request needed) */
+  public readonly SEVERITY_BY_MODE = SeverityByMode;
 
   constructor(private api: Api<{}>) {
     this.batchRequest = new BatchRequest(api);
@@ -160,6 +394,13 @@ export class Line {
    * const specificLines = await client.line.get({ 
    *   ids: ['central', 'victoria', 'jubilee'] 
    * });
+   * 
+   * // Validate user input before making API calls
+   * const userInput = ['central', 'invalid-line'];
+   * const validIds = userInput.filter(id => id in client.line.LINE_NAMES);
+   * if (validIds.length !== userInput.length) {
+   *   throw new Error(`Invalid line IDs: ${userInput.filter(id => !(id in client.line.LINE_NAMES)).join(', ')}`);
+   * }
    */
   async get(options?: BaseLineQuery): Promise<LineInfo[]> {
     const { ids, modes, keepTflTypes } = options || {};
@@ -229,10 +470,64 @@ export class Line {
   }
 
   /**
+   * Get route sequence for a specific line and direction
+   * 
+   * This method returns the complete sequence of stops for a line in a specific direction,
+   * including detailed information about each stop and the route sections.
+   * 
+   * @param options - Query options for route sequence
+   * @returns Promise resolving to route sequence information
+   * @example
+   * // Get Central line inbound route sequence
+   * const sequence = await client.line.getRouteSequence({
+   *   id: 'central',
+   *   direction: 'inbound',
+   *   serviceTypes: ['Regular']
+   * });
+   * 
+   * // Get Victoria line outbound route sequence
+   * const sequence = await client.line.getRouteSequence({
+   *   id: 'victoria',
+   *   direction: 'outbound',
+   *   excludeCrowding: true
+   * });
+   */
+  async getRouteSequence(options: LineRouteSequenceQuery): Promise<TflRouteSequence> {
+    const { id, direction, serviceTypes, excludeCrowding, keepTflTypes } = options;
+    
+    return this.api.line.lineRouteSequence({
+      id,
+      direction,
+      serviceTypes: serviceTypes as ServiceType[],
+      excludeCrowding
+    }).then((response: any) => stripTypeFields(response.data, keepTflTypes));
+  }
+
+  /**
    * Get line status information
+   * @param options - Query options for status filtering
+   * @returns Promise resolving to an array of line status information
+   * @example
+   * // Get status for specific lines
+   * const status = await client.line.getStatus({ 
+   *   ids: ['central', 'victoria'],
+   *   detail: true
+   * });
+   * 
+   * // Get status for all lines with specific severity
+   * const severeDelays = await client.line.getStatus({ severity: 3 });
+   * 
+   * // Get status for tube lines only
+   * const tubeStatus = await client.line.getStatus({ modes: ['tube'] });
    */
   async getStatus(options: LineStatusQuery = {}): Promise<TflLine[]> {
-    const { ids, modes, severity, dateRange, keepTflTypes } = options;
+    const { ids, modes, severity, dateRange, detail, severityLevel, keepTflTypes } = options;
+
+    // Handle severity-based status (new endpoint)
+    if (severity !== undefined && !ids?.length && !modes?.length) {
+      return this.api.line.lineStatusBySeverity(severity)
+        .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+    }
 
     if (dateRange && ids?.length) {
       return this.batchRequest.processBatch(
@@ -240,34 +535,54 @@ export class Line {
         async (chunk) => this.api.line.lineStatus({
           ids: chunk,
           startDate: dateRange.startDate,
-          endDate: dateRange.endDate
-        }).then(response => stripTypeFields(response.data, keepTflTypes))
+          endDate: dateRange.endDate,
+          detail
+        }).then((response: any) => stripTypeFields(response.data, keepTflTypes))
       );
     }
 
     if (ids?.length) {
       return this.batchRequest.processBatch(
         ids,
-        async (chunk) => this.api.line.lineStatusByIds({ ids: chunk })
-          .then(response => stripTypeFields(response.data, keepTflTypes))
+        async (chunk) => this.api.line.lineStatusByIds({ 
+          ids: chunk,
+          detail
+        }).then((response: any) => stripTypeFields(response.data, keepTflTypes))
       );
     }
 
     // Handle mode specific status
     if (modes?.length) {
-      return this.api.line.lineStatusByMode({ modes: modes as string[] })
-        .then(response => stripTypeFields(response.data, keepTflTypes));
+      return this.api.line.lineStatusByMode({ 
+        modes: modes as string[],
+        detail,
+        severityLevel
+      }).then((response: any) => stripTypeFields(response.data, keepTflTypes));
     }
 
     // Default: get all modes first, then get status for all modes
-    const allModes = await this.api.line.lineMetaModes().then(response => response.data);
-    const modeNames = allModes.map(mode => mode.modeName).filter((name): name is string => name !== undefined);
-    return this.api.line.lineStatusByMode({ modes: modeNames })
-      .then(response => stripTypeFields(response.data, keepTflTypes));
+    const allModes = await this.api.line.lineMetaModes().then((response: any) => response.data);
+    const modeNames = allModes.map((mode: any) => mode.modeName).filter((name: any): name is string => name !== undefined);
+    return this.api.line.lineStatusByMode({ 
+      modes: modeNames,
+      detail
+    }).then((response: any) => stripTypeFields(response.data, keepTflTypes));
   }
 
   /**
    * Get line disruption information
+   * @param options - Query options for disruption filtering
+   * @returns Promise resolving to an array of disruption information
+   * @example
+   * // Get disruptions for specific lines
+   * const disruptions = await client.line.getDisruption({ 
+   *   ids: ['central', 'victoria'] 
+   * });
+   * 
+   * // Get disruptions for all tube lines
+   * const tubeDisruptions = await client.line.getDisruption({ 
+   *   modes: ['tube'] 
+   * });
    */
   async getDisruption(options: BaseLineQuery = {}): Promise<TflDisruption[]> {
     const { ids, modes, keepTflTypes } = options;
@@ -291,7 +606,141 @@ export class Line {
   }
 
   /**
-   * Get line metadata
+   * Get stop points (stations) for a specific line
+   * 
+   * This method returns all stations that serve a given line, including
+   * their stop point IDs, names, and additional information.
+   * 
+   * @param options - Query options for stop points
+   * @returns Promise resolving to an array of stop point information
+   * @example
+   * // Get all stations for Central line
+   * const stations = await client.line.getStopPoints({ id: 'central' });
+   * 
+   * // Get TfL-operated national rail stations only
+   * const tflStations = await client.line.getStopPoints({ 
+   *   id: 'elizabeth',
+   *   tflOperatedNationalRailStationsOnly: true
+   * });
+   */
+  async getStopPoints(options: LineStopPointsQuery): Promise<TflStopPoint[]> {
+    const { id, tflOperatedNationalRailStationsOnly, keepTflTypes } = options;
+    
+    return this.api.line.lineStopPoints({
+      id,
+      tflOperatedNationalRailStationsOnly
+    }).then(response => stripTypeFields(response.data, keepTflTypes));
+  }
+
+  /**
+   * Get timetable for a specific line and station
+   * 
+   * This method returns timetable information for a specific station on a line,
+   * optionally including destination-specific timetables.
+   * 
+   * @param options - Query options for timetable
+   * @returns Promise resolving to timetable information
+   * @example
+   * // Get timetable from Oxford Circus
+   * const timetable = await client.line.getTimetable({
+   *   id: 'central',
+   *   fromStopPointId: '940GZZLUOXC'
+   * });
+   * 
+   * // Get timetable from Oxford Circus to Victoria
+   * const timetable = await client.line.getTimetable({
+   *   id: 'central',
+   *   fromStopPointId: '940GZZLUOXC',
+   *   toStopPointId: '940GZZLUVIC'
+   * });
+   */
+  async getTimetable(options: LineTimetableQuery): Promise<TflTimetableResponse> {
+    const { id, fromStopPointId, toStopPointId, keepTflTypes } = options;
+    
+    if (toStopPointId) {
+      return this.api.line.lineTimetableTo(fromStopPointId, id, toStopPointId)
+        .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+    }
+    
+    return this.api.line.lineTimetable(fromStopPointId, id)
+      .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+  }
+
+  /**
+   * Get arrival predictions for specific lines at a stop
+   * 
+   * This method returns real-time arrival predictions for specified lines
+   * at a given stop, with optional direction and destination filtering.
+   * 
+   * @param options - Query options for arrivals
+   * @returns Promise resolving to an array of arrival predictions
+   * @example
+   * // Get arrivals for Central line at Oxford Circus
+   * const arrivals = await client.line.getArrivals({
+   *   ids: ['central'],
+   *   stopPointId: '940GZZLUOXC'
+   * });
+   * 
+   * // Get inbound arrivals for Victoria line at Victoria
+   * const arrivals = await client.line.getArrivals({
+   *   ids: ['victoria'],
+   *   stopPointId: '940GZZLUVIC',
+   *   direction: 'inbound'
+   * });
+   */
+  async getArrivals(options: LineArrivalsQuery): Promise<TflPrediction[]> {
+    const { ids, stopPointId, direction, destinationStationId, keepTflTypes } = options;
+    
+    return this.api.line.lineArrivals({
+      ids,
+      stopPointId,
+      direction,
+      destinationStationId
+    }).then(response => stripTypeFields(response.data, keepTflTypes));
+  }
+
+  /**
+   * Search lines and routes
+   * @param options - Query options for search
+   * @returns Promise resolving to search results
+   * @example
+   * // Search for lines containing "victoria"
+   * const results = await client.line.search({ 
+   *   query: "victoria",
+   *   modes: ['tube']
+   * });
+   * 
+   * // Search for night service routes
+   * const results = await client.line.search({ 
+   *   query: "central",
+   *   serviceTypes: ['Night']
+   * });
+   */
+  async search(options: LineSearchQuery & { keepTflTypes?: boolean }): Promise<TflRouteSearchResponse> {
+    const { query, modes, serviceTypes, keepTflTypes } = options;
+    return this.api.line.lineSearch({ 
+      query, 
+      modes: modes as string[],
+      serviceTypes: serviceTypes as ServiceType[]
+    }).then(response => stripTypeFields(response.data, keepTflTypes));
+  }
+
+  /**
+   * Get line metadata (makes HTTP request to TfL API)
+   * 
+   * This method fetches live metadata from the TfL API. For static metadata
+   * that doesn't change frequently, consider using the static properties
+   * instead to save HTTP round trips.
+   * 
+   * @param options - Options for metadata request
+   * @returns Promise resolving to line metadata
+   * @example
+   * // Get live metadata from TfL API
+   * const meta = await client.line.getMeta();
+   * 
+   * // Use static metadata instead (no HTTP request)
+   * const serviceTypes = client.line.SERVICE_TYPES; // ['Regular', 'Night']
+   * const disruptionCategories = client.line.DISRUPTION_CATEGORIES;
    */
   async getMeta(options: { keepTflTypes?: boolean } = {}): Promise<{
     modes: TflApiMode[];
@@ -313,18 +762,32 @@ export class Line {
       serviceTypes: stripTypeFields(serviceTypes, options.keepTflTypes)
     };
   }
-
-  /**
-   * Search lines
-   */
-  async search(options: LineSearchQuery & { keepTflTypes?: boolean }): Promise<TflRouteSearchResponse> {
-    const { query, modes, keepTflTypes } = options;
-    return this.api.line.lineSearch({ 
-      query, 
-      modes: modes as string[] 
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
-  }
 }
 
-// Export the Line module
-export { BaseLineQuery, LineRouteQuery, LineStatusQuery, LineSearchQuery };
+// Export the Line module and all interfaces
+export { 
+  BaseLineQuery, 
+  LineRouteQuery, 
+  LineStatusQuery, 
+  LineSearchQuery,
+  LineRouteSequenceQuery,
+  LineStopPointsQuery,
+  LineTimetableQuery,
+  LineArrivalsQuery
+};
+
+// Re-export static types and enums for direct use
+export {
+  TflLineId,
+  LINE_NAMES,
+  LINE_INFO,
+  modeMetadata,
+  SeverityDescription,
+  SeverityByMode,
+  tubeSeverity,
+  busSeverity,
+  dlrSeverity
+};
+
+// Re-export the raw Lines data
+export { Lines };

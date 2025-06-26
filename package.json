@@ -9,14 +9,14 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm run generate-types && tsc",
+    "build": "npm run generate && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "playground": "ts-node playground/index.ts",
     "demo": "ts-node playground/demo.ts",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "generate-types": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node src/generateEnums.ts",
+    "generate": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src/generated -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node script/generateJsDoc.ts && ts-node script/generateMeta.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run build"
   },

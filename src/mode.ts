@@ -3,7 +3,7 @@ import {
   TflApiPresentationEntitiesMode,
   TflApiPresentationEntitiesPrediction,
   TflApiPresentationEntitiesActiveServiceType
-} from './tfl';
+} from './generated/tfl';
 
 interface ModeQuery {
   mode: string;

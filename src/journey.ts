@@ -3,7 +3,7 @@ import {
   TflApiPresentationEntitiesJourneyPlannerItineraryResult,
   TflApiPresentationEntitiesMode,
   JourneyJourneyResultsParams
-} from './tfl';
+} from './generated/tfl';
 
 interface JourneyQuery extends Partial<JourneyJourneyResultsParams> {
   from: string;

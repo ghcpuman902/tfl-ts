@@ -1,4 +1,4 @@
-import { Api } from '../tfl';
+import { Api } from '../generated/tfl';
 
 interface BatchRequestOptions {
   maxConcurrent?: number;
