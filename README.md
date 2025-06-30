@@ -1,11 +1,11 @@
 # TfL API TypeScript SDK
 
-[![npm version](https://badge.fury.io/js/tfl-api-ts.svg)](https://badge.fury.io/js/tfl-api-ts)
+[![npm version](https://badge.fury.io/js/tfl-ts.svg)](https://badge.fury.io/js/tfl-ts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-<!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-api-ts/actions) -->
-<!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-api-ts/actions) -->
+<!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
+<!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 
 > A community-driven TypeScript SDK that makes the Transport for London (TfL) API easy to use in Node.js and JavaScript environments. Built by developers, for developers.
 
@@ -15,17 +15,12 @@
 
 First, you'll need to register for free API credentials at the [TfL API Portal](https://api-portal.tfl.gov.uk/). This is required to access TfL's public API.
 
-### 2. Install the package
+### 2. Install & Setup
 
 ```bash
-pnpm add tfl-api-ts
+pnpm add tfl-ts
 ```
-or
 
-```bash
-npm i tfl-api-ts
-```
-### 3. Start coding
 Create a `.env` file in your project root:
 
 ```env
@@ -33,12 +28,13 @@ TFL_APP_ID=your-app-id
 TFL_APP_KEY=your-app-key
 ```
 
-Create a TypeScript file:
+### 3. Start coding
+
 ```typescript
 // playground/demo.ts
-import TflClient from 'tfl-api-ts';
+import TflClient from 'tfl-ts';
 
-const client = new TflClient(); // Automatically reads appId and appKey from .env
+const client = new TflClient(); // Automatically reads from .env
 
 // You can also pass credentials directly
 // const client = new TflClient({
@@ -47,21 +43,21 @@ const client = new TflClient(); // Automatically reads appId and appKey from .en
 // });
 
 
-const main = async () => {
+const main = async () => { // wrap in async function to use await
   const query = "Oxford Circus";
   const modes = ['tube'];
 
   const stopPointSearchResult = await client.stopPoint.search({ query, modes });
   const stopPointId = stopPointSearchResult.matches?.[0]?.id;
-  console.log('Stop ID found:', stopPointId); // "940GZZLUOXC"
 
   if (!stopPointId) {
     throw new Error(`No stop ID found for the given query: ${query}`);
   }
+  console.log('Stop ID found:', stopPointId); // "940GZZLUOXC"
 
   // Get arrivals for Central line at Oxford Circus station
   const arrivals = await client.line.getArrivals({
-    ids: ['central'],
+    lineIds: ['central'],
     stopPointId: stopPointId 
   });
 
@@ -99,23 +95,28 @@ node-ts playground/demo.ts
 
 ## Goal + Highlights
 
-![Using the SDK to get timetable of a specific station following a search](<Using API client to get timetable of a specific station following a search.gif>)
-
-![Autocomplete Example](<Autocomplete Example.gif>)
-
 - **TypeScript-first:** Full type safety and autocompletion for all endpoints and IDs.
 - **Batch & parallel requests:** The SDK bundles requests for common use cases, and run them in parallel if possible.
 - **Universal compatibility:** Works in Node.js, browsers, and edge runtimes. (help us test! Feedback welcome)
 - **Auto-updating:** API endpoints and metadata are automatically generated from TfL's OpenAPI specification. This includes all REST endpoints plus metadata that would otherwise require separate API calls. We fetch this data at build time, making it available as constants in your code. The SDK stays current even when TfL adds new lines or services.
+- **Clear parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
 
+## Examples
+
+### Autocomplete
+Autocomplete for line IDs, modes, etc.
+![Autocomplete Example](<Autocomplete Example.gif>)
+
+### VS code showing jsdoc comments
+Using the SDK to get timetable of a specific station following a search
+![Using the SDK to get timetable of a specific station following a search](<Using API client to get timetable of a specific station following a search.gif>)
+
+### Get real-time tube status
 ```typescript
-// Get real-time tube status
 const tubeStatus = await client.line.getStatus({ modes: ['tube'] });
-```
-Example output:
-```json
+// console output:
 [
-  ...
+  // ...
   {
     id: 'central',
     name: 'Central',
@@ -145,17 +146,12 @@ Example output:
     ],
     crowding: 'Unknown'
   },
-  ...
+  // ...
 ]
 ```
 
-
+### Pre-generated constants
 ```typescript
-// Autocomplete for line IDs, modes, etc.
-const lines = await client.line.get({ 
-  ids: ['central', 'victoria'] // ✅ Autocomplete available, also type-safe so numbers won't be accepted
-});
-
 // Pre-generated constants
 console.log(client.line.LINE_NAMES);
 // console output:
@@ -174,120 +170,90 @@ console.log(client.line.LINE_NAMES);
   'woolwich-ferry': 'Woolwich Ferry'
   ...
 }
+```
 
+### Validate user input
+```typescript
 // Validate user input
-const userInput = ['central', 'invalid-line'];
-const validIds = userInput.filter(id => id in client.line.LINE_NAMES);
-if (validIds.length !== userInput.length) {
-  throw new Error(`Invalid line IDs: ${userInput.filter(id => !(id in client.line.LINE_NAMES)).join(', ')}`);
-}
+  const userInput = ['central', '100', 'elizabeth', 'elizabeth-line', 'invalid-line'];
+  const validIds = userInput.filter(id => id in client.line.LINE_NAMES);
+  console.log(validIds);
+  if (validIds.length !== userInput.length) {
+    throw new Error(`Invalid line IDs: ${userInput.filter(id => !(id in client.line.LINE_NAMES)).join(', ')}`);
+  }
 
-// Get bus arrivals for a stop
-const arrivals = await client.stopPoint.getArrivals({
-  id: '490000014N',
-  lineIds: ['1', '2']
-});
+  // console output:
+  [ 'central', '100', 'elizabeth' ]
+  /*
+  Error: Invalid line IDs: elizabeth-line, invalid-line
+    at main (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:12:11)
+    at Object.<anonymous> (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
+    at Module._compile (node:internal/modules/cjs/loader:1692:14)
+    at Module.m._compile (/Users/manglekuo/dev/nextjs/tfl-ts/node_modules/.pnpm/ts-node@10.9.2_@types+node@20.17.19_typescript@5.7.3/node_modules/ts-node/src/index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1824:10
+    at Object.require.extensions.<computed> [as .ts] (/Users/manglekuo/dev/nextjs/tfl-ts/node_modules/.pnpm/ts-node@10.9.2_@types+node@20.17.19_typescript@5.7.3/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1427:32)
+    at Module._load (node:internal/modules/cjs/loader:1250:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+  */
+```
 
+### Get bus arrivals for a stop
+```typescript
+  // search for a bus stop using 5 digit code, which can be found on Google Maps
+  const query = "51800"; // Aldwych / Kingsway (F)
+  const modes = ['bus'];
+
+  const stopPointSearchResult = await client.stopPoint.search({ query, modes });
+  const stopPointId = stopPointSearchResult.matches?.[0]?.id;
+
+  if (!stopPointId) {
+    throw new Error(`No bus stop found for the given query: ${query}`);
+  }
+  console.log('Bus stop ID found:', stopPointId);
+
+  // Get arrivals for bus stop
+  const arrivals = await client.stopPoint.getArrivals({
+    stopPointIds: [stopPointId]
+  });
+
+  // Sort arrivals by time to station (earliest first)
+  const sortedArrivals = arrivals.sort((a, b) => 
+    (a.timeToStation || 0) - (b.timeToStation || 0)
+  );
+  
+  sortedArrivals.forEach((arrival) => {
+    console.log(
+      `Bus ${arrival.lineName || 'Unknown'}` +
+      ` to ${arrival.towards || 'Unknown'}` + 
+      ` arrives in ${Math.round((arrival.timeToStation || 0) / 60)}min`
+    );
+  });
+
+  /* console output:
+    Bus stop ID found: 490003191F
+    Bus stop Aldwych / Kingsway F:
+    Bus 1 to Russell Square Or Tottenham Court Road arrives in 4min
+    Bus 188 to Russell Square Or Tottenham Court Road arrives in 6min
+    Bus 1 to Russell Square Or Tottenham Court Road arrives in 8min
+    Bus 68 to Russell Square Or Tottenham Court Road arrives in 10min
+    Bus 68 to Russell Square Or Tottenham Court Road arrives in 12min
+    Bus 91 to Russell Square Or Tottenham Court Road arrives in 14min
+    Bus 188 to Russell Square Or Tottenham Court Road arrives in 19min
+    Bus 68 to Russell Square Or Tottenham Court Road arrives in 22min
+    Bus 1 to Russell Square Or Tottenham Court Road arrives in 29min
+    Bus 188 to Russell Square Or Tottenham Court Road arrives in 29min
+  */
+```
+
+### Plan a journey
+```typescript
 // Plan a journey
-const journey = await client.journey.get({
+const journey = await client.journey.plan({
   from: '940GZZLUOXC', // Oxford Circus
   to: '940GZZLUVIC'    // Victoria
 });
-```
-
-> See the [Playground](#playground) or [API Reference](#api-reference) for more examples.
-
-## 📋 Table of Contents
-
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage Examples](#usage-examples)
-- [API Reference](#api-reference)
-- [TypeScript Support](#typescript-support)
-- [Playground](#playground)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
-
-## 🚀 Quick Start
-
-```typescript
-import TflClient from 'tfl-api-ts';
-
-// Initialize with your TfL API credentials
-const client = new TflClient({
-  appId: 'your-app-id',
-  appKey: 'your-app-key'
-});
-
-// Get real-time tube status
-const tubeStatus = await client.line.getStatus({ modes: ['tube'] });
-console.log(tubeStatus);
-
-// Get bus arrivals for a specific stop
-const arrivals = await client.stopPoint.getArrivals({
-  id: '490000014N',
-  lineIds: ['1', '2']
-});
-console.log(arrivals);
-```
-
-## 📦 Installation
-
-```bash
-# Using npm
-npm install tfl-api-ts
-
-# Using yarn
-yarn add tfl-api-ts
-
-# Using pnpm
-pnpm add tfl-api-ts
-```
-
-## 🎯 Usage Examples
-
-### Basic Line Information
-
-```typescript
-import TflClient from 'tfl-api-ts';
-
-const client = new TflClient({
-  appId: process.env.TFL_APP_ID!,
-  appKey: process.env.TFL_APP_KEY!
-});
-
-// Get all tube lines
-const tubeLines = await client.line.get({ modes: ['tube'] });
-
-// Get specific lines with full type safety
-const specificLines = await client.line.get({ 
-  ids: ['central', 'victoria', 'jubilee'] 
-});
-
-// Get line status with disruptions
-const status = await client.line.getStatus({ 
-  modes: ['tube', 'dlr'] 
-});
-```
-
-### Stop Point Information
-
-```typescript
-// Get arrivals for a bus stop
-const arrivals = await client.stopPoint.getArrivals({
-  id: '490000014N',
-  lineIds: ['1', '2', '3']
-});
-
-// Search for stops
-const stops = await client.stopPoint.search({
-  query: 'Oxford Circus',
-  modes: ['tube', 'bus']
-});
-
-// Get stop information
-const stopInfo = await client.stopPoint.get({ id: '940GZZLUOXC' });
 ```
 
 ### Journey Planning
@@ -300,112 +266,278 @@ const journey = await client.journey.get({
   modes: ['tube', 'bus']
 });
 
-// Get journey meta information
-const meta = await client.journey.getMeta();
+// console output:
+// [PLACEHOLDER - Journey planning response with routes, legs, and timing information]
 ```
 
-## 🔧 TypeScript Support
-
-The SDK provides complete TypeScript support with auto-generated types and flexible validation:
-
+### Get all transport modes
 ```typescript
-import { TflLine, TflStopPoint, TflLineId, ModeName } from 'tfl-api-ts';
+// Get all available transport modes
+const modes = await client.mode.get();
 
-// All responses are properly typed
-const lines: TflLine[] = await client.line.getStatus();
-
-// TypeScript provides autocomplete for known values
-const specificLines = await client.line.get({ 
-  ids: ['central', 'victoria'] // ✅ Autocomplete available
-});
-
-// But you can also use custom strings when needed
-const customModes = ['tube', 'custom-mode'];
-const tubeLines = await client.line.get({ 
-  modes: customModes // ✅ Flexible, but validate first!
-});
-
-// Validate user input before making API calls
-const validateLineIds = (ids: string[]) => {
-  const validIds = ids.filter(id => id in client.line.LINE_NAMES);
-  if (validIds.length !== ids.length) {
-    const invalidIds = ids.filter(id => !(id in client.line.LINE_NAMES));
-    throw new Error(`Invalid line IDs: ${invalidIds.join(', ')}`);
-  }
-  return validIds;
-};
-
-// Access generated constants for validation
-const lineName = client.line.LINE_NAMES['central']; // "Central"
-const lineInfo = client.line.LINE_INFO['central']; // Full line information
-const validModes = Object.keys(client.line.MODE_METADATA); // All valid modes
+// console output:
+// [PLACEHOLDER - List of all transport modes with metadata]
 ```
 
-### Flexible Type Design
-
-We believe in providing a great developer experience without TypeScript getting in your way:
-
-- **Autocomplete available** for known values like line IDs and modes
-- **Flexible types** that accept strings for custom scenarios
-- **Validation helpers** to check inputs before making API calls
-- **No strict enforcement** that blocks beginners from getting started
-
-This approach lets you start quickly while still providing the tools to build robust applications.
-
-## 🎮 Interactive Playground
-
-> **🔄 TODO: Add online demo link and screenshot**
-
-Explore the TfL API interactively with our web-based playground:
-
-### Features
-- 🔍 **Explore Transport Modes** - Browse all available transport modes
-- 🚇 **View Routes** - See all routes/lines for each transport mode  
-- 📊 **Route Details** - Get comprehensive information about specific routes
-- 🎨 **Clean UI** - Modern, responsive interface
-
-### Running Locally
-
-```bash
-# Clone and install
-git clone https://github.com/manglekuo/tfl-api-ts.git
-cd tfl-api-ts
-pnpm install
-
-# Set up credentials
-echo "TFL_APP_ID=your-app-id" > .env
-echo "TFL_APP_KEY=your-app-key" >> .env
-
-# Generate types and start playground
-pnpm generate-api-client
-pnpm playground
-```
-
-Then open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 🔑 API Credentials
-
-This SDK requires free API credentials from TfL. Register at the [TfL API Portal](https://api-portal.tfl.gov.uk/) to get your `appId` and `appKey`.
-
-### Environment Variables (Recommended)
-
-Create a `.env` file in your project root:
-
-```env
-TFL_APP_ID=your-app-id
-TFL_APP_KEY=your-app-key
-```
-
-### Direct Configuration
-
+### Get road status and disruptions
 ```typescript
-const client = new TflClient({
-  appId: 'your-app-id',
-  appKey: 'your-app-key'
+// Get road status for all road corridors
+const roadStatus = await client.road.getStatus();
+
+// Get specific road corridor status
+const corridorStatus = await client.road.getStatusByCorridor({
+  ids: ['A2', 'A3']
 });
+
+// console output:
+// [PLACEHOLDER - Road status information including disruptions and severity]
 ```
 
-## 🏗️ Development
+### Get air quality data
+```typescript
+// Get current air quality data
+const airQuality = await client.airQuality.get();
+
+// Get air quality forecast
+const forecast = await client.airQuality.getForecast();
+
+// console output:
+// [PLACEHOLDER - Air quality measurements and forecast data]
+```
+
+### Get accident statistics
+```typescript
+// Get accident statistics for a specific year
+const accidentStats = await client.accidentStats.get({
+  year: 2023
+});
+
+// console output:
+// [PLACEHOLDER - Accident statistics including severity, mode, and location data]
+```
+
+### Search for bike points
+```typescript
+// Search for bike points near a location
+const bikePoints = await client.stopPoint.search({
+  query: 'BikePoint',
+  categories: ['BikePoint']
+});
+
+// Get specific bike point information
+const bikePointInfo = await client.stopPoint.get({
+  ids: ['BikePoints_1']
+});
+
+// console output:
+// [PLACEHOLDER - Bike point locations, availability, and docking information]
+```
+
+### Get line disruptions
+```typescript
+// Get all current disruptions
+const disruptions = await client.line.getDisruptions();
+
+// Get disruptions for specific lines
+const lineDisruptions = await client.line.getDisruptionsByLine({
+  ids: ['central', 'victoria']
+});
+
+// console output:
+// [PLACEHOLDER - Disruption details including description, severity, and affected routes]
+```
+
+### Get line routes
+```typescript
+// Get route information for specific lines
+const routes = await client.line.getRoute({
+  ids: ['central', 'jubilee']
+});
+
+// Get route with specific service type
+const nightRoutes = await client.line.getRoute({
+  ids: ['central'],
+  serviceTypes: ['Night']
+});
+
+// console output:
+// [PLACEHOLDER - Route information including stops, directions, and service patterns]
+```
+
+### Search for places
+```typescript
+// Search for places (stations, attractions, etc.)
+const places = await client.stopPoint.search({
+  query: 'London Bridge',
+  categories: ['Place']
+});
+
+// Get place information
+const placeInfo = await client.stopPoint.get({
+  ids: ['940GZZLULNB']
+});
+
+// console output:
+// [PLACEHOLDER - Place information including location, facilities, and accessibility]
+```
+
+### Get line crowding information
+```typescript
+// Get crowding information for specific lines
+const crowding = await client.line.getCrowding({
+  ids: ['central', 'jubilee']
+});
+
+// console output:
+// [PLACEHOLDER - Crowding levels and passenger flow information]
+```
+
+### Get line timetable
+```typescript
+// Get timetable for a specific line and stop
+const timetable = await client.line.getTimetable({
+  id: 'central',
+  fromStopPointId: '940GZZLUOXC'
+});
+
+// console output:
+// [PLACEHOLDER - Timetable information with departure times and destinations]
+```
+
+### Get stop point facilities
+```typescript
+// Get facilities for a specific stop point
+const facilities = await client.stopPoint.getFacilities({
+  id: '940GZZLUOXC'
+});
+
+// console output:
+// [PLACEHOLDER - Station facilities including accessibility, toilets, shops, etc.]
+```
+
+### Get line service types
+```typescript
+// Get available service types for lines
+const serviceTypes = await client.line.getServiceTypes();
+
+// console output:
+// [PLACEHOLDER - Service types including Regular, Night, and other special services]
+```
+
+### Get mode-specific information
+```typescript
+// Get information about specific transport modes
+const tubeInfo = await client.mode.getActiveServiceTypes({
+  mode: 'tube'
+});
+
+// console output:
+// [PLACEHOLDER - Mode-specific service information and operating details]
+```
+
+### Advanced journey planning with preferences
+```typescript
+// Plan a journey with specific preferences
+const journeyWithPrefs = await client.journey.get({
+  from: '940GZZLUOXC', // Oxford Circus
+  to: '940GZZLUVIC',   // Victoria
+  modes: ['tube', 'bus'],
+  accessibilityPreference: 'noSolidStairs',
+  walkingSpeed: 'slow',
+  cyclePreference: 'allTheWay',
+  bikeProficiency: 'moderate'
+});
+
+// console output:
+// [PLACEHOLDER - Journey options optimized for accessibility and cycling preferences]
+```
+
+### Get real-time arrivals for multiple stops
+```typescript
+// Get arrivals for multiple stop points
+const multiStopArrivals = await client.stopPoint.getArrivals({
+  stopPointIds: ['940GZZLUOXC', '940GZZLUVIC', '940GZZLUKSX']
+});
+
+// Group arrivals by stop point
+const arrivalsByStop = multiStopArrivals.reduce((acc, arrival) => {
+  const stopId = arrival.stationId || arrival.naptanId;
+  if (!acc[stopId]) acc[stopId] = [];
+  acc[stopId].push(arrival);
+  return acc;
+}, {} as Record<string, typeof multiStopArrivals>);
+
+// console output:
+// [PLACEHOLDER - Arrivals grouped by stop point with timing and destination information]
+```
+
+### Get line status with detailed information
+```typescript
+// Get detailed status for all tube lines
+const detailedStatus = await client.line.getStatus({
+  modes: ['tube'],
+  detail: true
+});
+
+// Filter for lines with disruptions
+const disruptedLines = detailedStatus.filter(line => 
+  line.lineStatuses.some(status => status.statusSeverity !== 10)
+);
+
+// console output:
+// [PLACEHOLDER - Detailed line status including disruption reasons, validity periods, and affected sections]
+```
+
+### Search with multiple categories
+```typescript
+// Search across multiple categories
+const multiCategorySearch = await client.stopPoint.search({
+  query: 'London',
+  categories: ['Place', 'StopPoint', 'BikePoint']
+});
+
+// console output:
+// [PLACEHOLDER - Search results across different categories with relevance scoring]
+```
+
+### Get road corridor details
+```typescript
+// Get detailed information about road corridors
+const corridorDetails = await client.road.getCorridor({
+  ids: ['A2', 'A3', 'A4']
+});
+
+// console output:
+// [PLACEHOLDER - Road corridor information including boundaries, status, and disruption details]
+```
+
+### Get air quality by location
+```typescript
+// Get air quality data for specific locations
+const locationAirQuality = await client.airQuality.getByLocation({
+  lat: 51.5074,
+  lon: -0.1278
+});
+
+// console output:
+// [PLACEHOLDER - Location-specific air quality measurements and health recommendations]
+```
+
+### Get accident statistics by severity
+```typescript
+// Get accident statistics filtered by severity
+const severeAccidents = await client.accidentStats.get({
+  year: 2023,
+  severity: 'Serious'
+});
+
+// console output:
+// [PLACEHOLDER - Accident statistics filtered by severity level with detailed breakdown]
+```
+
+## 🏗️ Contributing 
+
+Help us develop and improve the SDK. We welcome contributions from the community! This is an open-source project.
 
 ### Prerequisites
 
@@ -417,49 +549,46 @@ const client = new TflClient({
 
 ```bash
 # Clone the repository
-git clone https://github.com/manglekuo/tfl-api-ts.git
-cd tfl-api-ts
+git clone https://github.com/manglekuo/tfl-ts.git
+cd tfl-ts
 
 # Install dependencies
 pnpm install
 
 # Set up environment variables
-cp .env.example .env
+touch .env
 # Edit .env with your TfL API credentials
 
-# Re-generate types from TfL API, only run if TFL api has changed
-pnpm generate-api-client
+# [Optional] Re-generate types from TfL API, only run if you think TFL api has changed
+pnpm run generate
 
 # Build the project
-pnpm build
+pnpm run build
 ```
 
 ### Available Scripts
 
 ```bash
 # Development
-pnpm dev          # Start development server
-pnpm build        # Build the project
-pnpm generate-api-client # Generate types from TfL API
+pnpm run build        # Build the project (includes type generation)
+pnpm run generate     # Generate types from TfL API
+pnpm run playground   # Run interactive playground
+pnpm run demo         # Run demo.ts code to test the SDK
 
 # Testing
-pnpm test         # Run tests
-pnpm test:watch   # Run tests in watch mode
-pnpm test:coverage # Run tests with coverage
+pnpm run test         # Run tests
+pnpm run test:watch   # Run tests in watch mode
 
 # Code Quality
-pnpm lint         # Run ESLint
-pnpm format       # Format code with Prettier
-pnpm type-check   # Run TypeScript type checking
+pnpm run lint         # Run ESLint
+pnpm run format       # Format code with Prettier
 
-# Playground
-pnpm playground   # Start the interactive playground
 ```
 
 ### Project Structure
 
 ```
-tfl-api-ts/
+tfl-ts/
 ├── src/
 │   ├── generated/     # Auto-generated types and constants
 │   │   ├── jsdoc/     # Generated JSDoc documentation
@@ -483,9 +612,9 @@ This project follows a specific development pattern where each API module in `/s
 2. **Extract types from tfl.ts** (`/src/generated/tfl.ts`) for the specific module
 3. **Create/update the module** (`/src/[moduleName].ts`) with:
    - Static metadata properties
-   - Interfaces and types (manually copied from tfl.ts)
+   - Interfaces and types (imported but extended from tfl.ts)
    - Class methods that wrap the generated API client
-   - Comprehensive JSDoc documentation
+   - Comprehensive JSDoc documentation (feel free to use AI to generate)
    - Utility methods for common operations
 
 ### Completed Modules
@@ -499,44 +628,12 @@ This project follows a specific development pattern where each API module in `/s
 | `bikePoint.ts` | ✅ Complete | `BikePoint.ts` | Bike point info and search |
 | `cabwise.ts` | ✅ Complete | `Cabwise.ts` | Taxi/minicab search |
 
-### Example Development Request
+### AI assistance
 
-When asking an AI to create a new module, use this format:
-
-```
-Create src/[moduleName].ts to cover @[ModuleName].ts from /src/generated/jsdoc/.
-Don't import anything - manually add the types from @tfl.ts.
-
-Requirements:
-- Read /src/generated/jsdoc/[ModuleName].ts for API structure
-- Extract relevant types from /src/generated/tfl.ts
-- Create a class with static metadata properties
-- Implement all API endpoints as methods
-- Add comprehensive JSDoc documentation
-- Include utility methods for common operations
-- Follow the existing code style and patterns
-```
-
-### Key Principles
-
-- **No imports from generated files**: All types are manually added to maintain control
-- **Static metadata**: Each module includes static properties for API documentation
-- **Type safety**: Full TypeScript support with proper interfaces
-- **Consistent patterns**: All modules follow the same structure and naming conventions
-- **Comprehensive docs**: Full JSDoc coverage for all methods and properties
-
-### Using Generated Metadata
-
-Some modules benefit from pre-generated metadata in `/src/generated/meta/`:
-- **Line IDs**: Use `Lines` from `Line.ts` instead of API calls
-- **Mode names**: Use `Modes` from `Meta.ts` for validation
-- **Severity levels**: Use `Severity` from `Meta.ts` for status descriptions
-
-This approach provides better performance and reduces API calls while maintaining type safety.
-
-## 🤝 Contributing
-
-We welcome contributions from the community! This is an open-source project built by developers, for developers.
+- always check LLM output.
+- you can use LLM to generate code and commit but not PR.
+- always use this file [README.md](README.md) and the file [LLM_context.md](LLM_context.md) as a reference.
+- do not let LLM add new files except wrtting test and inside `utils/` folder.
 
 ### Development Workflow
 
@@ -624,10 +721,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support & Community
 
-- 📧 **Email**: [Add support email]
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/manglekuo/tfl-api-ts/discussions)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/manglekuo/tfl-api-ts/issues)
-- 📖 **Documentation**: [Add documentation link]
+- 📧 **Email**: [manglekuo@gmail.com](mailto:manglekuo@gmail.com)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/ghcpuman902/tfl-ts/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/ghcpuman902/tfl-ts/issues)
 
 ---
 
@@ -635,9 +731,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ by the London developer community**
 
-[![GitHub stars](https://img.shields.io/github/stars/manglekuo/tfl-api-ts?style=social)](https://github.com/manglekuo/tfl-api-ts)
-[![GitHub forks](https://img.shields.io/github/forks/manglekuo/tfl-api-ts?style=social)](https://github.com/manglekuo/tfl-api-ts)
-[![GitHub issues](https://img.shields.io/github/issues/manglekuo/tfl-api-ts)](https://github.com/manglekuo/tfl-api-ts/issues)
+[![GitHub stars](https://img.shields.io/github/stars/ghcpuman902/tfl-ts?style=social)](https://github.com/ghcpuman902/tfl-ts)
+[![GitHub forks](https://img.shields.io/github/forks/ghcpuman902/tfl-ts?style=social)](https://github.com/ghcpuman902/tfl-ts)
+[![GitHub issues](https://img.shields.io/github/issues/ghcpuman902/tfl-ts)](https://github.com/ghcpuman902/tfl-ts/issues)
 
 </div>
-

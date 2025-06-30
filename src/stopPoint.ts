@@ -20,6 +20,19 @@ import {
 import { BatchRequest } from './utils/batchRequest';
 import { stripTypeFields } from './utils/stripTypes';
 
+// 🚨 ALWAYS use generated metadata (never hardcode!)
+import { 
+  Modes, 
+  ServiceTypes, 
+  DisruptionCategories, 
+  Severity,
+  Categories,
+  PlaceTypes,
+  SearchProviders,
+  Sorts,
+  StopTypes
+} from './generated/meta/Meta';
+
 // Import raw data from generated meta files
 import { 
   StopPointCategory, 
@@ -33,64 +46,76 @@ import {
   ModeMetadata
 } from './generated/meta/StopPoint';
 
-// Create arrays from the types for static properties
-const STOP_POINT_CATEGORIES: readonly StopPointCategory[] = [
-  'Accessibility', 'AirQuality', 'BikePoint', 'CarPark', 'CycleSuperhighway', 
-  'Disruption', 'JourneyPlanner', 'Line', 'Mode', 'Place', 'Route', 'StopPoint', 'Train', 'Tube'
-] as const;
+/**
+ * Extended SearchMatch interface that includes properties actually returned by the API
+ * but missing from the generated TflApiPresentationEntitiesSearchMatch type
+ */
+export interface ExtendedSearchMatch {
+  id?: string;
+  url?: string;
+  name?: string;
+  lat?: number;
+  lon?: number;
+  // Additional properties that are actually returned by the API
+  stationName?: string;
+  platformName?: string;
+  modes?: string[];
+  lines?: Array<{
+    id: string;
+    name: string;
+  }>;
+  [key: string]: any; // Allow for additional properties
+}
 
-const STOP_POINT_TYPES: readonly StopPointType[] = [
-  'NaptanMetroStation', 'NaptanRailStation', 'NaptanBusCoachStation', 
-  'NaptanPublicBusCoachTram', 'NaptanAccessibleArea', 'NaptanFlexibleZone'
-] as const;
-
-const MODE_NAMES: readonly ModeName[] = [
-  'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 
-  'cable-car', 'coach', 'cycle', 'cycle-hire', 'walking', 'national-rail'
-] as const;
-
-const TFL_SERVICE_MODES: readonly TflServiceMode[] = [
-  'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 'cable-car', 'cycle-hire'
-] as const;
-
-const FARE_PAYING_MODES: readonly FarePayingMode[] = [
-  'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 
-  'cable-car', 'coach', 'cycle-hire', 'national-rail'
-] as const;
-
-const SCHEDULED_SERVICE_MODES: readonly ScheduledServiceMode[] = [
-  'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 
-  'cable-car', 'coach', 'national-rail'
-] as const;
+/**
+ * Extended SearchResponse interface that uses the extended SearchMatch
+ */
+export interface ExtendedSearchResponse {
+  query?: string;
+  from?: number;
+  page?: number;
+  pageSize?: number;
+  provider?: string;
+  total?: number;
+  matches?: ExtendedSearchMatch[];
+  maxScore?: number;
+}
 
 /**
  * Query options for stop point requests
  * @example
  * // Get specific stop points by ID
- * const stops = await client.stopPoint.get({ ids: ['940GZZLUOXC', '940GZZLUVIC'] });
+ * const stops = await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC', '940GZZLUVIC'] });
  * 
  * // Get stop points by mode
  * const tubeStops = await client.stopPoint.get({ modes: ['tube'] });
+ * 
+ * // Validate user input before making API calls
+ * const userInput = ['940GZZLUOXC', 'invalid-id'];
+ * const validIds = userInput.filter(id => id.match(/^[0-9A-Z]+$/));
+ * if (validIds.length !== userInput.length) {
+ *   throw new Error(`Invalid stop point IDs: ${userInput.filter(id => !id.match(/^[0-9A-Z]+$/)).join(', ')}`);
+ * }
  */
 interface BaseStopPointQuery {
-  /** Array of stop point IDs (e.g., '940GZZLUOXC', '940GZZLUVIC') */
-  ids?: string[];
-  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr') */
-  modes?: (ModeName | string)[];
+  /** Array of stop point IDs (e.g., '940GZZLUOXC', '940GZZLUVIC'). TypeScript provides autocomplete for known values. */
+  stopPointIds?: string[];
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
+  modes?: string[];
   /** Maximum number of results to return */
   maxResults?: number;
   /** Array of line IDs to filter by */
-  lines?: string[];
+  lineIds?: string[];
   /** Search radius in meters */
   radius?: number;
   /** Whether to use stop point hierarchy */
   useStopPointHierarchy?: boolean;
   /** Array of categories to include */
-  categories?: StopPointCategory[];
+  categories?: string[];
   /** Whether to return lines for each stop point */
   returnLines?: boolean;
   /** Array of stop types to filter by */
-  stoptypes?: StopPointType[];
+  stoptypes?: string[];
   /** Direction of travel */
   direction?: string;
   /** Whether to include crowding data */
@@ -109,16 +134,23 @@ interface BaseStopPointQuery {
  *   query: "Oxford",
  *   modes: ['tube', 'bus']
  * });
+ * 
+ * // Validate user input before making API calls
+ * const userInput = ['tube', 'invalid-mode'];
+ * const validModes = userInput.filter(mode => client.stopPoint.MODE_NAMES.includes(mode as any));
+ * if (validModes.length !== userInput.length) {
+ *   throw new Error(`Invalid modes: ${userInput.filter(mode => !client.stopPoint.MODE_NAMES.includes(mode as any)).join(', ')}`);
+ * }
  */
 interface StopPointSearchQuery {
   /** Search query string */
   query: string;
-  /** Filter by transport modes (e.g., 'tube', 'bus', 'dlr') */
-  modes?: (ModeName | string)[];
+  /** Filter by transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
+  modes?: string[];
   /** Maximum number of results to return */
   maxResults?: number;
   /** Filter by line IDs */
-  lines?: string[];
+  lineIds?: string[];
   /** Filter to TfL-operated national rail stations only */
   tflOperatedNationalRailStationsOnly?: boolean;
   /** Whether to only return stations with fares data */
@@ -134,13 +166,13 @@ interface StopPointSearchQuery {
  * @example
  * // Get arrivals for a specific stop
  * const arrivals = await client.stopPoint.getArrivals({
- *   ids: ['940GZZLUOXC'],
+ *   stopPointIds: ['940GZZLUOXC'],
  *   sortBy: 'timeToStation'
  * });
  */
 interface StopPointArrivalsQuery {
   /** Array of stop point IDs */
-  ids: string[];
+  stopPointIds: string[];
   /** Sort arrivals by criteria */
   sortBy?: 'timeToStation' | 'lineName' | 'destinationName';
   /** Sort order */
@@ -197,6 +229,13 @@ interface StopPointCrowdingQuery {
  *   lineId: 'central',
  *   serviceTypes: ['Regular']
  * });
+ * 
+ * // Validate service types before making API calls
+ * const userInput = ['Regular', 'InvalidType'];
+ * const validServiceTypes = userInput.filter(type => client.stopPoint.SERVICE_TYPES.includes(type as any));
+ * if (validServiceTypes.length !== userInput.length) {
+ *   throw new Error(`Invalid service types: ${userInput.filter(type => !client.stopPoint.SERVICE_TYPES.includes(type as any)).join(', ')}`);
+ * }
  */
 interface StopPointReachableFromQuery {
   /** Stop point ID */
@@ -204,7 +243,7 @@ interface StopPointReachableFromQuery {
   /** Line ID */
   lineId: string;
   /** Service types to filter by */
-  serviceTypes?: ('Regular' | 'Night')[];
+  serviceTypes?: string[];
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -222,7 +261,7 @@ interface StopPointRouteQuery {
   /** Stop point ID */
   id: string;
   /** Service types to filter by */
-  serviceTypes?: ('Regular' | 'Night')[];
+  serviceTypes?: string[];
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -232,13 +271,13 @@ interface StopPointRouteQuery {
  * @example
  * // Get disruptions for specific stops
  * const disruptions = await client.stopPoint.getDisruption({
- *   ids: ['940GZZLUOXC', '940GZZLUVIC'],
+ *   stopPointIds: ['940GZZLUOXC', '940GZZLUVIC'],
  *   getFamily: true
  * });
  */
 interface StopPointDisruptionQuery {
   /** Array of stop point IDs */
-  ids: string[];
+  stopPointIds: string[];
   /** Whether to return disruptions for entire family */
   getFamily?: boolean;
   /** Whether to include route blocked stops */
@@ -291,11 +330,11 @@ interface StopPointGeoQuery {
   /** Whether to use stop point hierarchy */
   useStopPointHierarchy?: boolean;
   /** Array of categories to include */
-  categories?: StopPointCategory[];
+  categories?: string[];
   /** Whether to return lines for each stop point */
   returnLines?: boolean;
   /** Array of stop types to filter by */
-  stoptypes?: StopPointType[];
+  stoptypes?: string[];
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -310,8 +349,8 @@ interface StopPointGeoQuery {
  * });
  */
 interface StopPointModeQuery {
-  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr') */
-  modes: (ModeName | string)[];
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
+  modes: string[];
   /** Page number for pagination */
   page?: number;
   /** Whether to keep $type fields in the response */
@@ -350,8 +389,8 @@ interface StopPointServiceTypesQuery {
   id: string;
   /** Array of line IDs */
   lineIds?: string[];
-  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr') */
-  modes?: (ModeName | string)[];
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
+  modes?: string[];
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -377,7 +416,7 @@ export interface StopPointInfo {
   /** Display name of the stop point */
   name: string;
   /** Transport modes available at this stop */
-  modes: ModeName[];
+  modes: string[];
   /** Lines that serve this stop */
   lines?: Array<{
     id: string;
@@ -410,29 +449,135 @@ export interface StopPointInfo {
 export class StopPoint {
   private batchRequest: BatchRequest;
 
+  // 🚨 ALWAYS use generated metadata (never hardcode!)
+  /** Available transport modes (static, no HTTP request needed) */
+  public readonly MODE_NAMES: readonly string[] = Modes.map(m => m.modeName);
+
+  /** Service types (static, no HTTP request needed) */
+  public readonly SERVICE_TYPES: readonly string[] = ServiceTypes;
+
+  /** Disruption categories (static, no HTTP request needed) */
+  public readonly DISRUPTION_CATEGORIES: readonly string[] = DisruptionCategories;
+
+  /** Place types (static, no HTTP request needed) */
+  public readonly PLACE_TYPES: readonly string[] = PlaceTypes;
+
+  /** Search providers (static, no HTTP request needed) */
+  public readonly SEARCH_PROVIDERS: readonly string[] = SearchProviders;
+
+  /** Sort options (static, no HTTP request needed) */
+  public readonly SORT_OPTIONS: readonly string[] = Sorts;
+
+  /** Stop types (static, no HTTP request needed) */
+  public readonly STOP_TYPES: readonly string[] = StopTypes;
+
+  /** Categories (static, no HTTP request needed) */
+  public readonly CATEGORIES: readonly string[] = Categories.map(c => c.category);
+
+  /** All severity levels (static, no HTTP request needed) */
+  public readonly ALL_SEVERITY: readonly typeof Severity[number][] = Severity;
+
   /** Available stop point categories (static, no HTTP request needed) */
-  public readonly STOP_POINT_CATEGORIES: readonly StopPointCategory[] = STOP_POINT_CATEGORIES;
+  public readonly STOP_POINT_CATEGORIES: readonly StopPointCategory[] = [
+    'Accessibility', 'AirQuality', 'BikePoint', 'CarPark', 'CycleSuperhighway', 
+    'Disruption', 'JourneyPlanner', 'Line', 'Mode', 'Place', 'Route', 'StopPoint', 'Train', 'Tube'
+  ] as const;
 
   /** Available stop point types (static, no HTTP request needed) */
-  public readonly STOP_POINT_TYPES: readonly StopPointType[] = STOP_POINT_TYPES;
-
-  /** Available transport modes (static, no HTTP request needed) */
-  public readonly MODE_NAMES: readonly ModeName[] = MODE_NAMES;
+  public readonly STOP_POINT_TYPES: readonly StopPointType[] = [
+    'NaptanMetroStation', 'NaptanRailStation', 'NaptanBusCoachStation', 
+    'NaptanPublicBusCoachTram', 'NaptanAccessibleArea', 'NaptanFlexibleZone'
+  ] as const;
 
   /** TfL service modes (static, no HTTP request needed) */
-  public readonly TFL_SERVICE_MODES: readonly TflServiceMode[] = TFL_SERVICE_MODES;
+  public readonly TFL_SERVICE_MODES: readonly TflServiceMode[] = [
+    'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 'cable-car', 'cycle-hire'
+  ] as const;
 
   /** Fare paying modes (static, no HTTP request needed) */
-  public readonly FARE_PAYING_MODES: readonly FarePayingMode[] = FARE_PAYING_MODES;
+  public readonly FARE_PAYING_MODES: readonly FarePayingMode[] = [
+    'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 
+    'cable-car', 'coach', 'cycle-hire', 'national-rail'
+  ] as const;
 
   /** Scheduled service modes (static, no HTTP request needed) */
-  public readonly SCHEDULED_SERVICE_MODES: readonly ScheduledServiceMode[] = SCHEDULED_SERVICE_MODES;
+  public readonly SCHEDULED_SERVICE_MODES: readonly ScheduledServiceMode[] = [
+    'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'river-bus', 
+    'cable-car', 'coach', 'national-rail'
+  ] as const;
 
   /** Mode metadata (static, no HTTP request needed) */
   public readonly MODE_METADATA: ModeMetadata = modeMetadata;
 
+  // 🚨 Build derived metadata from generated data
+  /** Severity levels grouped by mode (static, no HTTP request needed) */
+  public readonly SEVERITY_BY_MODE = this.buildSeverityByMode();
+
+  /** Severity descriptions (static, no HTTP request needed) */
+  public readonly SEVERITY_DESCRIPTIONS = this.buildSeverityDescriptions();
+
+  /** Categories with their available keys (static, no HTTP request needed) */
+  public readonly CATEGORIES_WITH_KEYS = this.buildCategoriesWithKeys();
+
   constructor(private api: Api<{}>) {
     this.batchRequest = new BatchRequest(api);
+  }
+
+  /**
+   * Builds severity levels grouped by mode from generated data
+   * @returns Record mapping mode names to their severity levels
+   * @example
+   * const tubeSeverity = client.stopPoint.SEVERITY_BY_MODE.tube;
+   * // Returns: [{ level: 10, description: 'Good Service' }, ...]
+   */
+  private buildSeverityByMode(): Record<string, Array<{level: number, description: string}>> {
+    const severityMap: Record<string, Array<{level: number, description: string}>> = {};
+    
+    Severity.forEach(severity => {
+      if (!severityMap[severity.modeName]) {
+        severityMap[severity.modeName] = [];
+      }
+      severityMap[severity.modeName].push({
+        level: severity.severityLevel,
+        description: severity.description
+      });
+    });
+    
+    return severityMap;
+  }
+
+  /**
+   * Builds severity descriptions from generated data
+   * @returns Record mapping severity levels to descriptions
+   * @example
+   * const description = client.stopPoint.SEVERITY_DESCRIPTIONS[10];
+   * // Returns: 'Good Service'
+   */
+  private buildSeverityDescriptions(): Record<number, string> {
+    const descriptions: Record<number, string> = {};
+    
+    Severity.forEach(severity => {
+      descriptions[severity.severityLevel] = severity.description;
+    });
+    
+    return descriptions;
+  }
+
+  /**
+   * Builds categories with their available keys from generated data
+   * @returns Record mapping category names to their available keys
+   * @example
+   * const facilityKeys = client.stopPoint.CATEGORIES_WITH_KEYS.Facility;
+   * // Returns: ['Lifts', 'Boarding Ramp', 'Cash Machines', ...]
+   */
+  private buildCategoriesWithKeys(): Record<string, readonly string[]> {
+    const categoriesMap: Record<string, readonly string[]> = {};
+    
+    Categories.forEach(category => {
+      categoriesMap[category.category] = category.availableKeys;
+    });
+    
+    return categoriesMap;
   }
 
   /**
@@ -474,7 +619,7 @@ export class StopPoint {
    * @returns Promise resolving to an array of stop point information
    * @example
    * // Get specific stop points by ID
-   * const stops = await client.stopPoint.get({ ids: ['940GZZLUOXC', '940GZZLUVIC'] });
+   * const stops = await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC', '940GZZLUVIC'] });
    * 
    * // Get stop points by mode
    * const tubeStops = await client.stopPoint.get({ modes: ['tube'] });
@@ -519,13 +664,13 @@ export class StopPoint {
     }
 
     // Handle options object (original behavior)
-    const { ids } = input;
-    if (!ids?.length) {
+    const { stopPointIds } = input;
+    if (!stopPointIds?.length) {
       throw new Error('Stop point ID(s) are required');
     }
 
     return this.batchRequest.processBatch(
-      ids,
+      stopPointIds,
       async (chunk) => this.api.stopPoint.stopPointGet({ ids: chunk })
         .then(response => stripTypeFields(response.data, input.keepTflTypes))
     );
@@ -538,6 +683,13 @@ export class StopPoint {
    * @returns Promise resolving to an array of places
    * @example
    * const places = await client.stopPoint.getPlaces('940GZZLUOXC', ['NaptanMetroStation']);
+   * 
+   * // Validate place types before making API calls
+   * const userInput = ['NaptanMetroStation', 'InvalidType'];
+   * const validPlaceTypes = userInput.filter(type => client.stopPoint.PLACE_TYPES.includes(type));
+   * if (validPlaceTypes.length !== userInput.length) {
+   *   throw new Error(`Invalid place types: ${userInput.filter(type => !client.stopPoint.PLACE_TYPES.includes(type)).join(', ')}`);
+   * }
    */
   async getPlaces(id: string, placeTypes: string[]): Promise<TflApiPresentationEntitiesPlace[]> {
     return this.api.stopPoint.stopPointGet2({ id, placeTypes })
@@ -570,8 +722,15 @@ export class StopPoint {
    * @returns Promise resolving to an array of stop points
    * @example
    * const metroStations = await client.stopPoint.getByType(['NaptanMetroStation']);
+   * 
+   * // Validate stop types before making API calls
+   * const userInput = ['NaptanMetroStation', 'InvalidType'];
+   * const validStopTypes = userInput.filter(type => client.stopPoint.STOP_TYPES.includes(type));
+   * if (validStopTypes.length !== userInput.length) {
+   *   throw new Error(`Invalid stop types: ${userInput.filter(type => !client.stopPoint.STOP_TYPES.includes(type)).join(', ')}`);
+   * }
    */
-  async getByType(types: StopPointType[]): Promise<TflApiPresentationEntitiesStopPoint[]> {
+  async getByType(types: string[]): Promise<TflApiPresentationEntitiesStopPoint[]> {
     return this.api.stopPoint.stopPointGetByType(types)
       .then(response => stripTypeFields(response.data));
   }
@@ -584,7 +743,7 @@ export class StopPoint {
    * @example
    * const metroStations = await client.stopPoint.getByTypeWithPagination(['NaptanMetroStation'], 1);
    */
-  async getByTypeWithPagination(types: StopPointType[], page: number): Promise<TflApiPresentationEntitiesStopPoint[]> {
+  async getByTypeWithPagination(types: string[], page: number): Promise<TflApiPresentationEntitiesStopPoint[]> {
     return this.api.stopPoint.stopPointGetByTypeWithPagination(types, page)
       .then(response => stripTypeFields(response.data));
   }
@@ -610,15 +769,15 @@ export class StopPoint {
    * @returns Promise resolving to an array of arrival predictions
    * @example
    * const arrivals = await client.stopPoint.getArrivals({
-   *   ids: ['940GZZLUOXC'],
+   *   stopPointIds: ['940GZZLUOXC'],
    *   sortBy: 'timeToStation'
    * });
    */
   async getArrivals(options: StopPointArrivalsQuery): Promise<TflApiPresentationEntitiesPrediction[]> {
-    const { ids, sortBy, sortOrder, keepTflTypes } = options;
+    const { stopPointIds, sortBy, sortOrder, keepTflTypes } = options;
     
     const arrivals = await this.batchRequest.processBatch(
-      ids,
+      stopPointIds,
       async (chunk) => Promise.all(
         chunk.map(id => this.api.stopPoint.stopPointArrivals(id)
           .then(response => stripTypeFields(response.data, keepTflTypes)))
@@ -722,8 +881,15 @@ export class StopPoint {
    * const disruptions = await client.stopPoint.getDisruptionByMode(['tube', 'dlr'], {
    *   includeRouteBlockedStops: true
    * });
+   * 
+   * // Validate modes before making API calls
+   * const userInput = ['tube', 'invalid-mode'];
+   * const validModes = userInput.filter(mode => client.stopPoint.MODE_NAMES.includes(mode));
+   * if (validModes.length !== userInput.length) {
+   *   throw new Error(`Invalid modes: ${userInput.filter(mode => !client.stopPoint.MODE_NAMES.includes(mode)).join(', ')}`);
+   * }
    */
-  async getDisruptionByMode(modes: ModeName[], options?: { 
+  async getDisruptionByMode(modes: string[], options?: { 
     includeRouteBlockedStops?: boolean; 
     keepTflTypes?: boolean 
   }): Promise<TflApiPresentationEntitiesDisruptedPoint[]> {
@@ -737,14 +903,14 @@ export class StopPoint {
    * @returns Promise resolving to an array of disrupted points
    * @example
    * const disruptions = await client.stopPoint.getDisruption({
-   *   ids: ['940GZZLUOXC', '940GZZLUVIC'],
+   *   stopPointIds: ['940GZZLUOXC', '940GZZLUVIC'],
    *   getFamily: true
    * });
    */
   async getDisruption(options: StopPointDisruptionQuery): Promise<TflApiPresentationEntitiesDisruptedPoint[]> {
-    const { ids, getFamily, includeRouteBlockedStops, flattenResponse, keepTflTypes } = options;
+    const { stopPointIds, getFamily, includeRouteBlockedStops, flattenResponse, keepTflTypes } = options;
     return this.api.stopPoint.stopPointDisruption({ 
-      ids, 
+      ids: stopPointIds, 
       getFamily, 
       includeRouteBlockedStops, 
       flattenResponse 
@@ -814,27 +980,32 @@ export class StopPoint {
   /**
    * Search StopPoints by their common name, or their 5-digit Countdown Bus Stop Code
    * @param options - Query options for search
-   * @returns Promise resolving to search response
+   * @returns Promise resolving to search response with extended properties
    * @example
    * const results = await client.stopPoint.search({ 
    *   query: "Oxford Circus",
-   *   modes: ['tube', 'bus']
+   *   modes: ['tube', 'bus'],
+   *   lineIds: ['central', 'victoria']
    * });
+   * 
+   * // Access extended properties that are actually returned by the API
+   * console.log(results.matches?.[0]?.stationName); // "Oxford Circus"
+   * console.log(results.matches?.[0]?.platformName); // "Westbound - Platform 1"
    */
-  async search(options: StopPointSearchQuery): Promise<TflApiPresentationEntitiesSearchResponse> {
-    const { query, modes, maxResults, lines, tflOperatedNationalRailStationsOnly, faresOnly, includeHubs, keepTflTypes } = options;
+  async search(options: StopPointSearchQuery): Promise<ExtendedSearchResponse> {
+    const { query, modes, maxResults, lineIds, tflOperatedNationalRailStationsOnly, faresOnly, includeHubs, keepTflTypes } = options;
     return this.api.stopPoint.stopPointSearch({
       query,
       modes,
       maxResults,
-      lines,
+      lines: lineIds,
       tflOperatedNationalRailStationsOnly,
       faresOnly,
       includeHubs
     }).then(response => {
       const data = response.data;
       const sanitized = JSON.parse(JSON.stringify(data));
-      return stripTypeFields(sanitized, keepTflTypes);
+      return stripTypeFields(sanitized, keepTflTypes) as ExtendedSearchResponse;
     });
   }
 

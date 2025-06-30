@@ -17,13 +17,25 @@ import { stripTypeFields } from './utils/stripTypes';
 
 // Import raw data from generated meta files
 import { Lines } from './generated/meta/Line';
-import { Modes, ServiceTypes, DisruptionCategories } from './generated/meta/Meta';
+import { 
+  Modes, 
+  ServiceTypes, 
+  DisruptionCategories, 
+  Severity,
+  Categories,
+  PlaceTypes,
+  SearchProviders,
+  Sorts,
+  StopTypes
+} from './generated/meta/Meta';
 
 // Generate types from the generated meta data
 type TflLineId = typeof Lines[number]['id'];
 type ModeName = typeof Modes[number]['modeName'];
 type ServiceType = typeof ServiceTypes[number];
 type DisruptionCategory = typeof DisruptionCategories[number];
+type SeverityLevel = typeof Severity[number]['severityLevel'];
+type SeverityDescription = typeof Severity[number]['description'];
 
 // Create LINE_NAMES mapping
 const LINE_NAMES: Record<TflLineId, string> = Lines.reduce((acc, line) => {
@@ -57,60 +69,37 @@ const modeMetadata: Record<string, any> = Modes.reduce((acc, mode) => {
   return acc;
 }, {} as Record<string, any>);
 
-// Default severity descriptions (these would ideally come from Meta.ts)
-const SeverityDescription = [
-  'Good Service',
-  'Minor Delays', 
-  'Severe Delays',
-  'Part Suspended',
-  'Suspended',
-  'Closed',
-  'No Service',
-  'Planned Closure',
-  'Part Closure',
-  'Bus Service',
-  'Special Service',
-  'Part Closed',
-  'Exit Only',
-  'No Step Free Access',
-  'Change of frequency',
-  'Diverted',
-  'Not Running'
-] as const;
-
-// Default severity by mode mapping
-const SeverityByMode: Record<string, string> = {
-  'tube': 'tubeSeverity',
-  'bus': 'busSeverity', 
-  'dlr': 'dlrSeverity',
-  'overground': 'overgroundSeverity',
-  'tram': 'tramSeverity'
+// Build severity by mode mapping from generated data
+const buildSeverityByMode = (): Record<string, Array<{level: number, description: string}>> => {
+  const severityMap: Record<string, Array<{level: number, description: string}>> = {};
+  
+  Severity.forEach(severity => {
+    if (!severityMap[severity.modeName]) {
+      severityMap[severity.modeName] = [];
+    }
+    severityMap[severity.modeName].push({
+      level: severity.severityLevel,
+      description: severity.description
+    });
+  });
+  
+  // Sort by severity level (descending)
+  Object.keys(severityMap).forEach(mode => {
+    severityMap[mode].sort((a, b) => b.level - a.level);
+  });
+  
+  return severityMap;
 };
 
-// Default severity types (these would ideally come from Meta.ts)
-const tubeSeverity = [
-  { level: 10, description: 'Good Service' },
-  { level: 9, description: 'Minor Delays' },
-  { level: 6, description: 'Severe Delays' },
-  { level: 5, description: 'Part Closure' },
-  { level: 1, description: 'Closed' }
-] as const;
+// Build severity descriptions from generated data
+const buildSeverityDescriptions = (): readonly string[] => {
+  const descriptions = [...new Set(Severity.map(s => s.description))];
+  return descriptions.sort() as readonly string[];
+};
 
-const busSeverity = [
-  { level: 10, description: 'Good Service' },
-  { level: 9, description: 'Minor Delays' },
-  { level: 6, description: 'Severe Delays' },
-  { level: 5, description: 'Part Closure' },
-  { level: 1, description: 'Closed' }
-] as const;
-
-const dlrSeverity = [
-  { level: 10, description: 'Good Service' },
-  { level: 9, description: 'Minor Delays' },
-  { level: 6, description: 'Severe Delays' },
-  { level: 5, description: 'Part Closure' },
-  { level: 1, description: 'Closed' }
-] as const;
+// Build severity by mode mapping
+const severityByMode = buildSeverityByMode();
+const severityDescriptions = buildSeverityDescriptions();
 
 /**
  * Query options for line-related requests
@@ -119,7 +108,7 @@ const dlrSeverity = [
  * const tubeLines = await client.line.get({ modes: ['tube'] });
  * 
  * // Get specific lines by ID
- * const specificLines = await client.line.get({ ids: ['central', 'victoria'] });
+ * const specificLines = await client.line.get({ lineIds: ['central', 'victoria'] });
  * 
  * // Validate user input before making API calls
  * const userInput = ['central', 'invalid-line'];
@@ -130,7 +119,7 @@ const dlrSeverity = [
  */
 interface BaseLineQuery {
   /** Array of line IDs (e.g., 'central', 'victoria', 'jubilee'). TypeScript provides autocomplete for known values. */
-  ids?: string[];
+  lineIds?: string[];
   /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
   modes?: string[];
   /** Whether to keep $type fields in the response */
@@ -142,7 +131,7 @@ interface BaseLineQuery {
  * @example
  * // Most common: Get routes for specific lines
  * const routes = await client.line.getRoute({ 
- *   ids: ['central', 'victoria'],
+ *   lineIds: ['central', 'victoria'],
  *   serviceTypes: ['Regular']
  * });
  * 
@@ -165,7 +154,7 @@ interface LineRouteQuery extends BaseLineQuery {
  * @example
  * // Get status for specific lines
  * const status = await client.line.getStatus({ 
- *   ids: ['central', 'victoria'],
+ *   lineIds: ['central', 'victoria'],
  *   severity: 10
  * });
  */
@@ -267,14 +256,21 @@ interface LineTimetableQuery {
  * @example
  * // Get arrivals for Central line at Oxford Circus
  * const arrivals = await client.line.getArrivals({
- *   ids: ['central'],
+ *   lineIds: ['central'],
  *   stopPointId: '940GZZLUOXC',
+ *   direction: 'inbound'
+ * });
+ * 
+ * // Get inbound arrivals for Victoria line at Victoria
+ * const arrivals = await client.line.getArrivals({
+ *   lineIds: ['victoria'],
+ *   stopPointId: '940GZZLUVIC',
  *   direction: 'inbound'
  * });
  */
 interface LineArrivalsQuery {
   /** Array of line IDs */
-  ids: string[];
+  lineIds: string[];
   /** Stop point ID */
   stopPointId: string;
   /** Direction of travel */
@@ -324,7 +320,7 @@ export interface LineInfo {
  * const tubeLines = await client.line.get({ modes: ['tube'] });
  * 
  * // Get status for specific lines
- * const status = await client.line.getStatus({ ids: ['central', 'victoria'] });
+ * const status = await client.line.getStatus({ lineIds: ['central', 'victoria'] });
  * 
  * // Search for lines
  * const results = await client.line.search({ query: "victoria" });
@@ -356,24 +352,37 @@ export class Line {
   public readonly MODE_METADATA = modeMetadata;
 
   /** Available severity descriptions (static, no HTTP request needed) */
-  public readonly SEVERITY_DESCRIPTIONS: typeof SeverityDescription = SeverityDescription;
+  public readonly SEVERITY_DESCRIPTIONS: typeof severityDescriptions = severityDescriptions;
 
   /** Available service types (static, no HTTP request needed) */
-  public readonly SERVICE_TYPES: readonly ServiceTypeFromData[] = allServiceTypes;
+  public readonly SERVICE_TYPES: readonly ServiceType[] = ServiceTypes;
 
   /** Available disruption categories (static, no HTTP request needed) */
-  public readonly DISRUPTION_CATEGORIES: DisruptionCategory[] = [
-    'Undefined',
-    'RealTime',
-    'PlannedWork', 
-    'Information',
-    'Event',
-    'Crowding',
-    'StatusAlert'
-  ];
+  public readonly DISRUPTION_CATEGORIES: readonly DisruptionCategory[] = DisruptionCategories;
 
   /** Mode-specific severity types (static, no HTTP request needed) */
-  public readonly SEVERITY_BY_MODE = SeverityByMode;
+  public readonly SEVERITY_BY_MODE = severityByMode;
+
+  /** Available mode names (static, no HTTP request needed) */
+  public readonly MODE_NAMES: readonly ModeName[] = Modes.map(m => m.modeName);
+
+  /** Available place types (static, no HTTP request needed) */
+  public readonly PLACE_TYPES: readonly typeof PlaceTypes[number][] = PlaceTypes;
+
+  /** Available search providers (static, no HTTP request needed) */
+  public readonly SEARCH_PROVIDERS: readonly typeof SearchProviders[number][] = SearchProviders;
+
+  /** Available sort options (static, no HTTP request needed) */
+  public readonly SORT_OPTIONS: readonly typeof Sorts[number][] = Sorts;
+
+  /** Available stop types (static, no HTTP request needed) */
+  public readonly STOP_TYPES: readonly typeof StopTypes[number][] = StopTypes;
+
+  /** Available categories with their keys (static, no HTTP request needed) */
+  public readonly CATEGORIES: readonly typeof Categories[number][] = Categories;
+
+  /** All severity levels and descriptions (static, no HTTP request needed) */
+  public readonly ALL_SEVERITY: readonly typeof Severity[number][] = Severity;
 
   constructor(private api: Api<{}>) {
     this.batchRequest = new BatchRequest(api);
@@ -392,7 +401,7 @@ export class Line {
    * 
    * // Get specific lines
    * const specificLines = await client.line.get({ 
-   *   ids: ['central', 'victoria', 'jubilee'] 
+   *   lineIds: ['central', 'victoria', 'jubilee'] 
    * });
    * 
    * // Validate user input before making API calls
@@ -403,11 +412,11 @@ export class Line {
    * }
    */
   async get(options?: BaseLineQuery): Promise<LineInfo[]> {
-    const { ids, modes, keepTflTypes } = options || {};
+    const { lineIds, modes, keepTflTypes } = options || {};
 
-    if (ids?.length) {
+    if (lineIds?.length) {
       const response = await this.batchRequest.processBatch(
-        ids,
+        lineIds,
         async (chunk) => this.api.line.lineGet(chunk).then(response => response.data)
       );
       return stripTypeFields(response, keepTflTypes) as LineInfo[];
@@ -439,7 +448,7 @@ export class Line {
    * @example
    * // Most common: Get routes for specific lines
    * const specificRoutes = await client.line.getRoute({ 
-   *   ids: ['central', 'victoria'],
+   *   lineIds: ['central', 'victoria'],
    *   serviceTypes: ['Regular']
    * });
    * 
@@ -453,10 +462,10 @@ export class Line {
    * const allRoutes = await client.line.getRoute();
    */
   async getRoute(options: LineRouteQuery = {}): Promise<TflLine[]> {
-    const { ids, modes, keepTflTypes } = options;
+    const { lineIds, modes, keepTflTypes } = options;
 
-    if (ids?.length) {
-      return this.api.line.lineLineRoutesByIds({ ids, serviceTypes: options.serviceTypes as ServiceType[] })
+    if (lineIds?.length) {
+      return this.api.line.lineLineRoutesByIds({ ids: lineIds, serviceTypes: options.serviceTypes as ServiceType[] })
         .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
@@ -510,7 +519,7 @@ export class Line {
    * @example
    * // Get status for specific lines
    * const status = await client.line.getStatus({ 
-   *   ids: ['central', 'victoria'],
+   *   lineIds: ['central', 'victoria'],
    *   detail: true
    * });
    * 
@@ -521,17 +530,17 @@ export class Line {
    * const tubeStatus = await client.line.getStatus({ modes: ['tube'] });
    */
   async getStatus(options: LineStatusQuery = {}): Promise<TflLine[]> {
-    const { ids, modes, severity, dateRange, detail, severityLevel, keepTflTypes } = options;
+    const { lineIds, modes, severity, dateRange, detail, severityLevel, keepTflTypes } = options;
 
     // Handle severity-based status (new endpoint)
-    if (severity !== undefined && !ids?.length && !modes?.length) {
+    if (severity !== undefined && !lineIds?.length && !modes?.length) {
       return this.api.line.lineStatusBySeverity(severity)
         .then((response: any) => stripTypeFields(response.data, keepTflTypes));
     }
 
-    if (dateRange && ids?.length) {
+    if (dateRange && lineIds?.length) {
       return this.batchRequest.processBatch(
-        ids,
+        lineIds,
         async (chunk) => this.api.line.lineStatus({
           ids: chunk,
           startDate: dateRange.startDate,
@@ -541,9 +550,9 @@ export class Line {
       );
     }
 
-    if (ids?.length) {
+    if (lineIds?.length) {
       return this.batchRequest.processBatch(
-        ids,
+        lineIds,
         async (chunk) => this.api.line.lineStatusByIds({ 
           ids: chunk,
           detail
@@ -576,7 +585,7 @@ export class Line {
    * @example
    * // Get disruptions for specific lines
    * const disruptions = await client.line.getDisruption({ 
-   *   ids: ['central', 'victoria'] 
+   *   lineIds: ['central', 'victoria'] 
    * });
    * 
    * // Get disruptions for all tube lines
@@ -585,10 +594,10 @@ export class Line {
    * });
    */
   async getDisruption(options: BaseLineQuery = {}): Promise<TflDisruption[]> {
-    const { ids, modes, keepTflTypes } = options;
+    const { lineIds, modes, keepTflTypes } = options;
 
-    if (ids?.length) {
-      return this.api.line.lineDisruption(ids)
+    if (lineIds?.length) {
+      return this.api.line.lineDisruption(lineIds)
         .then(response => stripTypeFields(response.data, keepTflTypes));
     }
 
@@ -677,22 +686,22 @@ export class Line {
    * @example
    * // Get arrivals for Central line at Oxford Circus
    * const arrivals = await client.line.getArrivals({
-   *   ids: ['central'],
+   *   lineIds: ['central'],
    *   stopPointId: '940GZZLUOXC'
    * });
    * 
    * // Get inbound arrivals for Victoria line at Victoria
    * const arrivals = await client.line.getArrivals({
-   *   ids: ['victoria'],
+   *   lineIds: ['victoria'],
    *   stopPointId: '940GZZLUVIC',
    *   direction: 'inbound'
    * });
    */
   async getArrivals(options: LineArrivalsQuery): Promise<TflPrediction[]> {
-    const { ids, stopPointId, direction, destinationStationId, keepTflTypes } = options;
+    const { lineIds, stopPointId, direction, destinationStationId, keepTflTypes } = options;
     
     return this.api.line.lineArrivals({
-      ids,
+      ids: lineIds,
       stopPointId,
       direction,
       destinationStationId
@@ -782,11 +791,8 @@ export {
   LINE_NAMES,
   LINE_INFO,
   modeMetadata,
-  SeverityDescription,
-  SeverityByMode,
-  tubeSeverity,
-  busSeverity,
-  dlrSeverity
+  severityDescriptions,
+  severityByMode
 };
 
 // Re-export the raw Lines data

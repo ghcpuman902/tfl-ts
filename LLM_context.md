@@ -41,6 +41,99 @@ interface BaseLineQuery {
  */
 ```
 
+### **🚨 CRITICAL: NEVER HARDCODE METADATA**
+
+**CRITICAL RULE**: **NEVER hardcode metadata values!** Always use the generated data from `Meta.ts` and other generated files.
+
+**❌ WRONG - Never do this:**
+```typescript
+// ❌ NEVER hardcode metadata
+const SeverityDescription = [
+  'Good Service',
+  'Minor Delays', 
+  'Severe Delays',
+  'Part Suspended',
+  // ... hardcoded values
+] as const;
+
+const tubeSeverity = [
+  { level: 10, description: 'Good Service' },
+  { level: 9, description: 'Minor Delays' },
+  // ... hardcoded values
+] as const;
+```
+
+**✅ CORRECT - Always do this:**
+```typescript
+// ✅ ALWAYS use generated metadata
+import { 
+  Modes, 
+  ServiceTypes, 
+  DisruptionCategories, 
+  Severity,
+  Categories,
+  PlaceTypes,
+  SearchProviders,
+  Sorts,
+  StopTypes
+} from './generated/meta/Meta';
+
+// Build metadata from generated data
+const buildSeverityByMode = (): Record<string, Array<{level: number, description: string}>> => {
+  const severityMap: Record<string, Array<{level: number, description: string}>> = {};
+  
+  Severity.forEach(severity => {
+    if (!severityMap[severity.modeName]) {
+      severityMap[severity.modeName] = [];
+    }
+    severityMap[severity.modeName].push({
+      level: severity.severityLevel,
+      description: severity.description
+    });
+  });
+  
+  return severityMap;
+};
+
+// Use generated data directly
+public readonly SERVICE_TYPES: readonly ServiceType[] = ServiceTypes;
+public readonly DISRUPTION_CATEGORIES: readonly DisruptionCategory[] = DisruptionCategories;
+public readonly MODE_NAMES: readonly ModeName[] = Modes.map(m => m.modeName);
+```
+
+**Required Metadata Constants for Every Module:**
+```typescript
+export class [ModuleName] {
+  // ✅ ALWAYS provide these metadata constants
+  public readonly MODE_NAMES: readonly ModeName[] = Modes.map(m => m.modeName);
+  public readonly SERVICE_TYPES: readonly ServiceType[] = ServiceTypes;
+  public readonly DISRUPTION_CATEGORIES: readonly DisruptionCategory[] = DisruptionCategories;
+  public readonly PLACE_TYPES: readonly typeof PlaceTypes[number][] = PlaceTypes;
+  public readonly SEARCH_PROVIDERS: readonly typeof SearchProviders[number][] = SearchProviders;
+  public readonly SORT_OPTIONS: readonly typeof Sorts[number][] = Sorts;
+  public readonly STOP_TYPES: readonly typeof StopTypes[number][] = StopTypes;
+  public readonly CATEGORIES: readonly typeof Categories[number][] = Categories;
+  public readonly ALL_SEVERITY: readonly typeof Severity[number][] = Severity;
+  
+  // ✅ Build derived metadata from generated data
+  public readonly SEVERITY_BY_MODE = this.buildSeverityByMode();
+  public readonly SEVERITY_DESCRIPTIONS = this.buildSeverityDescriptions();
+}
+```
+
+**Available Generated Metadata Files:**
+- `./generated/meta/Meta.ts` - Contains: Modes, Severity, ServiceTypes, DisruptionCategories, Categories, PlaceTypes, SearchProviders, Sorts, StopTypes
+- `./generated/meta/Line.ts` - Contains: Lines (all line data)
+- `./generated/meta/[OtherModule].ts` - Contains: module-specific metadata
+
+**Benefits of Using Generated Metadata:**
+- ✅ **Always up-to-date**: Generated from live TfL API
+- ✅ **Complete**: Contains all possible values
+- ✅ **Type-safe**: TypeScript types generated automatically
+- ✅ **Consistent**: Same data across all modules
+- ✅ **Maintainable**: No manual updates needed
+- ✅ **Reliable**: No risk of typos or missing values
+
 ### **Project Overview**
 We're developing a TypeScript wrapper for the Transport for London (TfL) API. The goal is to create well-typed, documented, and consistent API client modules that map to generated JSDoc files without importing from them.
 
@@ -176,6 +269,95 @@ const validateLineIds = (ids: string[]) => {
 - **Consistency**: Same pattern across all modules
 - **Best Practices**: Encourages proper validation without forcing it
 
+### **🎯 Improved ID Naming Pattern**
+
+#### **Problem Statement**
+Generic parameter names like `ids` are too vague and can lead to confusion when working with multiple types of IDs (line IDs, stop point IDs, disruption IDs, etc.).
+
+#### **Solution: Specific ID Parameter Names**
+
+**Naming Convention:**
+```typescript
+// ✅ GOOD: Specific and clear parameter names
+interface LineQuery {
+  lineIds?: string[];        // Clear: these are line IDs
+  modes?: string[];
+}
+
+interface StopPointQuery {
+  stopPointIds?: string[];   // Clear: these are stop point IDs
+  lineIds?: string[];        // Clear: these are line IDs
+  modes?: string[];
+}
+
+interface JourneyQuery {
+  from: string;              // Clear: origin location
+  to: string;                // Clear: destination location
+  modes?: string[];
+}
+
+// ❌ BAD: Generic and confusing
+interface GenericQuery {
+  ids?: string[];            // Vague: what type of IDs?
+  modes?: string[];
+}
+```
+
+**API Call Mapping:**
+```typescript
+// User-facing interface uses clear names
+async getStatus(options: LineStatusQuery): Promise<TflLine[]> {
+  const { lineIds, modes, severity, detail, keepTflTypes } = options;
+  
+  if (lineIds?.length) {
+    // Map clear parameter names to API expectations
+    return this.api.line.lineStatusByIds({ 
+      ids: lineIds,  // Map lineIds to ids for API call
+      detail 
+    }).then(response => stripTypeFields(response.data, keepTflTypes));
+  }
+  // ... rest of implementation
+}
+```
+
+**Benefits:**
+- **Clarity**: `lineIds` is immediately clear that these are line IDs
+- **Consistency**: All modules use the same pattern (`lineIds`, `stopPointIds`)
+- **Better Developer Experience**: Users understand what type of IDs they're working with
+- **API Compatibility**: Generated API calls still work by mapping clear names to expected parameters
+- **Reduced Errors**: Less chance of passing wrong ID types to methods
+
+**Implementation Pattern for AI Agents:**
+1. **Interface Definition**: Use specific ID parameter names (`lineIds`, `stopPointIds`, `disruptionIds`)
+2. **Method Implementation**: Map specific names to API expectations (`ids: lineIds`)
+3. **Documentation**: Update all examples to use the new parameter names
+4. **Consistency**: Apply the same pattern across all modules
+
+**Example Module Updates:**
+```typescript
+// Before (vague)
+interface BaseLineQuery {
+  ids?: string[];  // ❌ What type of IDs?
+}
+
+// After (clear)
+interface BaseLineQuery {
+  lineIds?: string[];  // ✅ Clear: line IDs
+}
+
+// Before (vague)
+interface StopPointQuery {
+  ids?: string[];  // ❌ What type of IDs?
+  lines?: string[];  // ❌ What type of lines?
+}
+
+// After (clear)
+interface StopPointQuery {
+  stopPointIds?: string[];  // ✅ Clear: stop point IDs
+  lineIds?: string[];       // ✅ Clear: line IDs
+}
+```
+
 ### **Development Pattern**
 
 #### **File Structure**
@@ -211,6 +393,8 @@ script/
 4. **Create consistent modules** - Follow established patterns and naming conventions
 5. **Use flexible type design** - Accept strings for user flexibility, provide autocomplete
 6. **Encourage validation** - Include validation examples in documentation
+7. **🚨 NEVER HARDCODE METADATA** - Always use generated data from `Meta.ts` and other generated files
+8. **Provide comprehensive metadata constants** - Export all relevant metadata for validation and autocomplete
 
 ### **Standard Request Format for AI**
 
@@ -229,6 +413,8 @@ Requirements:
 - Use flexible type design: string[] for user flexibility with autocomplete
 - Provide metadata constants for validation
 - Include validation examples in JSDoc
+- 🚨 NEVER HARDCODE METADATA - Always use generated data from Meta.ts and other generated files
+- Provide comprehensive metadata constants (MODE_NAMES, SERVICE_TYPES, DISRUPTION_CATEGORIES, etc.)
 ```
 
 ### **Module Structure Pattern**
@@ -240,6 +426,8 @@ Each module should include:
 - **Comprehensive JSDoc** documentation with validation examples
 - **Utility methods** for common operations
 - **Flexible type definitions** that accept strings while providing autocomplete
+- **🚨 Comprehensive metadata constants** from generated files (never hardcoded)
+- **Derived metadata builders** for complex data structures
 
 ### **Example Implementation**
 
@@ -249,6 +437,19 @@ Each module should include:
  * 
  * [Description of what this module does]
  */
+
+// Import generated metadata (NEVER hardcode!)
+import { 
+  Modes, 
+  ServiceTypes, 
+  DisruptionCategories, 
+  Severity,
+  Categories,
+  PlaceTypes,
+  SearchProviders,
+  Sorts,
+  StopTypes
+} from './generated/meta/Meta';
 
 // Types from tfl.ts (manually added)
 export interface [ModuleName]Params {
@@ -264,9 +465,20 @@ export class [ModuleName]Api {
     // Endpoint definitions
   };
   
-  // Validation metadata
-  public readonly MODE_NAMES: readonly ModeName[] = MODE_NAMES;
-  public readonly LINE_NAMES: Record<TflLineId, string> = LINE_NAMES;
+  // 🚨 ALWAYS use generated metadata (never hardcode!)
+  public readonly MODE_NAMES: readonly ModeName[] = Modes.map(m => m.modeName);
+  public readonly SERVICE_TYPES: readonly ServiceType[] = ServiceTypes;
+  public readonly DISRUPTION_CATEGORIES: readonly DisruptionCategory[] = DisruptionCategories;
+  public readonly PLACE_TYPES: readonly typeof PlaceTypes[number][] = PlaceTypes;
+  public readonly SEARCH_PROVIDERS: readonly typeof SearchProviders[number][] = SearchProviders;
+  public readonly SORT_OPTIONS: readonly typeof Sorts[number][] = Sorts;
+  public readonly STOP_TYPES: readonly typeof StopTypes[number][] = StopTypes;
+  public readonly CATEGORIES: readonly typeof Categories[number][] = Categories;
+  public readonly ALL_SEVERITY: readonly typeof Severity[number][] = Severity;
+  
+  // Build derived metadata from generated data
+  public readonly SEVERITY_BY_MODE = this.buildSeverityByMode();
+  public readonly SEVERITY_DESCRIPTIONS = this.buildSeverityDescriptions();
 
   // Constructor
   constructor(private api: any) {}
@@ -279,6 +491,11 @@ export class [ModuleName]Api {
   // Utility methods
   utilityMethod() {
     // Helper functionality
+  }
+  
+  // 🚨 Build derived metadata from generated data
+  private buildSeverityByMode() {
+    // Implementation using generated Severity data
   }
 }
 ```
@@ -302,6 +519,9 @@ This provides better performance and reduces API calls while maintaining type sa
 - ✅ Flexible type design for user convenience
 - ✅ Metadata constants for validation
 - ✅ Beginner-friendly approach
+- ✅ 🚨 NEVER hardcoded metadata - always use generated data
+- ✅ Comprehensive metadata constants from generated files
+- ✅ Derived metadata builders for complex data structures
 
 ### **Next Steps**
 Continue with the remaining 8 modules following the established pattern. Each module should be self-contained, well-documented, and provide a clean API surface for developers using the TfL API wrapper.

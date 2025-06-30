@@ -1,5 +1,5 @@
 {
-  "name": "tfl-api-ts",
+  "name": "tfl-ts",
   "version": "1.0.0",
   "description": "TypeScript SDK for Transport for London (Tfl) API with auto-generated types and real-time data support",
   "main": "dist/index.js",
@@ -37,12 +37,12 @@
   "packageManager": "pnpm@10.4.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/manglekuo/tfl-api-ts.git"
+    "url": "git+https://github.com/manglekuo/tfl-ts.git"
   },
   "bugs": {
-    "url": "https://github.com/manglekuo/tfl-api-ts/issues"
+    "url": "https://github.com/manglekuo/tfl-ts/issues"
   },
-  "homepage": "https://github.com/manglekuo/tfl-api-ts#readme",
+  "homepage": "https://github.com/manglekuo/tfl-ts#readme",
   "engines": {
     "node": ">=16.0.0"
   },
