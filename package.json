@@ -1,7 +1,7 @@
 {
   "name": "tfl-ts",
   "version": "1.0.0",
-  "description": "TypeScript SDK for Transport for London (Tfl) API with auto-generated types and real-time data support",
+  "description": "TypeScript client for Transport for London (Tfl) API with auto-generated types and real-time data support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -25,7 +25,7 @@
     "transport-for-london",
     "typescript",
     "api",
-    "sdk",
+    "client",
     "london",
     "transport",
     "underground",

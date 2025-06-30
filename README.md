@@ -1,4 +1,4 @@
-# TfL API TypeScript SDK
+# TfL API TypeScript Client
 
 [![npm version](https://badge.fury.io/js/tfl-ts.svg)](https://badge.fury.io/js/tfl-ts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -7,7 +7,7 @@
 <!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 <!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 
-> A community-driven TypeScript SDK that makes the Transport for London (TfL) API easy to use in Node.js and JavaScript environments. Built by developers, for developers.
+> A fully-typed TypeScript client for the Transport for London (TfL) API with auto-generated types, real-time data support, and comprehensive coverage of all TfL endpoints. Built with modern TypeScript practices and zero dependencies.
 
 ## Getting Started
 
@@ -96,9 +96,9 @@ node-ts playground/demo.ts
 ## Goal + Highlights
 
 - **TypeScript-first:** Full type safety and autocompletion for all endpoints and IDs.
-- **Batch & parallel requests:** The SDK bundles requests for common use cases, and run them in parallel if possible.
+- **Batch & parallel requests:** The client bundles requests for common use cases, and run them in parallel if possible.
 - **Universal compatibility:** Works in Node.js, browsers, and edge runtimes. (help us test! Feedback welcome)
-- **Auto-updating:** API endpoints and metadata are automatically generated from TfL's OpenAPI specification. This includes all REST endpoints plus metadata that would otherwise require separate API calls. We fetch this data at build time, making it available as constants in your code. The SDK stays current even when TfL adds new lines or services.
+- **Auto-updating:** API endpoints and metadata are automatically generated from TfL's OpenAPI specification. This includes all REST endpoints plus metadata that would otherwise require separate API calls. We fetch this data at build time, making it available as constants in your code. The client stays current even when TfL adds new lines or services.
 - **Clear parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
 
 ## Examples
@@ -108,8 +108,8 @@ Autocomplete for line IDs, modes, etc.
 ![Autocomplete Example](<Autocomplete Example.gif>)
 
 ### VS code showing jsdoc comments
-Using the SDK to get timetable of a specific station following a search
-![Using the SDK to get timetable of a specific station following a search](<Using API client to get timetable of a specific station following a search.gif>)
+Using the client to get timetable of a specific station following a search
+![Using the client to get timetable of a specific station following a search](<Using API client to get timetable of a specific station following a search.gif>)
 
 ### Get real-time tube status
 ```typescript
@@ -537,7 +537,7 @@ const severeAccidents = await client.accidentStats.get({
 
 ## 🏗️ Contributing 
 
-Help us develop and improve the SDK. We welcome contributions from the community! This is an open-source project.
+Help us develop and improve the client. We welcome contributions from the community! This is an open-source project.
 
 ### Prerequisites
 
@@ -573,7 +573,7 @@ pnpm run build
 pnpm run build        # Build the project (includes type generation)
 pnpm run generate     # Generate types from TfL API
 pnpm run playground   # Run interactive playground
-pnpm run demo         # Run demo.ts code to test the SDK
+pnpm run demo         # Run demo.ts code to test the client
 
 # Testing
 pnpm run test         # Run tests
@@ -658,7 +658,7 @@ This project follows a specific development pattern where each API module in `/s
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Core SDK | ✅ Complete | Full TypeScript SDK |
+| Core Client | ✅ Complete | Full TypeScript client |
 | Type Generation | ✅ Complete | Automated from TfL API |
 | Test Coverage | ✅ Complete | Comprehensive test suite |
 | Playground | ✅ Complete | Interactive web interface |
@@ -716,7 +716,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Transport for London](https://tfl.gov.uk/) for providing the public API
 - [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) for type generation
-- All contributors and users of this SDK
+- All contributors and users of this client
 - The London developer community for feedback and support
 
 ## 📞 Support & Community
