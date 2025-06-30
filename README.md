@@ -9,6 +9,13 @@
 
 > A fully-typed TypeScript client for the Transport for London (TfL) API with auto-generated types, real-time data support, and comprehensive coverage of all TfL endpoints. Built with modern TypeScript practices and zero dependencies.
 
+- **TypeScript-first:** Full type safety and autocompletion for all endpoints and IDs.
+- **Batch & parallel requests:** The client bundles requests for common use cases, and run them in parallel if possible.
+- **Universal compatibility:** Zero dependencies, works in Node.js, browsers, and edge runtimes. (help us test! Feedback welcome)
+- **Auto-updating:** API endpoints and metadata are automatically generated from TfL's OpenAPI specification. This includes all REST endpoints plus metadata that would otherwise require separate API calls. We fetch this data at build time, making it available as constants in your code. The client stays current even when TfL adds new lines or services.
+- **Better parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
+- **Comprehensive error handling:** Comprehensive error handling with typed error classes and automatic retry logic. All errors are instances of `TflError` or its subclasses, making it easy to handle different types of errors appropriately.
+
 ## Getting Started
 
 ### 1. Get your API credentials from TfL
@@ -30,11 +37,13 @@ TFL_APP_KEY=your-app-key
 
 ### 3. Start coding
 
+Example: get arrivals for a specific tube station
+
 ```typescript
 // playground/demo.ts
 import TflClient from 'tfl-ts';
 
-const client = new TflClient(); // Automatically reads from .env
+const client = new TflClient(); // Automatically reads from process.env
 
 // You can also pass credentials directly
 // const client = new TflClient({
@@ -42,64 +51,69 @@ const client = new TflClient(); // Automatically reads from .env
 //   appKey: 'your-app-key'
 // });
 
-
 const main = async () => { // wrap in async function to use await
-  const query = "Oxford Circus";
-  const modes = ['tube'];
+  // ======== Stage 1: get stop point ID from search ========
 
-  const stopPointSearchResult = await client.stopPoint.search({ query, modes });
-  const stopPointId = stopPointSearchResult.matches?.[0]?.id;
+  try {
+    const query = "Oxford Circus";
+    const modes = ['tube'];
+    const stopPointSearchResult = await client.stopPoint.search({ query, modes }); // a fetch happens behind the scenes
+    const stopPointId = stopPointSearchResult.matches?.[0]?.id;
+    if (!stopPointId) {
+      throw new Error(`No stop ID found for the given query: ${query}`);
+    }
 
-  if (!stopPointId) {
-    throw new Error(`No stop ID found for the given query: ${query}`);
+    console.log('Stop ID found:', stopPointId); // "940GZZLUOXC"
+  } catch (error) {
+    console.error('Error:', error);
+    return;
+    // For more information on error handling, see the Error Handling Guide in the ERROR.md file
   }
-  console.log('Stop ID found:', stopPointId); // "940GZZLUOXC"
 
-  // Get arrivals for Central line at Oxford Circus station
-  const arrivals = await client.line.getArrivals({
-    lineIds: ['central'],
-    stopPointId: stopPointId 
-  });
+  // ======== Stage 2: get arrivals ========
+  try {
+    // Get arrivals for Central line at Oxford Circus station
+    const arrivals = await client.line.getArrivals({
+      lineIds: ['central'],
+      stopPointId: '940GZZLUOXC' // from Step 1
+    });
 
-  // Sort arrivals by time to station (earliest first)
-  const sortedArrivals = arrivals.sort((a, b) => 
-    (a.timeToStation || 0) - (b.timeToStation || 0)
-  );
-  
-  sortedArrivals.forEach((arrival) => {
-    console.log(
-      `${arrival.lineName || 'Unknown'} Line` +
-      ` to ${arrival.towards || 'Unknown'}` + 
-      ` arrives in ${Math.round((arrival.timeToStation || 0) / 60)}min` +
-      ` on ${arrival.platformName || 'Unknown'}`
+    // Sort arrivals by time to station (earliest first)
+    const sortedArrivals = arrivals.sort((a, b) => 
+      (a.timeToStation || 0) - (b.timeToStation || 0)
     );
-  });
-  /* console output:
-    Central Line to Ealing Broadway arrives in 1min on Westbound - Platform 1
-    Central Line to Hainault via Newbury Park arrives in 2min on Eastbound - Platform 2
-    Central Line to West Ruislip arrives in 4min on Westbound - Platform 1
-    Central Line to Epping arrives in 6min on Eastbound - Platform 2
-    Central Line to Ealing Broadway arrives in 6min on Westbound - Platform 1
-    Central Line to Hainault via Newbury Park arrives in 8min on Eastbound - Platform 2
-  */
+    
+    sortedArrivals.forEach((arrival) => {
+      console.log(
+        `${arrival.lineName || 'Unknown'} Line` +
+        ` to ${arrival.towards || 'Unknown'}` + 
+        ` arrives in ${Math.round((arrival.timeToStation || 0) / 60)}min` +
+        ` on ${arrival.platformName || 'Unknown'}`
+      );
+    });
+    /* console output:
+      Central Line to Ealing Broadway arrives in 1min on Westbound - Platform 1
+      Central Line to Hainault via Newbury Park arrives in 2min on Eastbound - Platform 2
+      Central Line to West Ruislip arrives in 4min on Westbound - Platform 1
+      Central Line to Epping arrives in 6min on Eastbound - Platform 2
+      Central Line to Ealing Broadway arrives in 6min on Westbound - Platform 1
+      Central Line to Hainault via Newbury Park arrives in 8min on Eastbound - Platform 2
+    */
+  } catch (error) {
+    console.error('Error:', error);
+    return;
+  }
 }
 
 main().catch(console.error);
 
 ```
 
-Run the file:
-```bash
-node-ts playground/demo.ts
-```
+## Error Handling
 
-## Goal + Highlights
+For comprehensive error handling information, including error types, handling strategies, best practices, and troubleshooting, see the **[Error Handling Guide](ERROR.md)** file.
 
-- **TypeScript-first:** Full type safety and autocompletion for all endpoints and IDs.
-- **Batch & parallel requests:** The client bundles requests for common use cases, and run them in parallel if possible.
-- **Universal compatibility:** Works in Node.js, browsers, and edge runtimes. (help us test! Feedback welcome)
-- **Auto-updating:** API endpoints and metadata are automatically generated from TfL's OpenAPI specification. This includes all REST endpoints plus metadata that would otherwise require separate API calls. We fetch this data at build time, making it available as constants in your code. The client stays current even when TfL adds new lines or services.
-- **Clear parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
+The TfL TypeScript client provides comprehensive error handling with typed error classes and automatic retry logic. All errors are instances of `TflError` or its subclasses, making it easy to handle different types of errors appropriately.
 
 ## Examples
 
@@ -541,7 +555,7 @@ Help us develop and improve the client. We welcome contributions from the commun
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - pnpm (recommended) or npm
 - TfL API credentials
 
@@ -549,7 +563,7 @@ Help us develop and improve the client. We welcome contributions from the commun
 
 ```bash
 # Clone the repository
-git clone https://github.com/manglekuo/tfl-ts.git
+git clone https://github.com/ghcpuman902/tfl-ts.git
 cd tfl-ts
 
 # Install dependencies
