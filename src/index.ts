@@ -344,6 +344,24 @@ export {
 // Export UI utilities for building user interfaces
 export * from './utils/ui';
 
+// Explicitly export key UI functions for better documentation clarity
+export {
+  getLineColor,
+  getLineCssProps,
+  getSeverityCategory,
+  getSeverityClasses,
+  getAccessibleSeverityLabel,
+  sortLinesBySeverityAndOrder,
+  getLineStatusSummary,
+  isNormalService,
+  hasNightService,
+  getLineAriaLabel,
+  getLineDisplayName,
+  LINE_COLORS,
+  SEVERITY_MAPPING,
+  LINE_ORDER
+} from './utils/ui';
+
 // Export bike point utilities for working with bike point data
 export { 
   getPropertyValue, 
