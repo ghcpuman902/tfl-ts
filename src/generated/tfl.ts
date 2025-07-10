@@ -2602,7 +2602,7 @@ export enum ContentType {
 }
 
 export class HttpClient<SecurityDataType = unknown> {
-  public baseUrl: string = 'https://api.tfl.gov.uk';
+  public baseUrl: string = 'https://api.digital.tfl.gov.uk';
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
   private abortControllers = new Map<CancelToken, AbortController>();
@@ -2779,7 +2779,7 @@ export class HttpClient<SecurityDataType = unknown> {
 /**
  * @title Transport for London Unified API
  * @version v1
- * @baseUrl https://api.tfl.gov.uk
+ * @baseUrl https://api.digital.tfl.gov.uk
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
   accidentStats = {

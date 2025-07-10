@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-07-08T14:05:05.594Z
+// Generated at: 2025-07-10T01:28:59.106Z
 
 export const ROAD_DATA = {
   "section": "Road",
@@ -153,7 +153,7 @@ export const ROAD_DATA = {
     }
   ],
   "totalEndpoints": 6,
-  "generatedAt": "2025-07-08T14:05:05.594Z"
+  "generatedAt": "2025-07-10T01:28:59.106Z"
 } as const;
 
 export type ROAD_DATAType = typeof ROAD_DATA;

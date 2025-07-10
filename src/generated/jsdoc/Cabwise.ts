@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-07-08T14:05:05.593Z
+// Generated at: 2025-07-10T01:28:59.105Z
 
 export const CABWISE_DATA = {
   "section": "Cabwise",
@@ -78,7 +78,7 @@ export const CABWISE_DATA = {
     }
   ],
   "totalEndpoints": 1,
-  "generatedAt": "2025-07-08T14:05:05.593Z"
+  "generatedAt": "2025-07-10T01:28:59.105Z"
 } as const;
 
 export type CABWISE_DATAType = typeof CABWISE_DATA;
