@@ -50,14 +50,22 @@ const LINE_INFO: Record<TflLineId, typeof Lines[number]> = Lines.reduce((acc, li
 }, {} as Record<TflLineId, typeof Lines[number]>);
 
 // Extract unique service types from all lines
-const allServiceTypes = [...new Set(Lines.flatMap(line => 
-  line.serviceTypes?.map(st => st.name) || []
-))] as const;
-type ServiceTypeFromData = typeof allServiceTypes[number];
+const allServiceTypes = new Set<string>();
+Lines.forEach(line => {
+  line.serviceTypes?.forEach(st => {
+    if (st.name) allServiceTypes.add(st.name);
+  });
+});
+const serviceTypesArray = Array.from(allServiceTypes);
+type ServiceTypeFromData = typeof serviceTypesArray[number];
 
 // Extract unique mode names from all lines
-const allModeNames = [...new Set(Lines.map(line => line.modeName))] as const;
-type ModeNameFromData = typeof allModeNames[number];
+const allModeNames = new Set<string>();
+Lines.forEach(line => {
+  allModeNames.add(line.modeName);
+});
+const modeNamesArray = Array.from(allModeNames);
+type ModeNameFromData = typeof modeNamesArray[number];
 
 // Create mode metadata from the generated Modes data
 const modeMetadata: Record<string, any> = Modes.reduce((acc, mode) => {
@@ -93,8 +101,11 @@ const buildSeverityByMode = (): Record<string, Array<{level: number, description
 
 // Build severity descriptions from generated data
 const buildSeverityDescriptions = (): readonly string[] => {
-  const descriptions = [...new Set(Severity.map(s => s.description))];
-  return descriptions.sort() as readonly string[];
+  const descriptions = new Set<string>();
+  Severity.forEach(severity => {
+    descriptions.add(severity.description);
+  });
+  return Array.from(descriptions).sort();
 };
 
 // Build severity by mode mapping

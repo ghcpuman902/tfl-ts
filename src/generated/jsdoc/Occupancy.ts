@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-06-19T16:03:07.560Z
+// Generated at: 2025-07-08T14:05:05.594Z
 
 export const OCCUPANCY_DATA = {
   "section": "Occupancy",
@@ -81,7 +81,7 @@ export const OCCUPANCY_DATA = {
     }
   ],
   "totalEndpoints": 5,
-  "generatedAt": "2025-06-19T16:03:07.560Z"
+  "generatedAt": "2025-07-08T14:05:05.594Z"
 } as const;
 
 export type OCCUPANCY_DATAType = typeof OCCUPANCY_DATA;

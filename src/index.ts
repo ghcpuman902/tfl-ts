@@ -2,6 +2,8 @@ import { Api } from './generated/tfl';
 import { Line } from './line';
 import { AccidentStats } from './accidentStats';
 import { AirQuality } from './airQuality';
+import { BikePoint } from './bikePoint';
+import { Cabwise } from './cabwise';
 import { Journey } from './journey';
 import { StopPoint } from './stopPoint';
 import { Mode } from './mode';
@@ -10,12 +12,7 @@ import {
   Modes, 
   ServiceTypes, 
   DisruptionCategories,
-  Severity,
-  Categories,
-  PlaceTypes,
-  SearchProviders,
-  Sorts,
-  StopTypes
+  Severity
 } from './generated/meta/Meta';
 import { Lines } from './generated/meta/Line';
 import {
@@ -174,14 +171,45 @@ class TflClient {
   public road: Road;
   
   /**
+   * Access all London bike point locations and real-time availability.
+   */
+  public bikePoint: BikePoint;
+  
+  /**
+   * ⚠️ **DEPRECATED API - NOT RECOMMENDED FOR USE**
+   * 
    * Access accident statistics for London roads.
+   * 
+   * This API appears to be poorly maintained on TfL's side and may not return
+   * current or reliable data. Recent testing shows that most years return
+   * "Invalid year parameter" errors, suggesting the API is no longer actively
+   * supported.
+   * 
+   * **RECOMMENDED ALTERNATIVES:**
+   * - London Datastore: https://data.london.gov.uk/dataset/?tags=GIS&tag=accidents
+   * - TfL Road Safety Data: https://tfl.gov.uk/corporate/publications-and-reports/road-safety
    */
   public accidentStats: AccidentStats;
 
   /**
+   * ⚠️ **DEPRECATED API - NOT RECOMMENDED FOR USE**
+   * 
    * Access real-time air quality data for London.
+   * 
+   * This API appears to be poorly maintained on TfL's side and may not return
+   * current or reliable data. Recent testing shows 500 Internal Server Error
+   * responses, suggesting the API is no longer actively supported.
+   * 
+   * **RECOMMENDED ALTERNATIVES:**
+   * - London Air API: https://londonair.org.uk/Londonair/API/
+   * - London Datastore Air Quality: https://data.london.gov.uk/air-quality/
    */
   public airQuality: AirQuality;
+
+  /**
+   * Access taxi and minicab contact information through TfL Cabwise service.
+   */
+  public cabwise: Cabwise;
 
   constructor(config?: TflClientConfig) {
     const appId = config?.appId || process.env.TFL_APP_ID;
@@ -232,10 +260,12 @@ class TflClient {
     this.journey = new Journey(this.api);
     this.mode = new Mode(this.api);
     this.road = new Road(this.api);
+    this.bikePoint = new BikePoint(this.api);
 
     // Initialize additional services
     this.accidentStats = new AccidentStats(this.api);
     this.airQuality = new AirQuality(this.api);
+    this.cabwise = new Cabwise(this.api);
   }
 
   /**
@@ -243,7 +273,7 @@ class TflClient {
    */
   async executeWithRetry<T>(
     apiCall: () => Promise<T>,
-    context?: string
+    _context?: string
   ): Promise<T> {
     const requestId = this.generateRequestId();
     let lastError: TflError;
@@ -279,7 +309,7 @@ class TflClient {
   /**
    * Generate a unique request ID for tracking
    */
-  private generateRequestId(): string {
+  private generateRequestId = (): string => {
     return `tfl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
@@ -310,3 +340,14 @@ export {
   TflConfigError,
   TflErrorHandler
 };
+
+// Export UI utilities for building user interfaces
+export * from './utils/ui';
+
+// Export bike point utilities for working with bike point data
+export { 
+  getPropertyValue, 
+  findElectricBikes, 
+  sortByDistance, 
+  findClosestWithBikes 
+} from './utils/bikePoint';

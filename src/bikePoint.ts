@@ -1,12 +1,15 @@
 import { 
   Api, 
+  BikePointSearchParams, 
+  TflApiPresentationEntitiesAdditionalProperties, 
   TflApiPresentationEntitiesPlace
 } from './generated/tfl';
 import { stripTypeFields } from './utils/stripTypes';
+import { 
+  extractStatus, 
+} from './utils/bikePoint';
 
-// Import raw data from generated meta files
-import { BIKEPOINT_DATA } from './generated/jsdoc/BikePoint';
-import { ModeName } from './generated/meta/StopPoint';
+
 
 /**
  * Bike point information returned by the TfL API
@@ -43,7 +46,7 @@ import { ModeName } from './generated/meta/StopPoint';
  *   lon: -0.10997
  * }
  */
-export interface BikePointInfo {
+export interface BikePointInfo extends TflApiPresentationEntitiesPlace {
   /** Unique identifier for the bike point */
   id?: string;
   /** URL to the bike point resource */
@@ -73,7 +76,7 @@ export interface BikePointInfo {
  *   modified: "2023-01-01T12:00:00Z"
  * }
  */
-export interface BikePointProperty {
+export interface BikePointProperty extends TflApiPresentationEntitiesAdditionalProperties {
   /** Category of the property */
   category?: string;
   /** Property key */
@@ -97,7 +100,24 @@ export interface BikePointProperty {
  *   spaces: 10,
  *   brokenDocks: 0,
  *   lat: 51.529163,
- *   lon: -0.10997
+ *   lon: -0.10997,
+ *   terminalName: "001023",
+ *   isInstalled: true,
+ *   isLocked: false,
+ *   installDate: "2023-01-01T12:00:00Z",
+ *   removalDate: null,
+ *   isTemporary: false,
+ *   standardBikes: 4,
+ *   eBikes: 1,
+ *   additionalProperties: [
+ *     {
+ *       category: "NumberOfBikes",
+ *       key: "NbBikes",
+ *       sourceSystemKey: "BikePoints",
+ *       value: "5",
+ *       modified: "2023-01-01T12:00:00Z"
+ *     }
+ *   ]
  * }
  */
 export interface BikePointStatus {
@@ -117,6 +137,24 @@ export interface BikePointStatus {
   lat?: number;
   /** Longitude coordinate */
   lon?: number;
+  /** Terminal name/ID */
+  terminalName?: string;
+  /** Whether the bike point is installed */
+  isInstalled?: boolean;
+  /** Whether the bike point is locked */
+  isLocked?: boolean;
+  /** Installation date */
+  installDate?: string;
+  /** Removal date (if applicable) */
+  removalDate?: string | null;
+  /** Whether this is a temporary bike point */
+  isTemporary?: boolean;
+  /** Number of standard bikes */
+  standardBikes?: number;
+  /** Number of electric bikes */
+  eBikes?: number;
+  /** Original additional properties (preserved when keepTflTypes is true) */
+  additionalProperties?: BikePointProperty[];
 }
 
 /**
@@ -128,11 +166,78 @@ export interface BikePointStatus {
  *   keepTflTypes: false
  * });
  */
-interface BikePointSearchQuery {
+interface BikePointSearchQuery extends BikePointSearchParams {
   /** The search term (e.g., "St. James") */
   query: string;
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
+}
+
+/**
+ * Query options for bike point radius search
+ * @example
+ * // Search for bike points within 500m of a location
+ * const bikePoints = await client.bikePoint.getByRadius({
+ *   lat: 51.508418,
+ *   lon: -0.067048,
+ *   radius: 500,
+ *   keepTflTypes: false
+ * });
+ */
+interface BikePointRadiusQuery {
+  /** Latitude of the center point */
+  lat: number;
+  /** Longitude of the center point */
+  lon: number;
+  /** Radius in meters (default: 200) */
+  radius?: number;
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
+}
+
+/**
+ * Query options for bike point bounding box search
+ * @example
+ * // Search for bike points within a bounding box
+ * const bikePoints = await client.bikePoint.getByBounds({
+ *   point1: { lat: 51.516027, lon: -0.119842 },
+ *   point2: { lat: 51.513089, lon: -0.115669 },
+ *   keepTflTypes: false
+ * });
+ */
+interface BikePointBoundsQuery {
+  /** First point of the bounding box */
+  point1: { lat: number; lon: number };
+  /** Second point of the bounding box */
+  point2: { lat: number; lon: number };
+  /** Whether to keep $type fields in the response */
+  keepTflTypes?: boolean;
+}
+
+/**
+ * Response from radius-based bike point search
+ * @example
+ * {
+ *   centrePoint: [51.508, -0.067],
+ *   places: [
+ *     {
+ *       id: "BikePoints_46",
+ *       name: "Nesham Street, Wapping",
+ *       distance: 96.91253333568288,
+ *       lat: 51.507131,
+ *       lon: -0.06691,
+ *       bikes: 5,
+ *       docks: 15,
+ *       spaces: 10
+ *     }
+ *   ]
+ * }
+ */
+export interface BikePointRadiusResponse {
+  /** Center point coordinates [lat, lon] */
+  centrePoint: [number, number];
+  /** Array of bike points within the radius */
+  places: (BikePointStatus & { distance?: number })[];
 }
 
 /**
@@ -144,65 +249,69 @@ interface BikePointSearchQuery {
  * // Get specific bike point by ID
  * const bikePoint = await client.bikePoint.getById('BikePoints_1');
  * 
+ * // Get bike point with original additional properties preserved
+ * const bikePointWithTypes = await client.bikePoint.getById('BikePoints_1', { keepTflTypes: true });
+ * console.log('Original properties:', bikePointWithTypes.additionalProperties);
+ * 
  * // Search for bike points
  * const searchResults = await client.bikePoint.search({ query: 'St. James' });
+ * 
+ * // Get bike points within radius
+ * const nearbyBikePoints = await client.bikePoint.getByRadius({
+ *   lat: 51.508418,
+ *   lon: -0.067048,
+ *   radius: 500
+ * });
+ * 
+ * // Get bike points within bounding box
+ * const areaBikePoints = await client.bikePoint.getByBounds({
+ *   point1: { lat: 51.516027, lon: -0.119842 },
+ *   point2: { lat: 51.513089, lon: -0.115669 }
+ * });
  * 
  * // Access static metadata (no HTTP request)
  * const endpoints = client.bikePoint.ENDPOINTS;
  * const totalEndpoints = client.bikePoint.TOTAL_ENDPOINTS;
+ * 
+ * // Validate user input before making API calls
+ * const userInput = ['BikePoints_1', 'invalid-id'];
+ * const validIds = userInput.filter(id => id.startsWith('BikePoints_'));
+ * if (validIds.length !== userInput.length) {
+ *   throw new Error(`Invalid bike point IDs: ${userInput.filter(id => !id.startsWith('BikePoints_')).join(', ')}`);
+ * }
  */
 export class BikePoint {
-  /** Available API endpoints (static, no HTTP request needed) */
-  public readonly ENDPOINTS = BIKEPOINT_DATA.endpoints;
+  /** Transport mode for bike points */
+  public readonly MODE = 'cycle-hire' as const;
 
-  /** Total number of available endpoints (static, no HTTP request needed) */
-  public readonly TOTAL_ENDPOINTS = BIKEPOINT_DATA.totalEndpoints;
-
-  /** API section name (static, no HTTP request needed) */
-  public readonly SECTION = BIKEPOINT_DATA.section;
-
-  /** Generation timestamp (static, no HTTP request needed) */
-  public readonly GENERATED_AT = BIKEPOINT_DATA.generatedAt;
-
-  /** Transport mode for bike points (static, no HTTP request needed) */
-  public readonly MODE: ModeName = 'cycle-hire';
-
-  /** Bike point property categories (static, no HTTP request needed) */
+  /** Bike point property categories */
   public readonly PROPERTY_CATEGORIES = [
-    'NumberOfBikes',
-    'NumberOfDocks', 
-    'NumberOfEmptyDocks'
+    'Description'
   ] as const;
 
-  /** Bike point property keys (static, no HTTP request needed) */
+  /** Bike point property keys */
   public readonly PROPERTY_KEYS = [
     'NbBikes',
     'NbDocks',
-    'NbSpaces'
+    'NbEmptyDocks'
   ] as const;
 
   constructor(private api: Api<{}>) {}
 
   /**
-   * Gets all bike point locations
+   * Gets all bike point locations with their current status
    * 
    * This method returns all bike point locations in London with their current status.
-   * The Place object has an additionalProperties array which contains the nbBikes,
-   * nbDocks and nbSpaces numbers which give the status of the BikePoint.
-   * A mismatch in these numbers i.e. nbDocks - (nbBikes + nbSpaces) != 0 indicates broken docks.
+   * The response includes structured status information with bikes, docks, spaces, and broken docks.
    * 
    * @param options - Options for the request
-   * @returns Promise resolving to an array of bike point information
+   * @returns Promise resolving to an array of bike point status information
    * @example
-   * // Get all bike points
+   * // Get all bike points with status
    * const allBikePoints = await client.bikePoint.get();
    * 
-   * // Get all bike points with type fields preserved
-   * const allBikePoints = await client.bikePoint.get({ keepTflTypes: true });
-   * 
    * // Process bike point data
-   * allBikePoints.forEach(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
+   * allBikePoints.forEach(status => {
    *   console.log(`${status.name}: ${status.bikes} bikes, ${status.spaces} spaces available`);
    *   
    *   if (status.brokenDocks > 0) {
@@ -211,20 +320,32 @@ export class BikePoint {
    * });
    * 
    * // Find bike points with available bikes
-   * const availableBikePoints = allBikePoints.filter(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   return status.bikes > 0;
-   * });
+   * const availableBikePoints = allBikePoints.filter(status => status.bikes > 0);
    * 
    * // Find bike points with available spaces
-   * const availableSpaces = allBikePoints.filter(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   return status.spaces > 0;
+   * const availableSpaces = allBikePoints.filter(status => status.spaces > 0);
+   * 
+   * // Find bike points with electric bikes
+   * const eBikePoints = allBikePoints.filter(status => status.eBikes > 0);
+   * 
+   * // Get all bike points with original additional properties preserved
+   * const allBikePointsWithTypes = await client.bikePoint.get({ keepTflTypes: true });
+   * 
+   * // Access original properties for debugging or advanced processing
+   * allBikePointsWithTypes.forEach(status => {
+   *   if (status.additionalProperties) {
+   *     console.log(`${status.name} has ${status.additionalProperties.length} original properties`);
+   *     status.additionalProperties.forEach(prop => {
+   *       console.log(`  ${prop.key}: ${prop.value} (${prop.category})`);
+   *     });
+   *   }
    * });
    */
-  async get(options: { keepTflTypes?: boolean } = {}): Promise<BikePointInfo[]> {
-    return this.api.bikePoint.bikePointGetAll()
+  async get(options: { keepTflTypes?: boolean } = {}): Promise<BikePointStatus[]> {
+    const rawData = await this.api.bikePoint.bikePointGetAll()
       .then((response: any) => stripTypeFields(response.data, options.keepTflTypes));
+    
+    return rawData.map((bikePoint: BikePointInfo) => extractStatus(bikePoint, options.keepTflTypes));
   }
 
   /**
@@ -235,30 +356,41 @@ export class BikePoint {
    * 
    * @param id - A bike point id (a list of ids can be obtained from the get() method)
    * @param options - Options for the request
-   * @returns Promise resolving to bike point information
+   * @returns Promise resolving to bike point status information
    * @example
    * // Get specific bike point by ID
    * const bikePoint = await client.bikePoint.getById('BikePoints_1');
    * 
-   * // Get bike point with type fields preserved
-   * const bikePoint = await client.bikePoint.getById('BikePoints_1', { keepTflTypes: true });
+   * // Display status information
+   * console.log(`Bike Point: ${bikePoint.name}`);
+   * console.log(`Available bikes: ${bikePoint.bikes}`);
+   * console.log(`Available spaces: ${bikePoint.spaces}`);
+   * console.log(`Total docks: ${bikePoint.docks}`);
    * 
-   * // Extract and display status
-   * if (bikePoint) {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   console.log(`Bike Point: ${status.name}`);
-   *   console.log(`Available bikes: ${status.bikes}`);
-   *   console.log(`Available spaces: ${status.spaces}`);
-   *   console.log(`Total docks: ${status.docks}`);
-   *   
-   *   if (status.brokenDocks > 0) {
-   *     console.log(`Broken docks: ${status.brokenDocks}`);
-   *   }
+   * if (bikePoint.brokenDocks > 0) {
+   *   console.log(`Broken docks: ${bikePoint.brokenDocks}`);
+   * }
+   * 
+   * if (bikePoint.eBikes > 0) {
+   *   console.log(`Electric bikes: ${bikePoint.eBikes}`);
+   * }
+   * 
+   * // Get bike point with original additional properties preserved
+   * const bikePointWithTypes = await client.bikePoint.getById('BikePoints_1', { keepTflTypes: true });
+   * 
+   * // Access all original properties for advanced processing
+   * if (bikePointWithTypes.additionalProperties) {
+   *   console.log('All original properties:');
+   *   bikePointWithTypes.additionalProperties.forEach(prop => {
+   *     console.log(`  ${prop.key}: ${prop.value} (${prop.category}) - Modified: ${prop.modified}`);
+   *   });
    * }
    */
-  async getById(id: string, options: { keepTflTypes?: boolean } = {}): Promise<BikePointInfo> {
-    return this.api.bikePoint.bikePointGet(id)
+  async getById(id: string, options: { keepTflTypes?: boolean } = {}): Promise<BikePointStatus> {
+    const rawData = await this.api.bikePoint.bikePointGet(id)
       .then((response: any) => stripTypeFields(response.data, options.keepTflTypes));
+    
+    return extractStatus(rawData, options.keepTflTypes);
   }
 
   /**
@@ -289,8 +421,7 @@ export class BikePoint {
    *   
    *   // Get detailed status for each result
    *   client.bikePoint.getById(bikePoint.id!).then(detailedBikePoint => {
-   *     const status = client.bikePoint.extractStatus(detailedBikePoint);
-   *     console.log(`Status: ${status.bikes} bikes, ${status.spaces} spaces`);
+   *     console.log(`Status: ${detailedBikePoint.bikes} bikes, ${detailedBikePoint.spaces} spaces`);
    *   });
    * });
    * 
@@ -304,203 +435,176 @@ export class BikePoint {
       .then((response: any) => stripTypeFields(response.data, keepTflTypes));
   }
 
+
+
+
+
+
+
+
   /**
-   * Extract bike point status from bike point information
+   * Gets bike points within a radius of a location
    * 
-   * This utility method extracts the current status (bikes, docks, spaces)
-   * from a bike point's additionalProperties array.
+   * This method returns bike points within a specified radius of a given location.
+   * Uses the TfL API endpoint: /BikePoint?lat={lat}&lon={lon}&radius={radius}
    * 
-   * @param bikePoint - Bike point information
-   * @returns Bike point status with calculated broken docks
+   * @param options - Query options for radius-based bike point search
+   * @returns Promise resolving to bike point radius response
    * @example
-   * // Extract status from bike point data
-   * const allBikePoints = await client.bikePoint.get();
+   * // Get bike points within 500m of a location
+   * const nearbyBikePoints = await client.bikePoint.getByRadius({
+   *   lat: 51.508418,
+   *   lon: -0.067048,
+   *   radius: 500
+   * });
    * 
-   * allBikePoints.forEach(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   
-   *   console.log(`${status.name}:`);
-   *   console.log(`  Bikes available: ${status.bikes}`);
-   *   console.log(`  Spaces available: ${status.spaces}`);
-   *   console.log(`  Total docks: ${status.docks}`);
-   *   
-   *   if (status.brokenDocks > 0) {
-   *     console.log(`  ⚠️ Broken docks: ${status.brokenDocks}`);
+   * console.log(`Found ${nearbyBikePoints.places.length} bike points within ${options.radius}m`);
+   * console.log(`Center point: ${nearbyBikePoints.centrePoint[0]}, ${nearbyBikePoints.centrePoint[1]}`);
+   * 
+   * // Process each bike point
+   * nearbyBikePoints.places.forEach(bikePoint => {
+   *   console.log(`${bikePoint.name}: ${bikePoint.bikes} bikes, ${bikePoint.spaces} spaces (${bikePoint.distance?.toFixed(0)}m away)`);
+   * });
+   * 
+   * // Find closest bike point with available bikes
+   * const closestWithBikes = nearbyBikePoints.places
+   *   .filter(bikePoint => bikePoint.bikes > 0)
+   *   .sort((a, b) => (a.distance || 0) - (b.distance || 0))[0];
+   * 
+   * if (closestWithBikes) {
+   *   console.log(`Closest bike point with bikes: ${closestWithBikes.name} (${closestWithBikes.distance?.toFixed(0)}m)`);
+   * }
+   * 
+   * // Get bike points with original additional properties preserved
+   * const nearbyBikePointsWithTypes = await client.bikePoint.getByRadius({
+   *   lat: 51.508418,
+   *   lon: -0.067048,
+   *   radius: 500,
+   *   keepTflTypes: true
+   * });
+   * 
+   * // Access original properties for each bike point
+   * nearbyBikePointsWithTypes.places.forEach(bikePoint => {
+   *   if (bikePoint.additionalProperties) {
+   *     console.log(`${bikePoint.name} has ${bikePoint.additionalProperties.length} original properties`);
    *   }
-   *   
-   *   // Calculate availability percentage
-   *   const availabilityPercent = (status.bikes / status.docks) * 100;
-   *   console.log(`  Availability: ${availabilityPercent.toFixed(1)}%`);
-   * });
-   * 
-   * // Find bike points with issues
-   * const problematicBikePoints = allBikePoints.filter(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   return status.brokenDocks > 0 || status.bikes === 0;
    * });
    */
-  extractStatus(bikePoint: BikePointInfo): BikePointStatus {
-    const bikes = Number(this.getPropertyValue(bikePoint, 'NbBikes') || 0);
-    const docks = Number(this.getPropertyValue(bikePoint, 'NbDocks') || 0);
-    const spaces = Number(this.getPropertyValue(bikePoint, 'NbSpaces') || 0);
+  async getByRadius(options: BikePointRadiusQuery): Promise<BikePointRadiusResponse> {
+    const { lat, lon, radius = 200, keepTflTypes } = options;
     
-    // Calculate broken docks: total docks - (bikes + spaces)
-    const brokenDocks = Math.max(0, docks - (bikes + spaces));
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    queryParams.append('lat', lat.toString());
+    queryParams.append('lon', lon.toString());
+    if (radius !== 200) {
+      queryParams.append('radius', radius.toString());
+    }
     
+    // Make direct API call to the radius endpoint
+    const response = await this.api.request({
+      path: `/BikePoint?${queryParams.toString()}`,
+      method: 'GET',
+      format: 'json'
+    });
+    
+    const rawData = stripTypeFields(response.data, keepTflTypes);
+    
+    // Transform the data to include status information
     return {
-      id: bikePoint.id || '',
-      name: bikePoint.commonName || '',
-      bikes,
-      docks,
-      spaces,
-      brokenDocks,
-      lat: bikePoint.lat,
-      lon: bikePoint.lon
+      centrePoint: rawData.centrePoint,
+      places: rawData.places.map((bikePoint: BikePointInfo) => ({
+        ...extractStatus(bikePoint, keepTflTypes),
+        distance: bikePoint.distance
+      }))
     };
   }
 
   /**
-   * Get property value from bike point additional properties
+   * Gets bike points within a bounding box
    * 
-   * This helper method extracts a specific property value from the
-   * bike point's additionalProperties array.
+   * This method returns bike points within a bounding box defined by two points.
+   * Uses the TfL API endpoint: /BikePoint?swLat={swLat}&swLon={swLon}&neLat={neLat}&neLon={neLon}
    * 
-   * @param bikePoint - Bike point information
-   * @param key - Property key to extract (e.g., 'NbBikes', 'NbDocks', 'NbSpaces')
-   * @returns Property value as string or undefined if not found
+   * @param options - Query options for bounding box bike point search
+   * @returns Promise resolving to an array of bike point status information
    * @example
-   * // Get specific property values
-   * const bikePoint = await client.bikePoint.getById('BikePoints_1');
+   * // Get bike points within a bounding box
+   * const areaBikePoints = await client.bikePoint.getByBounds({
+   *   point1: { lat: 51.516027, lon: -0.119842 },
+   *   point2: { lat: 51.513089, lon: -0.115669 }
+   * });
    * 
-   * const bikes = client.bikePoint.getPropertyValue(bikePoint, 'NbBikes');
-   * const docks = client.bikePoint.getPropertyValue(bikePoint, 'NbDocks');
-   * const spaces = client.bikePoint.getPropertyValue(bikePoint, 'NbSpaces');
+   * console.log(`Found ${areaBikePoints.length} bike points in the area`);
    * 
-   * console.log(`Bikes: ${bikes}, Docks: ${docks}, Spaces: ${spaces}`);
-   */
-  getPropertyValue(bikePoint: BikePointInfo, key: string): string | undefined {
-    return bikePoint.additionalProperties?.find(prop => prop.key === key)?.value;
-  }
-
-  /**
-   * Get bike point metadata (makes HTTP request to TfL API)
+   * // Process each bike point
+   * areaBikePoints.forEach(bikePoint => {
+   *   console.log(`${bikePoint.name}: ${bikePoint.bikes} bikes, ${bikePoint.spaces} spaces`);
+   *   console.log(`Location: ${bikePoint.lat}, ${bikePoint.lon}`);
+   * });
    * 
-   * This method fetches live metadata from the TfL API. For static metadata
-   * that doesn't change frequently, consider using the static properties
-   * instead to save HTTP round trips.
+   * // Find bike points with most available bikes in the area
+   * const topBikePoints = areaBikePoints
+   *   .sort((a, b) => b.bikes - a.bikes)
+   *   .slice(0, 3);
    * 
-   * @param options - Options for metadata request
-   * @returns Promise resolving to bike point metadata
-   * @example
-   * // Get live metadata from TfL API
-   * const meta = await client.bikePoint.getMeta();
+   * console.log('Top 3 bike points with most bikes:');
+   * topBikePoints.forEach((bikePoint, index) => {
+   *   console.log(`${index + 1}. ${bikePoint.name}: ${bikePoint.bikes} bikes`);
+   * });
    * 
-   * // Use static metadata instead (no HTTP request)
-   * const endpoints = client.bikePoint.ENDPOINTS;
-   * const categories = client.bikePoint.PROPERTY_CATEGORIES;
-   * const keys = client.bikePoint.PROPERTY_KEYS;
-   */
-  async getMeta(options: { keepTflTypes?: boolean } = {}): Promise<{
-    endpoints: typeof BIKEPOINT_DATA.endpoints;
-    totalEndpoints: number;
-    section: string;
-    generatedAt: string;
-    mode: ModeName;
-    propertyCategories: readonly string[];
-    propertyKeys: readonly string[];
-  }> {
-    return {
-      endpoints: this.ENDPOINTS,
-      totalEndpoints: this.TOTAL_ENDPOINTS,
-      section: this.SECTION,
-      generatedAt: this.GENERATED_AT,
-      mode: this.MODE,
-      propertyCategories: this.PROPERTY_CATEGORIES,
-      propertyKeys: this.PROPERTY_KEYS
-    };
-  }
-
-  /**
-   * Find bike points with available bikes
+   * // Get bike points with original additional properties preserved
+   * const areaBikePointsWithTypes = await client.bikePoint.getByBounds({
+   *   point1: { lat: 51.516027, lon: -0.119842 },
+   *   point2: { lat: 51.513089, lon: -0.115669 },
+   *   keepTflTypes: true
+   * });
    * 
-   * This utility method filters bike points to find those with bikes available.
-   * 
-   * @param bikePoints - Array of bike point information
-   * @returns Array of bike points with available bikes
-   * @example
-   * // Find bike points with available bikes
-   * const allBikePoints = await client.bikePoint.get();
-   * const availableBikePoints = client.bikePoint.findAvailableBikes(allBikePoints);
-   * 
-   * console.log(`Found ${availableBikePoints.length} bike points with available bikes`);
-   * 
-   * availableBikePoints.forEach(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   console.log(`${status.name}: ${status.bikes} bikes available`);
+   * // Access original properties for debugging
+   * areaBikePointsWithTypes.forEach(bikePoint => {
+   *   if (bikePoint.additionalProperties) {
+   *     const lastModified = bikePoint.additionalProperties
+   *       .map(prop => new Date(prop.modified || ''))
+   *       .sort((a, b) => b.getTime() - a.getTime())[0];
+   *     console.log(`${bikePoint.name} last updated: ${lastModified}`);
+   *   }
    * });
    */
-  findAvailableBikes(bikePoints: BikePointInfo[]): BikePointInfo[] {
-    return bikePoints.filter(bikePoint => {
-      const bikes = this.getPropertyValue(bikePoint, 'NbBikes');
-      return bikes && Number(bikes) > 0;
+  async getByBounds(options: BikePointBoundsQuery): Promise<BikePointStatus[]> {
+    const { point1, point2, keepTflTypes } = options;
+    
+    // Determine southwest and northeast corners
+    const swLat = Math.min(point1.lat, point2.lat);
+    const swLon = Math.min(point1.lon, point2.lon);
+    const neLat = Math.max(point1.lat, point2.lat);
+    const neLon = Math.max(point1.lon, point2.lon);
+    
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    queryParams.append('swLat', swLat.toString());
+    queryParams.append('swLon', swLon.toString());
+    queryParams.append('neLat', neLat.toString());
+    queryParams.append('neLon', neLon.toString());
+    
+    // Make direct API call to the bounds endpoint
+    const response = await this.api.request({
+      path: `/BikePoint?${queryParams.toString()}`,
+      method: 'GET',
+      format: 'json'
     });
+    
+    const rawData = stripTypeFields(response.data, keepTflTypes);
+    return rawData.map((bikePoint: BikePointInfo) => extractStatus(bikePoint, keepTflTypes));
   }
 
-  /**
-   * Find bike points with available spaces
-   * 
-   * This utility method filters bike points to find those with empty spaces
-   * where bikes can be returned.
-   * 
-   * @param bikePoints - Array of bike point information
-   * @returns Array of bike points with available spaces
-   * @example
-   * // Find bike points with available spaces
-   * const allBikePoints = await client.bikePoint.get();
-   * const availableSpaces = client.bikePoint.findAvailableSpaces(allBikePoints);
-   * 
-   * console.log(`Found ${availableSpaces.length} bike points with available spaces`);
-   * 
-   * availableSpaces.forEach(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   console.log(`${status.name}: ${status.spaces} spaces available`);
-   * });
-   */
-  findAvailableSpaces(bikePoints: BikePointInfo[]): BikePointInfo[] {
-    return bikePoints.filter(bikePoint => {
-      const spaces = this.getPropertyValue(bikePoint, 'NbSpaces');
-      return spaces && Number(spaces) > 0;
-    });
-  }
 
-  /**
-   * Find bike points with broken docks
-   * 
-   * This utility method filters bike points to find those with broken docks.
-   * 
-   * @param bikePoints - Array of bike point information
-   * @returns Array of bike points with broken docks
-   * @example
-   * // Find bike points with broken docks
-   * const allBikePoints = await client.bikePoint.get();
-   * const brokenDocks = client.bikePoint.findBrokenDocks(allBikePoints);
-   * 
-   * console.log(`Found ${brokenDocks.length} bike points with broken docks`);
-   * 
-   * brokenDocks.forEach(bikePoint => {
-   *   const status = client.bikePoint.extractStatus(bikePoint);
-   *   console.log(`${status.name}: ${status.brokenDocks} broken docks`);
-   * });
-   */
-  findBrokenDocks(bikePoints: BikePointInfo[]): BikePointInfo[] {
-    return bikePoints.filter(bikePoint => {
-      const status = this.extractStatus(bikePoint);
-      return status.brokenDocks > 0;
-    });
-  }
+
+
 }
 
-// Re-export static types and constants for direct use
-export {
-  BIKEPOINT_DATA
+// Export the BikePoint module and all interfaces
+export { 
+  BikePointSearchQuery,
+  BikePointRadiusQuery,
+  BikePointBoundsQuery
 }; 

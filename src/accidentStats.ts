@@ -1,12 +1,10 @@
 import { 
   Api, 
-  TflApiPresentationEntitiesAccidentStatsAccidentDetail as TflAccidentDetail,
-  TflApiPresentationEntitiesAccidentStatsAccidentStatsOrderedSummary as TflAccidentStatsOrderedSummary
+  TflApiPresentationEntitiesAccidentStatsAccidentDetail as TflAccidentDetail
 } from './generated/tfl';
 import { stripTypeFields } from './utils/stripTypes';
 
-// Import raw data from generated meta files
-import { ACCIDENTSTATS_DATA } from './generated/jsdoc/AccidentStats';
+
 
 /**
  * Query options for accident statistics requests
@@ -61,32 +59,41 @@ export interface AccidentStatsInfo {
 }
 
 /**
- * AccidentStats class for interacting with TfL AccidentStats API endpoints
+ * ⚠️ **DEPRECATED API - NOT RECOMMENDED FOR USE**
+ * 
+ * Access accident statistics for London roads.
+ * 
+ * This API appears to be poorly maintained on TfL's side and may not return
+ * current or reliable data. Recent testing shows that most years return
+ * "Invalid year parameter" errors, suggesting the API is no longer actively
+ * supported.
+ * 
+ * **RECOMMENDED ALTERNATIVES:**
+ * - London Datastore: https://data.london.gov.uk/dataset/?tags=GIS&tag=accidents
+ * - TfL Road Safety Data: https://tfl.gov.uk/corporate/publications-and-reports/road-safety
+ * 
+ * This is a simple API that provides accident statistics data by year.
+ * No metadata constants are provided as this API only deals with accident data.
+ * 
  * @example
  * // Get accident statistics for a specific year
  * const accidents = await client.accidentStats.get({ year: 2023 });
  * 
- * // Access static metadata (no HTTP request)
- * const endpoints = client.accidentStats.ENDPOINTS;
- * const totalEndpoints = client.accidentStats.TOTAL_ENDPOINTS;
+ * // Process accident data
+ * accidents.forEach(accident => {
+ *   console.log(`Accident on ${accident.date} at ${accident.location}`);
+ *   console.log(`Severity: ${accident.severity}, Borough: ${accident.borough}`);
+ * });
  */
 export class AccidentStats {
-  /** Available API endpoints (static, no HTTP request needed) */
-  public readonly ENDPOINTS = ACCIDENTSTATS_DATA.endpoints;
-
-  /** Total number of available endpoints (static, no HTTP request needed) */
-  public readonly TOTAL_ENDPOINTS = ACCIDENTSTATS_DATA.totalEndpoints;
-
-  /** API section name (static, no HTTP request needed) */
-  public readonly SECTION = ACCIDENTSTATS_DATA.section;
-
-  /** Generation timestamp (static, no HTTP request needed) */
-  public readonly GENERATED_AT = ACCIDENTSTATS_DATA.generatedAt;
 
   constructor(private api: Api<{}>) {}
 
   /**
    * Gets all accident details for accidents occurring in the specified year
+   * 
+   * ⚠️ **WARNING: This method is part of a deprecated API.**
+   * See the class documentation above for details and recommended alternatives.
    * 
    * This method returns comprehensive accident statistics including:
    * - Location details (coordinates, borough, street name)
@@ -115,45 +122,47 @@ export class AccidentStats {
   async get(options: AccidentStatsQuery): Promise<TflAccidentDetail[]> {
     const { year, keepTflTypes } = options;
     return this.api.accidentStats.accidentStatsGet(year)
-      .then(response => stripTypeFields(response.data, keepTflTypes));
+      .then((response: any) => stripTypeFields(response.data, keepTflTypes))
+      .catch((error: any) => {
+        // The error is a Response object, not an axios-style error
+        if (error instanceof Response) {
+          const status = error.status;
+          const statusText = error.statusText;
+          
+          if (status === 404) {
+            throw new Error(`No accident data available for year ${year}. This year may not have data or may not be accessible.`);
+          }
+          if (status === 400) {
+            throw new Error(`Invalid year parameter: ${year}. The year ${year} is not supported by the TfL AccidentStats API.`);
+          }
+          if (status === 403) {
+            throw new Error('Access denied. Please check your API credentials and permissions.');
+          }
+          if (status >= 500) {
+            throw new Error(`TfL API server error (${status}). Please try again later.`);
+          }
+          
+          // For other status codes, provide a generic but helpful message
+          throw new Error(`TfL API error (${status} ${statusText}) for year ${year}. Please check the year parameter.`);
+        }
+        
+        // Handle other types of errors
+        if (error?.message?.includes('fetch')) {
+          throw new Error(`Network error: Unable to connect to TfL API. Please check your internet connection.`);
+        }
+        
+        if (error?.message?.includes('timeout')) {
+          throw new Error(`Request timeout: TfL API is taking too long to respond. Please try again.`);
+        }
+        
+        // If we can't categorize it, provide a more helpful error message
+        const originalMessage = error?.message || 'Unknown error occurred';
+        throw new Error(`TfL API error for year ${year}: ${originalMessage}`);
+      });
   }
 
-  /**
-   * Get accident statistics metadata (makes HTTP request to TfL API)
-   * 
-   * This method fetches live metadata from the TfL API. For static metadata
-   * that doesn't change frequently, consider using the static properties
-   * instead to save HTTP round trips.
-   * 
-   * @param options - Options for metadata request
-   * @returns Promise resolving to accident statistics metadata
-   * @example
-   * // Get live metadata from TfL API
-   * const meta = await client.accidentStats.getMeta();
-   * 
-   * // Use static metadata instead (no HTTP request)
-   * const endpoints = client.accidentStats.ENDPOINTS;
-   * const totalEndpoints = client.accidentStats.TOTAL_ENDPOINTS;
-   */
-  async getMeta(options: { keepTflTypes?: boolean } = {}): Promise<{
-    endpoints: typeof ACCIDENTSTATS_DATA.endpoints;
-    totalEndpoints: number;
-    section: string;
-    generatedAt: string;
-  }> {
-    return {
-      endpoints: this.ENDPOINTS,
-      totalEndpoints: this.TOTAL_ENDPOINTS,
-      section: this.SECTION,
-      generatedAt: this.GENERATED_AT
-    };
-  }
+
 }
 
 // Export the AccidentStats module and all interfaces
 export { AccidentStatsQuery };
-
-// Re-export static types and constants for direct use
-export {
-  ACCIDENTSTATS_DATA
-};

@@ -1,24 +1,33 @@
 {
   "name": "tfl-ts",
   "version": "1.0.0",
-  "description": "TypeScript client for Transport for London (Tfl) API with auto-generated types and real-time data support",
+  "description": "🚇 Fully-typed TypeScript client for Transport for London (TfL) API • Zero dependencies • Auto-generated types • Real-time arrivals • Journey planning • Universal compatibility",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist",
-    "README.md"
+    "dist/*.js",
+    "dist/*.d.ts",
+    "dist/utils/",
+    "dist/generated/",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "npm run generate && tsc",
+    "build": "npm run generate:types && tsc",
+    "build:full": "npm run generate && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "playground": "ts-node playground/index.ts",
     "demo": "ts-node playground/demo.ts",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "generate": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src/generated -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node script/generateJsDoc.ts && ts-node script/generateMeta.ts",
+    "generate": "npm run generate:types && npm run generate:meta",
+    "generate:types": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src/generated -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node script/generateJsDoc.ts",
+    "generate:meta": "ts-node script/generateMeta.ts",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run build"
+    "prepublishOnly": "npm run test && npm run build:full",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
   },
   "keywords": [
     "tfl",
@@ -30,9 +39,40 @@
     "transport",
     "underground",
     "tube",
-    "bus"
+    "bus",
+    "real-time",
+    "arrivals",
+    "journey-planning",
+    "zero-dependencies",
+    "autocomplete",
+    "batch-requests",
+    "openapi",
+    "swagger",
+    "dlr",
+    "overground",
+    "elizabeth-line",
+    "tram",
+    "river-services",
+    "disruptions",
+    "status",
+    "travel",
+    "public-transport",
+    "uk",
+    "britain",
+    "england",
+    "metro",
+    "transit",
+    "sdk",
+    "railway",
+    "crossrail",
+    "tfl-api",
+    "london-transport",
+    "public-api",
+    "transport-api",
+    "gtfs",
+    "mobility"
   ],
-  "author": "Mangle Kuo",
+  "author": "Mangle Kuo <manglekuo@gmail.com>",
   "license": "MIT",
   "packageManager": "pnpm@10.4.1",
   "repository": {
@@ -44,7 +84,7 @@
   },
   "homepage": "https://github.com/ghcpuman902/tfl-ts#readme",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",

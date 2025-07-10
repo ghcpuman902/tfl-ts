@@ -1,0 +1,62 @@
+# Source code (only compiled dist is needed)
+src/
+types/
+
+# Development and testing files
+script/
+playground/
+__tests__/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+test-import.js
+
+# Configuration files
+tsconfig.json
+jest.config.ts
+.eslintrc.json
+.prettierrc
+.gitignore
+.npmignore
+
+# Development dependencies and lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Documentation and development files
+LLM_context.md
+ERROR.md
+*.gif
+*.png
+*.jpg
+*.jpeg
+
+# Environment files
+.env*
+!.env.example
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Generated files that shouldn't be in the package
+src/generated/jsdoc/
+src/generated/meta-tree.json
+src/generated/.DS_Store
+
+# Build artifacts (will be regenerated)
+dist/generated/
+dist/__tests__/
+dist/types/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/ 

@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-06-19T16:03:07.560Z
+// Generated at: 2025-07-08T14:05:05.593Z
 
 export const BIKEPOINT_DATA = {
   "section": "BikePoint",
@@ -53,7 +53,7 @@ export const BIKEPOINT_DATA = {
     }
   ],
   "totalEndpoints": 3,
-  "generatedAt": "2025-06-19T16:03:07.560Z"
+  "generatedAt": "2025-07-08T14:05:05.593Z"
 } as const;
 
 export type BIKEPOINT_DATAType = typeof BIKEPOINT_DATA;

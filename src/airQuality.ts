@@ -1,8 +1,7 @@
-import { Api, SystemObject } from './generated/tfl';
+import { Api } from './generated/tfl';
 import { stripTypeFields } from './utils/stripTypes';
 
-// Import raw data from generated meta files
-import { AIRQUALITY_DATA } from './generated/jsdoc/AirQuality';
+
 
 /**
  * Air quality information returned by the TfL API
@@ -97,11 +96,45 @@ export interface AirQualityForecast {
  * // Check air quality bands
  * const bands = client.airQuality.AIR_QUALITY_BANDS;
  * console.log(bands); // ['Low', 'Moderate', 'High', 'Very High']
+ * 
+ * // Validate user input before making API calls
+ * const userInput = ['Low', 'Invalid'];
+ * const validBands = userInput.filter(band => client.airQuality.AIR_QUALITY_BANDS.includes(band as AirQualityBand));
+ * if (validBands.length !== userInput.length) {
+ *   throw new Error(`Invalid air quality bands: ${userInput.filter(band => !client.airQuality.AIR_QUALITY_BANDS.includes(band as AirQualityBand)).join(', ')}`);
+ * }
  */
 export type AirQualityBand = 'Low' | 'Moderate' | 'High' | 'Very High';
 
 /**
- * Air quality class for interacting with TfL Air Quality API endpoints
+ * ⚠️ **DEPRECATED API - NOT RECOMMENDED FOR USE**
+ * 
+ * Access real-time air quality data for London.
+ * 
+ * This API appears to be poorly maintained on TfL's side and may not return
+ * current or reliable data. 
+ * 
+ * **RECOMMENDED ALTERNATIVES:**
+ * 
+ * For comprehensive and up-to-date air quality data, please use:
+ * 
+ * 1. **London Air API** - https://londonair.org.uk/Londonair/API/
+ *    - Live air quality data feeds
+ *    - Current and forecast air quality information
+ *    - Machine-readable formats (XML/JSON)
+ *    - Comprehensive documentation and help
+ * 
+ * 2. **London Datastore Air Quality** - https://data.london.gov.uk/air-quality/
+ *    - London Atmospheric Emissions Inventory (LAEI)
+ *    - London Local Air Quality Management (LLAQM)
+ *    - Diffusion tube data
+ *    - Air quality fact sheets and reports
+ *    - NO2 focus areas and concentration maps
+ * 
+ * This API provides air quality information including current forecasts,
+ * pollutant levels, and health advice. The data is provided by Ricardo-AEA
+ * and updated hourly.
+ * 
  * @example
  * // Get current air quality data
  * const airQuality = await client.airQuality.get();
@@ -111,22 +144,17 @@ export type AirQualityBand = 'Low' | 'Moderate' | 'High' | 'Very High';
  * const airQuality = await client.airQuality.get({ keepTflTypes: true });
  * 
  * // Access static metadata (no HTTP request)
- * const bands = client.airQuality.ENDPOINTS;
+ * const bands = client.airQuality.AIR_QUALITY_BANDS;
  * const endpoints = client.airQuality.ENDPOINTS;
+ * 
+ * // Validate user input before making API calls
+ * const userInput = ['Low', 'Invalid'];
+ * const validBands = userInput.filter(band => client.airQuality.AIR_QUALITY_BANDS.includes(band as AirQualityBand));
+ * if (validBands.length !== userInput.length) {
+ *   throw new Error(`Invalid air quality bands: ${userInput.filter(band => !client.airQuality.AIR_QUALITY_BANDS.includes(band as AirQualityBand)).join(', ')}`);
+ * }
  */
 export class AirQuality {
-  /** Available API endpoints (static, no HTTP request needed) */
-  public readonly ENDPOINTS = AIRQUALITY_DATA.endpoints;
-
-  /** Total number of available endpoints (static, no HTTP request needed) */
-  public readonly TOTAL_ENDPOINTS = AIRQUALITY_DATA.totalEndpoints;
-
-  /** API section name (static, no HTTP request needed) */
-  public readonly SECTION = AIRQUALITY_DATA.section;
-
-  /** Generation timestamp (static, no HTTP request needed) */
-  public readonly GENERATED_AT = AIRQUALITY_DATA.generatedAt;
-
   /** Available air quality bands (static, no HTTP request needed) */
   public readonly AIR_QUALITY_BANDS: readonly AirQualityBand[] = [
     'Low', 'Moderate', 'High', 'Very High'
@@ -149,6 +177,9 @@ export class AirQuality {
 
   /**
    * Gets air quality data feed
+   * 
+   * ⚠️ **WARNING: This method is part of a deprecated API.**
+   * See the class documentation above for details and recommended alternatives.
    * 
    * This method returns comprehensive air quality information for London,
    * including current forecasts, pollutant levels, and health advice.
@@ -187,54 +218,19 @@ export class AirQuality {
    * if (airQuality.forecastURL) {
    *   console.log(`Detailed forecast: ${airQuality.forecastURL}`);
    * }
+   * 
+   * // Validate air quality bands
+   * const band = airQuality.currentForecast?.[0]?.forecastBand;
+   * if (band && !client.airQuality.AIR_QUALITY_BANDS.includes(band as AirQualityBand)) {
+   *   console.log(`Unknown air quality band: ${band}`);
+   * }
    */
   async get(options: { keepTflTypes?: boolean } = {}): Promise<AirQualityInfo> {
     return this.api.airQuality.airQualityGet()
       .then(response => stripTypeFields(response.data, options.keepTflTypes));
   }
 
-  /**
-   * Get air quality metadata (makes HTTP request to TfL API)
-   * 
-   * This method fetches live metadata from the TfL API. For static metadata
-   * that doesn't change frequently, consider using the static properties
-   * instead to save HTTP round trips.
-   * 
-   * @param options - Options for metadata request
-   * @returns Promise resolving to air quality metadata
-   * @example
-   * // Get live metadata from TfL API
-   * const meta = await client.airQuality.getMeta();
-   * 
-   * // Use static metadata instead (no HTTP request)
-   * const bands = client.airQuality.AIR_QUALITY_BANDS;
-   * const descriptions = client.airQuality.AIR_QUALITY_BAND_DESCRIPTIONS;
-   * const pollutants = client.airQuality.POLLUTANT_TYPES;
-   */
-  async getMeta(options: { keepTflTypes?: boolean } = {}): Promise<{
-    endpoints: typeof AIRQUALITY_DATA.endpoints;
-    totalEndpoints: number;
-    section: string;
-    generatedAt: string;
-    bands: readonly AirQualityBand[];
-    bandDescriptions: {
-      'Low': string;
-      'Moderate': string;
-      'High': string;
-      'Very High': string;
-    };
-    pollutantTypes: readonly string[];
-  }> {
-    return {
-      endpoints: this.ENDPOINTS,
-      totalEndpoints: this.TOTAL_ENDPOINTS,
-      section: this.SECTION,
-      generatedAt: this.GENERATED_AT,
-      bands: this.AIR_QUALITY_BANDS,
-      bandDescriptions: this.AIR_QUALITY_BAND_DESCRIPTIONS,
-      pollutantTypes: this.POLLUTANT_TYPES
-    };
-  }
+
 
   /**
    * Get air quality band description
@@ -254,6 +250,15 @@ export class AirQuality {
    * if (band) {
    *   const description = client.airQuality.getBandDescription(band as AirQualityBand);
    *   console.log(`Current air quality: ${description}`);
+   * }
+   * 
+   * // Validate band before using
+   * const userBand = 'High';
+   * if (client.airQuality.AIR_QUALITY_BANDS.includes(userBand as AirQualityBand)) {
+   *   const description = client.airQuality.getBandDescription(userBand as AirQualityBand);
+   *   console.log(description);
+   * } else {
+   *   console.log('Invalid air quality band');
    * }
    */
   getBandDescription(band: AirQualityBand): string {
@@ -278,6 +283,13 @@ export class AirQuality {
    * } else {
    *   console.log('✅ Air quality is good');
    * }
+   * 
+   * // Validate band before checking
+   * const userBand = 'High';
+   * if (client.airQuality.AIR_QUALITY_BANDS.includes(userBand as AirQualityBand)) {
+   *   const isPoor = client.airQuality.isPoorAirQuality(userBand as AirQualityBand);
+   *   console.log(`Is poor air quality: ${isPoor}`);
+   * }
    */
   isPoorAirQuality(band: AirQualityBand): boolean {
     return band === 'High' || band === 'Very High';
@@ -299,6 +311,15 @@ export class AirQuality {
    *   const advice = client.airQuality.getHealthAdvice(band);
    *   console.log(`Health advice: ${advice}`);
    * }
+   * 
+   * // Validate band before getting advice
+   * const userBand = 'Moderate';
+   * if (client.airQuality.AIR_QUALITY_BANDS.includes(userBand as AirQualityBand)) {
+   *   const advice = client.airQuality.getHealthAdvice(userBand as AirQualityBand);
+   *   console.log(`Health advice: ${advice}`);
+   * } else {
+   *   console.log('Invalid air quality band');
+   * }
    */
   getHealthAdvice(band: AirQualityBand): string {
     const advice = {
@@ -311,7 +332,7 @@ export class AirQuality {
   }
 }
 
-// Re-export static types and constants for direct use
-export {
-  AIRQUALITY_DATA
+// Export the AirQuality module and all interfaces
+export { 
+  // No specific query interfaces needed for AirQuality (only has one endpoint)
 };

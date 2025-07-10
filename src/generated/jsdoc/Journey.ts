@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-06-19T16:03:07.560Z
+// Generated at: 2025-07-08T14:05:05.593Z
 
 export const JOURNEY_DATA = {
   "section": "Journey",
@@ -204,7 +204,7 @@ export const JOURNEY_DATA = {
     }
   ],
   "totalEndpoints": 1,
-  "generatedAt": "2025-06-19T16:03:07.560Z"
+  "generatedAt": "2025-07-08T14:05:05.593Z"
 } as const;
 
 export type JOURNEY_DATAType = typeof JOURNEY_DATA;

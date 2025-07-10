@@ -778,6 +778,8 @@ export interface TflApiCommonJourneyPlannerJpElevation {
   /** @format double */
   endLon?: number;
   /** @format int32 */
+  startElevation?: number;
+  /** @format int32 */
   heightFromPreviousPoint?: number;
   /** @format double */
   gradient?: number;
@@ -1765,6 +1767,7 @@ export type TflApiPresentationEntitiesInstructionStepSkyDirectionDescriptionEnum
   | 'NorthWest';
 
 export type TflApiPresentationEntitiesInstructionStepTrackTypeEnum =
+  | 'Cycleways'
   | 'CycleSuperHighway'
   | 'CanalTowpath'
   | 'QuietRoad'
@@ -2599,7 +2602,7 @@ export enum ContentType {
 }
 
 export class HttpClient<SecurityDataType = unknown> {
-  public baseUrl: string = 'https://api.digital.tfl.gov.uk';
+  public baseUrl: string = 'https://api.tfl.gov.uk';
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
   private abortControllers = new Map<CancelToken, AbortController>();
@@ -2776,7 +2779,7 @@ export class HttpClient<SecurityDataType = unknown> {
 /**
  * @title Transport for London Unified API
  * @version v1
- * @baseUrl https://api.digital.tfl.gov.uk
+ * @baseUrl https://api.tfl.gov.uk
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
   accidentStats = {
