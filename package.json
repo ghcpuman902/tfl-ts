@@ -1,6 +1,6 @@
 {
   "name": "tfl-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "🚇 Fully-typed TypeScript client for Transport for London (TfL) API • Zero dependencies • Auto-generated types • Real-time arrivals • Journey planning • Universal compatibility",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -102,8 +102,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.18.2"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "typescript": ">=5.0.0"
   }
