@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-07-10T01:28:59.106Z
+// Generated at: 2025-08-22T11:23:57.227Z
 
 export const INDEX_DATA = {
   "sections": [
@@ -21,7 +21,7 @@ export const INDEX_DATA = {
   "totalSections": 14,
   "totalEndpoints": 69,
   "metaEndpoints": 15,
-  "generatedAt": "2025-07-10T01:28:59.106Z"
+  "generatedAt": "2025-08-22T11:23:57.227Z"
 } as const;
 
 export type INDEX_DATAType = typeof INDEX_DATA;

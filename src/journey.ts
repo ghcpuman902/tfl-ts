@@ -15,32 +15,24 @@
  * - Disambiguation handling for ambiguous locations
  * 
  * @example
- * // Plan a basic journey
+ * // Plan a basic journey using station IDs for higher success rate
  * const journey = await client.journey.plan({
  *   from: '940GZZLUOXC', // Oxford Circus Station ID
- *   to: '940GZZLUVIC',   // Victoria Station ID
- *   mode: ['tube', 'bus'],
- *   timeIs: 'Departing',
- *   date: '20241201',
- *   time: '1430'
+ *   to: '940GZZLUVIC'    // Victoria Station ID
  * });
  * 
- * // Plan an accessible journey
+ * // Plan an accessible journey using journey parameters
  * const accessibleJourney = await client.journey.plan({
- *   from: 'Kings Cross',
- *   to: 'Waterloo',
- *   accessibilityPreference: ['StepFreeToVehicle', 'NoEscalators'],
- *   walkingSpeed: 'Slow',
- *   maxWalkingMinutes: '15'
+ *   from: '1012553', // Kings Cross journey parameter
+ *   to: '1004756',   // London Bridge journey parameter
+ *   accessibilityPreference: ['StepFreeToPlatform']
  * });
  * 
- * // Plan a cycling journey
+ * // Plan a cycling journey using WGS84 coordinates
  * const cycleJourney = await client.journey.plan({
- *   from: 'Hyde Park',
- *   to: 'Regents Park',
- *   cyclePreference: 'AllTheWay',
- *   bikeProficiency: ['Easy'],
- *   alternativeCycle: true
+ *   from: '51.501476,-0.141922', // Buckingham Palace coordinates
+ *   to: '51.5052987,-0.1865762', // Kensington Palace coordinates
+ *   mode: ['cycle']
  * });
  */
 
@@ -75,6 +67,9 @@ import {
   Sorts,
   StopTypes
 } from './generated/meta/Meta';
+
+// Import Lines data for tube line mapping
+import { Lines } from './generated/meta/Line';
 
 // Generate types from the generated meta data
 type ModeName = typeof Modes[number]['modeName'];
@@ -124,6 +119,22 @@ const buildSeverityDescriptions = (): readonly string[] => {
 // Build severity by mode mapping
 const severityByMode = buildSeverityByMode();
 const severityDescriptions = buildSeverityDescriptions();
+
+// Build line mapping from Lines data for all transport modes
+const buildLineMapping = (): Record<string, Record<string, string>> => {
+  const lineMappings: Record<string, Record<string, string>> = {};
+  
+  Lines.forEach(line => {
+    if (!lineMappings[line.modeName]) {
+      lineMappings[line.modeName] = {};
+    }
+    lineMappings[line.modeName][line.id] = line.name;
+  });
+  
+  return lineMappings;
+};
+
+const lineMapping = buildLineMapping();
 
 /**
  * Disambiguation option from journey planner
@@ -249,6 +260,37 @@ export interface JourneyLegData {
   distance?: number;
   /** Whether this leg is disrupted */
   isDisrupted?: boolean;
+  /** Departure station/stop information */
+  departurePoint?: {
+    name?: string;
+    id?: string;
+    lat?: number;
+    lon?: number;
+  };
+  /** Arrival station/stop information */
+  arrivalPoint?: {
+    name?: string;
+    id?: string;
+    lat?: number;
+    lon?: number;
+  };
+  /** Route information */
+  routeInfo?: {
+    lineName?: string;
+    direction?: string;
+    destination?: string;
+    platform?: string;
+  };
+  /** Transfer information */
+  transferInfo?: {
+    duration?: string;
+    position?: string;
+  };
+  /** Stop points along the route */
+  stopPoints?: Array<{
+    name?: string;
+    id?: string;
+  }>;
 }
 
 /**
@@ -286,46 +328,36 @@ export interface JourneyResult {
 /**
  * Query options for journey planning requests
  * @example
- * // Plan a journey from Oxford Circus to Victoria
+ * // Plan a journey from Oxford Circus to Victoria using station IDs
  * const journey = await client.journey.plan({
- *   from: '940GZZLUOXC',
- *   to: '940GZZLUVIC',
- *   mode: ['tube', 'bus'],
- *   timeIs: 'Departing',
- *   date: '20241201',
- *   time: '1430'
+ *   from: '940GZZLUOXC', // Oxford Circus Station ID
+ *   to: '940GZZLUVIC'    // Victoria Station ID
  * });
  * 
- * // Plan a journey with specific preferences
- * const journey = await client.journey.plan({
- *   from: 'Oxford Circus',
- *   to: 'Victoria',
- *   journeyPreference: 'LeastTime',
- *   walkingSpeed: 'Fast',
- *   maxWalkingMinutes: '30'
+ * // Plan a multi-modal journey with minimal filters for higher success rate
+ * const multiModalJourney = await client.journey.plan({
+ *   from: '51.504549,-0.084994', // London Bridge WGS84
+ *   to: '51.503664,-0.019723',   // Canary Wharf WGS84
+ *   mode: ['tube', 'bus']
  * });
  * 
- * // Plan a journey with accessibility requirements
+ * // Plan a journey with accessibility requirements using journey parameters
  * const accessibleJourney = await client.journey.plan({
- *   from: 'Kings Cross',
- *   to: 'Waterloo',
- *   accessibilityPreference: ['StepFreeToVehicle', 'NoEscalators'],
- *   walkingSpeed: 'Slow',
- *   maxWalkingMinutes: '15'
+ *   from: '1012553', // Kings Cross journey parameter
+ *   to: '1004756',   // London Bridge journey parameter
+ *   accessibilityPreference: ['StepFreeToPlatform']
  * });
  * 
- * // Plan a cycling journey
+ * // Plan a cycling journey using WGS84 coordinates
  * const cycleJourney = await client.journey.plan({
- *   from: 'Hyde Park',
- *   to: 'Regents Park',
- *   cyclePreference: 'AllTheWay',
- *   bikeProficiency: ['Easy'],
- *   alternativeCycle: true
+ *   from: '51.501476,-0.141922', // Buckingham Palace coordinates
+ *   to: '51.5052987,-0.1865762', // Kensington Palace coordinates
+ *   mode: ['cycle']
  * });
  * 
  * @example
  * // Validate user input before making API calls
- * const userInput = ['tube', 'invalid-mode'];
+ * const userInput = ['tube', 'bus', 'invalid-mode'];
  * const validModes = userInput.filter(mode => client.journey.MODE_NAMES.includes(mode));
  * if (validModes.length !== userInput.length) {
  *   throw new Error(`Invalid modes: ${userInput.filter(mode => !client.journey.MODE_NAMES.includes(mode)).join(', ')}`);
@@ -352,30 +384,52 @@ export interface JourneyQuery extends Partial<JourneyJourneyResultsParams> {
  * - Disambiguation handling for ambiguous locations
  * 
  * @example
- * // Plan a journey
+ * // Plan a journey using station IDs for higher success rate
  * const journey = await client.journey.plan({
- *   from: 'Oxford Circus',
- *   to: 'Victoria',
- *   mode: ['tube', 'bus']
+ *   from: '940GZZLUOXC', // Oxford Circus Station ID
+ *   to: '940GZZLUVIC'    // Victoria Station ID
  * });
  * 
- * // Handle disambiguation
- * if (journey.disambiguation) {
+ * // Handle disambiguation when using free-text locations
+ * const ambiguousJourney = await client.journey.plan({
+ *   from: 'Westminster',
+ *   to: 'Bank'
+ * });
+ * 
+ * if (ambiguousJourney.disambiguation) {
  *   console.log('Multiple options found. Please choose from:');
- *   journey.disambiguation.toLocationDisambiguation?.disambiguationOptions.forEach(option => {
- *     console.log(`${option.place.commonName} (${option.parameterValue})`);
+ *   
+ *   // Show 'from' options
+ *   if (ambiguousJourney.disambiguation.fromLocationDisambiguation) {
+ *     console.log('From options:');
+ *     ambiguousJourney.disambiguation.fromLocationDisambiguation.disambiguationOptions.forEach(option => {
+ *       console.log(`- ${option.place.commonName} (${option.parameterValue})`);
+ *     });
+ *   }
+ *   
+ *   // Show 'to' options
+ *   if (ambiguousJourney.disambiguation.toLocationDisambiguation) {
+ *     console.log('To options:');
+ *     ambiguousJourney.disambiguation.toLocationDisambiguation.disambiguationOptions.forEach(option => {
+ *       console.log(`- ${option.place.commonName} (${option.parameterValue})`);
+ *     });
+ *   }
+ *   
+ *   // Use a specific option for the journey
+ *   const specificJourney = await client.journey.plan({
+ *     from: '1000266', // Westminster Station
+ *     to: '1000013'    // Bank Station
  *   });
  * }
  * 
  * // Get available journey modes
  * const modes = await client.journey.getModes();
  * 
- * // Plan an accessible journey
+ * // Plan an accessible journey using journey parameters
  * const accessibleJourney = await client.journey.plan({
- *   from: 'Kings Cross',
- *   to: 'Waterloo',
- *   accessibilityPreference: ['StepFreeToVehicle', 'NoEscalators'],
- *   walkingSpeed: 'Slow'
+ *   from: '1012553', // Kings Cross journey parameter
+ *   to: '1004756',   // London Bridge journey parameter
+ *   accessibilityPreference: ['StepFreeToPlatform']
  * });
  * 
  * // Get static metadata (no HTTP request)
@@ -492,6 +546,9 @@ export class Journey {
   /** Mode metadata with service information */
   public readonly MODE_METADATA = modeMetadata;
 
+  /** Line mapping for displaying line names across all transport modes */
+  public readonly LINE_MAPPING = lineMapping;
+
   // Journey-specific constants
   /** Available time options for journey planning */
   public readonly TIME_IS_OPTIONS: readonly string[] = ['Arriving', 'Departing'];
@@ -527,37 +584,30 @@ export class Journey {
    * @param options - Journey planning options
    * @returns Promise resolving to journey itinerary results with simplified types
    * @example
+   * // Plan a basic journey using station IDs for higher success rate
    * const journey = await client.journey.plan({
-   *   from: '940GZZLUOXC',
-   *   to: '940GZZLUVIC',
-   *   mode: ['tube', 'bus'],
-   *   timeIs: 'Departing',
-   *   date: '20241201',
-   *   time: '1430'
+   *   from: '940GZZLUOXC', // Oxford Circus Station ID
+   *   to: '940GZZLUVIC'    // Victoria Station ID
    * });
    * 
    * @example
-   * // Plan a journey with accessibility requirements
+   * // Plan a journey with accessibility requirements using journey parameters
    * const accessibleJourney = await client.journey.plan({
-   *   from: 'Kings Cross',
-   *   to: 'Waterloo',
-   *   accessibilityPreference: ['StepFreeToVehicle', 'NoEscalators'],
-   *   walkingSpeed: 'Slow',
-   *   maxWalkingMinutes: '15'
+   *   from: '1012553', // Kings Cross journey parameter
+   *   to: '1004756',   // London Bridge journey parameter
+   *   accessibilityPreference: ['StepFreeToPlatform']
    * });
    * 
    * @example
-   * // Plan a cycling journey
+   * // Plan a cycling journey using WGS84 coordinates
    * const cycleJourney = await client.journey.plan({
-   *   from: 'Hyde Park',
-   *   to: 'Regents Park',
-   *   cyclePreference: 'AllTheWay',
-   *   bikeProficiency: ['Easy'],
-   *   alternativeCycle: true
+   *   from: '51.501476,-0.141922', // Buckingham Palace coordinates
+   *   to: '51.5052987,-0.1865762', // Kensington Palace coordinates
+   *   mode: ['cycle']
    * });
    * 
    * @example
-   * // Handle disambiguation when multiple options are found
+   * // Handle disambiguation when using free-text locations
    * const journey = await client.journey.plan({
    *   from: 'Westminster',
    *   to: 'Bank'
@@ -591,7 +641,7 @@ export class Journey {
    * 
    * @example
    * // Validate user input before making API calls
-   * const userInput = ['tube', 'invalid-mode'];
+   * const userInput = ['tube', 'bus', 'invalid-mode'];
    * const validModes = userInput.filter(mode => client.journey.MODE_NAMES.includes(mode));
    * if (validModes.length !== userInput.length) {
    *   throw new Error(`Invalid modes: ${userInput.filter(mode => !client.journey.MODE_NAMES.includes(mode)).join(', ')}`);
@@ -672,7 +722,10 @@ export class Journey {
    * @param journey - Journey result from plan method
    * @returns Object with from and to station names
    * @example
-   * const journey = await client.journey.plan({ from: 'Oxford Circus', to: 'Victoria' });
+   * const journey = await client.journey.plan({ 
+   *   from: '940GZZLUOXC', // Oxford Circus Station ID
+   *   to: '940GZZLUVIC'    // Victoria Station ID
+   * });
    * const stationNames = client.journey.getStationNames(journey);
    * console.log(`From: ${stationNames.from}, To: ${stationNames.to}`);
    */
@@ -719,9 +772,9 @@ export class Journey {
    * @returns Object with validation results and any errors
    * @example
    * const validation = client.journey.validateOptions({
-   *   from: 'Oxford Circus',
-   *   to: 'Victoria',
-   *   mode: ['tube', 'invalid-mode']
+   *   from: '940GZZLUOXC', // Oxford Circus Station ID
+   *   to: '940GZZLUVIC',   // Victoria Station ID
+   *   mode: ['tube', 'bus', 'invalid-mode']
    * });
    * 
    * if (!validation.isValid) {
@@ -815,6 +868,7 @@ export class Journey {
       severityByMode: this.SEVERITY_BY_MODE,
       severityDescriptions: this.SEVERITY_DESCRIPTIONS,
       modeMetadata: this.MODE_METADATA,
+      lineMapping: this.LINE_MAPPING,
       timeIsOptions: this.TIME_IS_OPTIONS,
       journeyPreferences: this.JOURNEY_PREFERENCES,
       accessibilityPreferences: this.ACCESSIBILITY_PREFERENCES,
@@ -822,6 +876,71 @@ export class Journey {
       cyclePreferences: this.CYCLE_PREFERENCES,
       bikeProficiencies: this.BIKE_PROFICIENCIES
     };
+  }
+
+  /**
+   * Format date for TfL API (yyyyMMdd format)
+   * 
+   * Converts a Date object or date string to the required yyyyMMdd format
+   * for the TfL Journey API.
+   * 
+   * @param date - Date object or date string
+   * @returns Date string in yyyyMMdd format
+   * @example
+   * const dateStr = client.journey.formatDate(new Date('2025-01-15'));
+   * console.log(dateStr); // "20250115"
+   * 
+   * const dateStr2 = client.journey.formatDate('2025-01-15');
+   * console.log(dateStr2); // "20250115"
+   */
+  formatDate(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.getFullYear().toString() + 
+           (dateObj.getMonth() + 1).toString().padStart(2, '0') + 
+           dateObj.getDate().toString().padStart(2, '0');
+  }
+
+  /**
+   * Format time for TfL API (HHmm format)
+   * 
+   * Converts a time string or Date object to the required HHmm format
+   * for the TfL Journey API.
+   * 
+   * @param time - Time string (HH:mm, HH:mm:ss, or HHmm) or Date object
+   * @returns Time string in HHmm format
+   * @example
+   * const timeStr = client.journey.formatTime('14:30');
+   * console.log(timeStr); // "1430"
+   * 
+   * const timeStr2 = client.journey.formatTime('14:30:00');
+   * console.log(timeStr2); // "1430"
+   * 
+   * const timeStr3 = client.journey.formatTime(new Date('2025-01-15T14:30:00'));
+   * console.log(timeStr3); // "1430"
+   */
+  formatTime(time: string | Date): string {
+    if (time instanceof Date) {
+      return time.getHours().toString().padStart(2, '0') + 
+             time.getMinutes().toString().padStart(2, '0');
+    }
+    
+    // Handle different time string formats
+    const timeStr = time.toString();
+    
+    // If already in HHmm format, return as is
+    if (/^\d{4}$/.test(timeStr)) {
+      return timeStr;
+    }
+    
+    // Handle HH:mm or HH:mm:ss format
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (match) {
+      const hours = parseInt(match[1]).toString().padStart(2, '0');
+      const minutes = match[2];
+      return hours + minutes;
+    }
+    
+    throw new Error(`Invalid time format: ${time}. Expected HH:mm, HH:mm:ss, or HHmm format.`);
   }
 
   /**
@@ -838,6 +957,13 @@ export class Journey {
    * 
    * // Use in custom natural language generation
    * const customInstruction = `Please ${modeVerbs.tube.imperative} ${modeVerbs.tube.article} tube to your destination`;
+   * 
+   * // Example mode verbs for common modes:
+   * // tube: take the tube
+   * // bus: board the bus
+   * // walking: walk
+   * // cycle: ride the bike
+   * // river-bus: board the river bus
    */
   getAllModeVerbs(): Record<string, { imperative: string; gerund: string; present: string; article: string }> {
     const allVerbs: Record<string, { imperative: string; gerund: string; present: string; article: string }> = {};
@@ -971,8 +1097,8 @@ export class Journey {
       'river-bus': { imperative: 'board', gerund: 'boarding', present: 'board', article: 'the' },
       'river-tour': { imperative: 'board', gerund: 'boarding', present: 'board', article: 'the' },
       'cable-car': { imperative: 'take', gerund: 'taking', present: 'take', article: 'the' },
-      'cycle': { imperative: 'cycle', gerund: 'cycling', present: 'cycle', article: '' },
-      'cycle-hire': { imperative: 'cycle', gerund: 'cycling', present: 'cycle', article: '' },
+      'cycle': { imperative: 'ride', gerund: 'riding', present: 'ride', article: 'the' },
+      'cycle-hire': { imperative: 'ride', gerund: 'riding', present: 'ride', article: 'the' },
       'walking': { imperative: 'walk', gerund: 'walking', present: 'walk', article: '' },
       'taxi': { imperative: 'take', gerund: 'taking', present: 'take', article: 'a' },
       'coach': { imperative: 'board', gerund: 'boarding', present: 'board', article: 'the' },
@@ -994,7 +1120,10 @@ export class Journey {
    * @param isFirst - Whether this is the first leg in the journey
    * @returns Natural language instruction string
    * @example
-   * const journey = await client.journey.plan({ from: 'Oxford Circus', to: 'Victoria' });
+   * const journey = await client.journey.plan({ 
+   *   from: '940GZZLUOXC', // Oxford Circus Station ID
+   *   to: '940GZZLUVIC'    // Victoria Station ID
+   * });
    * if (journey.journeys?.[0]?.legs) {
    *   journey.journeys[0].legs.forEach((leg, index) => {
    *     const instruction = client.journey.generateNaturalInstruction(leg, index === 0);
@@ -1007,30 +1136,109 @@ export class Journey {
     const duration = leg.duration || 0;
     const verbs = this.getModeVerbs(modeName);
     const article = verbs.article;
-    const modeDisplay = modeName === 'walking' ? 'walking' : 
-                       modeName === 'cycle' || modeName === 'cycle-hire' ? 'cycling' :
-                       modeName === 'tube' ? 'tube' :
-                       modeName === 'bus' ? 'bus' :
-                       modeName === 'dlr' ? 'DLR' :
-                       modeName === 'overground' ? 'Overground' :
-                       modeName === 'elizabeth-line' ? 'Elizabeth line' :
-                       modeName === 'national-rail' ? 'train' :
-                       modeName === 'tram' ? 'tram' :
-                       modeName === 'river-bus' ? 'river bus' :
-                       modeName === 'river-tour' ? 'river tour' :
-                       modeName === 'cable-car' ? 'cable car' :
-                       modeName === 'taxi' ? 'taxi' :
-                       modeName === 'coach' ? 'coach' :
-                       modeName === 'replacement-bus' ? 'replacement bus' :
-                       modeName;
+    const modeDisplay = this.getModeDisplayName(modeName);
 
-    // Extract bus line information from original instruction if available
+    // Extract line information from original instruction if available
     let lineInfo = '';
-    if (leg.instruction?.summary && (modeName === 'bus' || modeName === 'replacement-bus')) {
-      // Look for bus line patterns like "390 bus", "N136 bus", etc.
-      const busLineMatch = leg.instruction.summary.match(/(\d+|[A-Z]\d+)\s+bus/i);
-      if (busLineMatch) {
-        lineInfo = ` ${busLineMatch[1]}`;
+    if (leg.instruction?.summary) {
+      // Handle different transport modes with line information
+      if (modeName === 'bus' || modeName === 'replacement-bus') {
+        // Look for bus line patterns like "390 bus", "N136 bus", etc.
+        const busLineMatch = leg.instruction.summary.match(/(\d+|[A-Z]\d+)\s+bus/i);
+        if (busLineMatch) {
+          lineInfo = ` ${busLineMatch[1]}`;
+        }
+      } else if (modeName === 'tube') {
+        // Look for tube line patterns like "Bakerloo line", "Central line", etc.
+        const tubeLineMatch = leg.instruction.summary.match(/([A-Za-z]+)\s+line/i);
+        if (tubeLineMatch) {
+          const lineName = tubeLineMatch[1];
+          // Check if this matches a known tube line
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'dlr') {
+        // Look for DLR patterns
+        const dlrLineMatch = leg.instruction.summary.match(/([A-Za-z]+)\s+line/i);
+        if (dlrLineMatch) {
+          const lineName = dlrLineMatch[1];
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'overground') {
+        // Look for Overground patterns
+        const overgroundLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+line/i);
+        if (overgroundLineMatch) {
+          const lineName = overgroundLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'elizabeth-line') {
+        // Look for Elizabeth line patterns
+        const elizabethLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+line/i);
+        if (elizabethLineMatch) {
+          const lineName = elizabethLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'national-rail') {
+        // Look for national rail patterns
+        const railLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+(?:line|service)/i);
+        if (railLineMatch) {
+          const lineName = railLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'tram') {
+        // Look for tram patterns
+        const tramLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+(?:line|tram)/i);
+        if (tramLineMatch) {
+          const lineName = tramLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
       }
     }
 
@@ -1038,11 +1246,15 @@ export class Journey {
     if (modeName === 'walking') {
       const distance = leg.distance || 0;
       const distanceText = distance > 0 ? ` (${formatDistance(distance)})` : '';
-      return `${isFirst ? 'Walk' : 'Then walk'} ${duration} minute${duration !== 1 ? 's' : ''}${distanceText}`;
+      const destination = leg.arrivalPoint?.name || leg.routeInfo?.destination;
+      const destinationText = destination ? ` to ${destination}` : '';
+      return `${isFirst ? 'Walk' : 'Then walk'} ${duration} minute${duration !== 1 ? 's' : ''}${distanceText}${destinationText}`;
     }
     
     if (modeName === 'cycle' || modeName === 'cycle-hire') {
-      return `${isFirst ? 'Cycle' : 'Then cycle'} for ${duration} minute${duration !== 1 ? 's' : ''}`;
+      const destination = leg.arrivalPoint?.name || leg.routeInfo?.destination;
+      const destinationText = destination ? ` to ${destination}` : '';
+      return `${isFirst ? verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1) : 'Then ' + verbs.imperative} ${article}${modeDisplay} for ${duration} minute${duration !== 1 ? 's' : ''}${destinationText}`;
     }
     
     if (modeName === 'interchange-keep-sitting') {
@@ -1050,13 +1262,46 @@ export class Journey {
     }
     
     if (modeName === 'interchange-secure') {
-      return `${isFirst ? 'Transfer to' : 'Then transfer to'} the next service`;
+      const transferTime = leg.transferInfo?.duration;
+      const transferText = transferTime ? ` (${transferTime} transfer)` : '';
+      return `${isFirst ? 'Transfer to' : 'Then transfer to'} the next service${transferText}`;
     }
 
-    // For public transport modes
-    const transportInstruction = `${isFirst ? verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1) : 'Then ' + verbs.imperative} ${article}${lineInfo} ${modeDisplay} for ${duration} minute${duration !== 1 ? 's' : ''}`;
+    // For public transport modes - create much more detailed instructions
+    const departureStation = leg.departurePoint?.name;
+    const arrivalStation = leg.arrivalPoint?.name;
+    const destination = leg.routeInfo?.destination;
+    const platform = leg.routeInfo?.platform;
     
-    return transportInstruction;
+    let instruction = '';
+    
+    if (isFirst) {
+      instruction = `${verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1)} ${article}${lineInfo} ${modeDisplay}`;
+    } else {
+      instruction = `Then ${verbs.imperative} ${article}${lineInfo} ${modeDisplay}`;
+    }
+    
+    // Add departure station if available
+    if (departureStation) {
+      instruction += ` from ${departureStation}`;
+    }
+    
+    // Add platform if available
+    if (platform) {
+      instruction += ` (Platform ${platform})`;
+    }
+    
+    // Add destination information
+    if (arrivalStation) {
+      instruction += ` to ${arrivalStation}`;
+    } else if (destination) {
+      instruction += ` towards ${destination}`;
+    }
+    
+    // Add duration
+    instruction += ` for ${duration} minute${duration !== 1 ? 's' : ''}`;
+    
+    return instruction;
   }
 
   /**
@@ -1067,7 +1312,10 @@ export class Journey {
    * @param journey - Journey data
    * @returns Complete natural language journey description
    * @example
-   * const journey = await client.journey.plan({ from: 'Oxford Circus', to: 'Victoria' });
+   * const journey = await client.journey.plan({ 
+   *   from: '940GZZLUOXC', // Oxford Circus Station ID
+   *   to: '940GZZLUVIC'    // Victoria Station ID
+   * });
    * if (journey.journeys?.[0]) {
    *   const description = client.journey.generateNaturalDescription(journey.journeys[0]);
    *   console.log(description);
@@ -1178,6 +1426,42 @@ export class Journey {
       detailed: this.generateLegSummary(leg)
     };
 
+    // Extract departure and arrival point information from actual TfL API data
+    // Note: The generated types show Point but actual API returns StopPoint objects
+    const departurePoint = leg.departurePoint ? {
+      name: (leg.departurePoint as any).commonName || (leg.departurePoint as any).name || this.extractStationNameFromInstruction(leg.instruction?.summary || ''),
+      id: (leg.departurePoint as any).naptanId || (leg.departurePoint as any).id || (leg.departurePoint.lat && leg.departurePoint.lon ? `${leg.departurePoint.lat},${leg.departurePoint.lon}` : undefined),
+      lat: leg.departurePoint.lat,
+      lon: leg.departurePoint.lon
+    } : undefined;
+
+    const arrivalPoint = leg.arrivalPoint ? {
+      name: (leg.arrivalPoint as any).commonName || (leg.arrivalPoint as any).name || this.extractStationNameFromInstruction(leg.instruction?.summary || '', true),
+      id: (leg.arrivalPoint as any).naptanId || (leg.arrivalPoint as any).id || (leg.arrivalPoint.lat && leg.arrivalPoint.lon ? `${leg.arrivalPoint.lat},${leg.arrivalPoint.lon}` : undefined),
+      lat: leg.arrivalPoint.lat,
+      lon: leg.arrivalPoint.lon
+    } : undefined;
+
+    // Extract route information from routeOptions
+    const routeInfo = leg.routeOptions && leg.routeOptions.length > 0 ? {
+      lineName: leg.routeOptions[0].name,
+      direction: leg.routeOptions[0].direction,
+      destination: leg.routeOptions[0].directions?.[0],
+      platform: undefined // Platform info might be in detailed instruction
+    } : undefined;
+
+    // Extract transfer information
+    const transferInfo = leg.interChangeDuration || leg.interChangePosition ? {
+      duration: leg.interChangeDuration,
+      position: leg.interChangePosition
+    } : undefined;
+
+    // Extract stop points from path
+    const stopPoints = leg.path?.stopPoints?.map(stop => ({
+      name: stop.name || stop.fullName,
+      id: stop.id
+    })) || [];
+
     return {
       duration: leg.duration || 0,
       instruction,
@@ -1191,8 +1475,37 @@ export class Journey {
         id: 'walking'
       },
       distance: leg.distance || 0,
-      isDisrupted: leg.isDisrupted || false
+      isDisrupted: leg.isDisrupted || false,
+      departurePoint,
+      arrivalPoint,
+      routeInfo,
+      transferInfo,
+      stopPoints
     };
+  }
+
+  /**
+   * Extract station name from instruction text
+   */
+  private extractStationNameFromInstruction(instruction: string, isArrival: boolean = false): string | undefined {
+    if (!instruction) return undefined;
+    
+    // Look for patterns like "Walk to Oxford Circus Underground Station"
+    // or "Take the District line to Victoria"
+    const patterns = [
+      /to ([^,]+?)(?:\s+(?:Underground\s+)?Station|$)/i,
+      /from ([^,]+?)(?:\s+(?:Underground\s+)?Station|$)/i,
+      /at ([^,]+?)(?:\s+(?:Underground\s+)?Station|$)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = instruction.match(pattern);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    
+    return undefined;
   }
 
   /**
@@ -1209,29 +1522,117 @@ export class Journey {
     // Use the natural language generation for better summaries
     const verbs = this.getModeVerbs(modeName);
     const article = verbs.article;
-    const modeDisplay = modeName === 'walking' ? 'walking' : 
-                       modeName === 'cycle' || modeName === 'cycle-hire' ? 'cycling' :
-                       modeName === 'tube' ? 'tube' :
-                       modeName === 'bus' ? 'bus' :
-                       modeName === 'dlr' ? 'DLR' :
-                       modeName === 'overground' ? 'Overground' :
-                       modeName === 'elizabeth-line' ? 'Elizabeth line' :
-                       modeName === 'national-rail' ? 'train' :
-                       modeName === 'tram' ? 'tram' :
-                       modeName === 'river-bus' ? 'river bus' :
-                       modeName === 'river-tour' ? 'river tour' :
-                       modeName === 'cable-car' ? 'cable car' :
-                       modeName === 'taxi' ? 'taxi' :
-                       modeName === 'coach' ? 'coach' :
-                       modeName === 'replacement-bus' ? 'replacement bus' :
-                       modeName;
+    const modeDisplay = this.getModeDisplayName(modeName);
+
+    // Extract line information for all transport modes
+    let lineInfo = '';
+    if (leg.instruction?.summary) {
+      // Handle different transport modes with line information
+      if (modeName === 'bus' || modeName === 'replacement-bus') {
+        // Look for bus line patterns like "390 bus", "N136 bus", etc.
+        const busLineMatch = leg.instruction.summary.match(/(\d+|[A-Z]\d+)\s+bus/i);
+        if (busLineMatch) {
+          lineInfo = ` ${busLineMatch[1]}`;
+        }
+      } else if (modeName === 'tube') {
+        // Look for tube line patterns like "Bakerloo line", "Central line", etc.
+        const tubeLineMatch = leg.instruction.summary.match(/([A-Za-z]+)\s+line/i);
+        if (tubeLineMatch) {
+          const lineName = tubeLineMatch[1];
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'dlr') {
+        // Look for DLR patterns
+        const dlrLineMatch = leg.instruction.summary.match(/([A-Za-z]+)\s+line/i);
+        if (dlrLineMatch) {
+          const lineName = dlrLineMatch[1];
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'overground') {
+        // Look for Overground patterns
+        const overgroundLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+line/i);
+        if (overgroundLineMatch) {
+          const lineName = overgroundLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'elizabeth-line') {
+        // Look for Elizabeth line patterns
+        const elizabethLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+line/i);
+        if (elizabethLineMatch) {
+          const lineName = elizabethLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'national-rail') {
+        // Look for national rail patterns
+        const railLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+(?:line|service)/i);
+        if (railLineMatch) {
+          const lineName = railLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      } else if (modeName === 'tram') {
+        // Look for tram patterns
+        const tramLineMatch = leg.instruction.summary.match(/([A-Za-z\s]+)\s+(?:line|tram)/i);
+        if (tramLineMatch) {
+          const lineName = tramLineMatch[1].trim();
+          const modeLines = lineMapping[modeName] || {};
+          const lineId = Object.keys(modeLines).find(id => 
+            modeLines[id].toLowerCase() === lineName.toLowerCase()
+          );
+          if (lineId) {
+            lineInfo = ` ${modeLines[lineId]}`;
+          } else {
+            lineInfo = ` ${lineName}`;
+          }
+        }
+      }
+    }
 
     if (modeName === 'walking') {
       return `Walk for ${duration} minutes`;
     }
     
     if (modeName === 'cycle' || modeName === 'cycle-hire') {
-      return `Cycle for ${duration} minutes`;
+      return `${verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1)} ${article}${modeDisplay} for ${duration} minutes`;
     }
     
     if (modeName === 'interchange-keep-sitting') {
@@ -1242,7 +1643,7 @@ export class Journey {
       return 'Transfer to the next service';
     }
 
-    return `${verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1)} ${article} ${modeDisplay} for ${duration} minutes`;
+    return `${verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1)} ${article}${lineInfo} ${modeDisplay} for ${duration} minutes`;
   }
 
   /**
@@ -1274,4 +1675,7 @@ export {
 };
 
 // Re-export the raw Modes data
-export { Modes }; 
+export { Modes };
+
+// Re-export the line mapping
+export { lineMapping }; 

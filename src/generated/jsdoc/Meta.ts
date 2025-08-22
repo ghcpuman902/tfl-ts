@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-07-10T01:28:59.104Z
+// Generated at: 2025-08-22T11:23:57.224Z
 
 export const META_DATA = {
   "section": "Meta",
@@ -171,7 +171,7 @@ export const META_DATA = {
     }
   ],
   "totalEndpoints": 15,
-  "generatedAt": "2025-07-10T01:28:59.104Z"
+  "generatedAt": "2025-08-22T11:23:57.223Z"
 } as const;
 
 export type META_DATAType = typeof META_DATA;

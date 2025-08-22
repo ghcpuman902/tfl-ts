@@ -1,5 +1,5 @@
 // Generated from TfL API Meta data
-// Generated at: 2025-07-10T01:28:55.599Z
+// Generated at: 2025-08-22T11:20:41.783Z
 
 export const Modes = [
   {
@@ -1299,12 +1299,12 @@ export const Categories = [
   {
     "category": "Accessibility",
     "availableKeys": [
-      "AddtionalInformation",
-      "LimitedCapacityLift",
+      "TaxiRankOutsideStation",
       "SpecificEntranceRequired",
       "AccessViaLift",
       "BlueBadgeCarParkSpaces",
-      "TaxiRankOutsideStation",
+      "AddtionalInformation",
+      "LimitedCapacityLift",
       "SpecificEntranceInstructions",
       "Toilet",
       "ToiletNote"
@@ -1331,18 +1331,18 @@ export const Categories = [
       "Boarding Ramp",
       "Cash Machines",
       "Waiting Room",
+      "Boarding Ramps",
+      "Escalators",
       "ASDA Click and Collect",
       "Ticket Halls",
+      "Gates",
+      "Toilets",
+      "Euro Cash Machines",
+      "Payphones",
       "Help Points",
       "WiFi",
       "Bridge",
       "Car park",
-      "Euro Cash Machines",
-      "Payphones",
-      "Boarding Ramps",
-      "Escalators",
-      "Gates",
-      "Toilets",
       "Amazon Lockers",
       "Other Facilities",
       "Left Luggage",
@@ -1364,12 +1364,12 @@ export const Categories = [
   {
     "category": "Opening Time",
     "availableKeys": [
-      "SunTo",
-      "SatFrom",
-      "SunFrom",
       "MonFriFrom",
+      "SunFrom",
       "MonFriTo",
-      "SatTo"
+      "SatTo",
+      "SatFrom",
+      "SunTo"
     ]
   },
   {

@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-07-10T01:28:59.105Z
+// Generated at: 2025-08-22T11:23:57.226Z
 
 export const MODE_DATA = {
   "section": "Mode",
@@ -41,7 +41,7 @@ export const MODE_DATA = {
     }
   ],
   "totalEndpoints": 2,
-  "generatedAt": "2025-07-10T01:28:59.105Z"
+  "generatedAt": "2025-08-22T11:23:57.226Z"
 } as const;
 
 export type MODE_DATAType = typeof MODE_DATA;
