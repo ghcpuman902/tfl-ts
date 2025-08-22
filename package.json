@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "build": "npm run generate:types && tsc",
+    "build:dist": "tsc",
     "build:full": "npm run generate && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -25,7 +26,7 @@
     "generate:types": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src/generated -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node script/generateJsDoc.ts",
     "generate:meta": "ts-node script/generateMeta.ts",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run build",
+    "prepublishOnly": "npm run test && npm run build:dist",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean"
   },
