@@ -251,6 +251,8 @@ export * from './utils/ui';
 export {
   getLineColor,
   getLineCssProps,
+  getLineInlineStyles,
+  normalizeLineId,
   getSeverityCategory,
   getSeverityClasses,
   getAccessibleSeverityLabel,

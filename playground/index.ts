@@ -294,7 +294,7 @@ await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });</code></pre></div
       <div class="feature-section">
         <h3 class="feature-title">Constants and UI helpers</h3>
         <p>Sample modes: ${modeNames.map((mode) => `<code>${escapeHtml(mode)}</code>`).join(', ')}</p>
-        <p>Central line color: <span style="color:${centralColor.hex}">${centralColor.hex}</span> (${centralColor.text})</p>
+        <p>Central line color: <span style="color:${centralColor.hex}">${centralColor.hex}</span></p>
       </div>
 
       <form method="GET" action="/explore">
@@ -422,6 +422,7 @@ app.get('/route', async (req, res) => {
       <div class="header">
         <h1>Route details</h1>
         <h2 style="color:${lineColor?.hex || '#212529'}">${escapeHtml(details.basic?.name || id)}</h2>
+        <div style="background-color:${lineColor?.hex || '#6B7280'};height:4px;border-radius:2px;margin:12px 0;"></div>
         <p>Severity category: <strong>${escapeHtml(String(details.ui?.severityCategory || 'unknown'))}</strong></p>
       </div>
 

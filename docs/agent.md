@@ -331,6 +331,8 @@ export const ArrivalBoard = ({ stopId }: { stopId: string }) => {
 import {
   getLineColor,
   getLineCssProps,
+  getLineInlineStyles,
+  normalizeLineId,
   getSeverityCategory,
   getSeverityClasses,
   getAccessibleSeverityLabel,
@@ -341,6 +343,23 @@ import {
 ```
 
 Use these for styling status boards — they operate on data already fetched from the API.
+
+**Line colors:** `getLineColor()` returns hex values only (no Tailwind classes). Apply with inline styles or CSS variables — Tailwind cannot see classes inside `node_modules`.
+
+```tsx
+const colors = getLineColor(line.id ?? ''); // normalizes elizabeth-line → elizabeth
+
+// Color bar
+<div style={{ backgroundColor: colors.hex, height: 4 }} />
+
+// Card accent
+<div style={{ borderLeft: `4px solid ${colors.hex}` }} />
+
+// Line title
+<span style={{ color: colors.hex }}>{line.name}</span>
+
+// Or use getLineInlineStyles / getLineCssProps for common patterns
+```
 
 ## Raw client escape hatch
 

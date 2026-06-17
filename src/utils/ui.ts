@@ -8,7 +8,7 @@
  * import { getLineColor, getSeverityCategory, getAccessibleSeverityLabel } from 'tfl-ts/utils/ui';
  * 
  * // Get line colors for styling
- * const colors = getLineColor('central'); // { hex: '#E32017', text: 'text-[#E32017]', bg: 'bg-[#E32017]' }
+ * const colors = getLineColor('central'); // { hex: '#E32017', poorDarkContrast: false }
  * 
  * // Get severity category for conditional styling
  * const category = getSeverityCategory(6); // 'severe'
@@ -27,21 +27,16 @@ export type SeverityLevel = number; // Use number to match generated API types
 export type SeverityDescription = typeof Severity[number]['description'];
 
 /**
- * Line color information with accessibility considerations
+ * Line color information with accessibility considerations.
+ * Use `hex` with inline styles or CSS — do not rely on framework-specific class names.
  */
 export interface LineColorInfo {
-  /** Hex color code */
+  /** Official TfL hex color code */
   hex: string;
-  /** Tailwind text color class */
-  text: string;
-  /** Tailwind background color class */
-  bg: string;
   /** Whether this color has poor contrast on dark backgrounds */
   poorDarkContrast: boolean;
-  /** Suggested text color for dark backgrounds */
-  darkText?: string;
-  /** Suggested background color for dark backgrounds */
-  darkBg?: string;
+  /** Suggested contrasting hex when `poorDarkContrast` is true (e.g. on dark themes) */
+  darkContrastHex?: string;
 }
 
 /**
@@ -61,150 +56,87 @@ export interface SeverityMapping {
 }
 
 /**
- * Official TfL line colors with accessibility considerations
- * 
+ * Official TfL line hex colors.
+ * Keys use normalized line IDs (see `normalizeLineId`).
+ */
+const LINE_COLOR_HEX = {
+  // Tube lines
+  'bakerloo': '#B36305',
+  'central': '#E32017',
+  'circle': '#FFD300',
+  'district': '#00782A',
+  'hammersmith-city': '#F3A9BB',
+  'jubilee': '#A0A5A9',
+  'metropolitan': '#9B0056',
+  'northern': '#000000',
+  'piccadilly': '#003688',
+  'victoria': '#0098D4',
+  'waterloo-city': '#95CDBA',
+
+  // Other transport modes
+  'dlr': '#00A4A7',
+  'elizabeth': '#6950A1',
+  'tram': '#5fb526',
+
+  // Overground lines
+  'liberty': '#0071FD',
+  'lioness': '#FC9D9A',
+  'mildmay': '#0071FD',
+  'suffragette': '#76B82A',
+  'weaver': '#A45A2A',
+  'windrush': '#EE2E24',
+} as const;
+
+/** Lines whose brand hex has poor contrast on dark backgrounds */
+const POOR_DARK_CONTRAST_LINES = new Set<string>(['northern']);
+
+const buildLineColorInfo = (lineId: string, hex: string): LineColorInfo => {
+  const poorDarkContrast = POOR_DARK_CONTRAST_LINES.has(lineId);
+  return {
+    hex,
+    poorDarkContrast,
+    ...(poorDarkContrast ? { darkContrastHex: '#ffffff' } : {}),
+  };
+};
+
+/**
+ * Official TfL line colors with accessibility considerations.
+ *
  * Colors are based on TfL's official brand guidelines and include
  * accessibility considerations for dark mode and contrast ratios.
  */
-export const LINE_COLORS: Record<string, LineColorInfo> = {
-  // Tube lines
-  'bakerloo': { 
-    hex: '#B36305', 
-    text: 'text-[#B36305]', 
-    bg: 'bg-[#B36305]', 
-    poorDarkContrast: false 
-  },
-  'central': { 
-    hex: '#E32017', 
-    text: 'text-[#E32017]', 
-    bg: 'bg-[#E32017]', 
-    poorDarkContrast: false 
-  },
-  'circle': { 
-    hex: '#FFD300', 
-    text: 'text-[#FFD300]', 
-    bg: 'bg-[#FFD300]', 
-    poorDarkContrast: false 
-  },
-  'district': { 
-    hex: '#00782A', 
-    text: 'text-[#00782A]', 
-    bg: 'bg-[#00782A]', 
-    poorDarkContrast: false 
-  },
-  'hammersmith-city': { 
-    hex: '#F3A9BB', 
-    text: 'text-[#F3A9BB]', 
-    bg: 'bg-[#F3A9BB]', 
-    poorDarkContrast: false 
-  },
-  'jubilee': { 
-    hex: '#A0A5A9', 
-    text: 'text-[#A0A5A9]', 
-    bg: 'bg-[#A0A5A9]', 
-    poorDarkContrast: false 
-  },
-  'metropolitan': { 
-    hex: '#9B0056', 
-    text: 'text-[#9B0056]', 
-    bg: 'bg-[#9B0056]', 
-    poorDarkContrast: false 
-  },
-  'northern': { 
-    hex: '#000000', 
-    text: 'text-[#000000]', 
-    bg: 'bg-[#000000]', 
-    poorDarkContrast: true,
-    darkText: 'text-white',
-    darkBg: 'bg-white'
-  },
-  'piccadilly': { 
-    hex: '#003688', 
-    text: 'text-[#003688]', 
-    bg: 'bg-[#003688]', 
-    poorDarkContrast: false 
-  },
-  'victoria': { 
-    hex: '#0098D4', 
-    text: 'text-[#0098D4]', 
-    bg: 'bg-[#0098D4]', 
-    poorDarkContrast: false 
-  },
-  'waterloo-city': { 
-    hex: '#95CDBA', 
-    text: 'text-[#95CDBA]', 
-    bg: 'bg-[#95CDBA]', 
-    poorDarkContrast: false 
-  },
-  
-  // Other transport modes
-  'dlr': { 
-    hex: '#00A4A7', 
-    text: 'text-[#00A4A7]', 
-    bg: 'bg-[#00A4A7]', 
-    poorDarkContrast: false 
-  },
-  'elizabeth': { 
-    hex: '#6950A1', 
-    text: 'text-[#6950A1]', 
-    bg: 'bg-[#6950A1]', 
-    poorDarkContrast: false 
-  },
-  'tram': { 
-    hex: '#5fb526', 
-    text: 'text-[#5fb526]', 
-    bg: 'bg-[#5fb526]', 
-    poorDarkContrast: false 
-  },
-  
-  // Overground lines
-  'liberty': { 
-    hex: '#0071FD', 
-    text: 'text-[#0071FD]', 
-    bg: 'bg-[#0071FD]', 
-    poorDarkContrast: false 
-  },
-  'lioness': { 
-    hex: '#FC9D9A', 
-    text: 'text-[#FC9D9A]', 
-    bg: 'bg-[#FC9D9A]', 
-    poorDarkContrast: false 
-  },
-  'mildmay': { 
-    hex: '#0071FD', 
-    text: 'text-[#0071FD]', 
-    bg: 'bg-[#0071FD]', 
-    poorDarkContrast: false 
-  },
-  'suffragette': { 
-    hex: '#76B82A', 
-    text: 'text-[#76B82A]', 
-    bg: 'bg-[#76B82A]', 
-    poorDarkContrast: false 
-  },
-  'weaver': { 
-    hex: '#A45A2A', 
-    text: 'text-[#A45A2A]', 
-    bg: 'bg-[#A45A2A]', 
-    poorDarkContrast: false 
-  },
-  'windrush': { 
-    hex: '#EE2E24', 
-    text: 'text-[#EE2E24]', 
-    bg: 'bg-[#EE2E24]', 
-    poorDarkContrast: false 
-  }
-} as const;
+export const LINE_COLORS: Record<string, LineColorInfo> = Object.fromEntries(
+  Object.entries(LINE_COLOR_HEX).map(([lineId, hex]) => [
+    lineId,
+    buildLineColorInfo(lineId, hex),
+  ]),
+);
 
 /**
  * Default color for unknown lines
  */
 export const DEFAULT_LINE_COLOR: LineColorInfo = {
   hex: '#6B7280',
-  text: 'text-gray-500',
-  bg: 'bg-gray-500',
-  poorDarkContrast: false
+  poorDarkContrast: false,
 };
+
+/**
+ * API line ID aliases mapped to normalized color lookup keys.
+ * TfL returns mode-style IDs (e.g. `elizabeth-line`) that differ from color keys.
+ */
+const LINE_ID_ALIASES: Record<string, string> = {
+  'elizabeth-line': 'elizabeth',
+};
+
+/**
+ * Normalize a TfL line ID for color and ordering lookups.
+ *
+ * @example
+ * normalizeLineId('elizabeth-line'); // 'elizabeth'
+ * normalizeLineId('central'); // 'central'
+ */
+export const normalizeLineId = (lineId: string): string =>
+  LINE_ID_ALIASES[lineId] ?? lineId;
 
 /**
  * Line ordering by passenger volume and importance
@@ -283,14 +215,19 @@ export const SEVERITY_MAPPING = buildSeverityMapping();
  * Get line color information
  * 
  * @param lineId - The line ID to get colors for
- * @returns LineColorInfo object with hex, Tailwind classes, and accessibility info
- * 
+ * @returns LineColorInfo with official hex color and accessibility metadata
+ *
  * @example
  * const colors = getLineColor('central');
- * // Returns: { hex: '#E32017', text: 'text-[#E32017]', bg: 'bg-[#E32017]', poorDarkContrast: false }
+ * // Returns: { hex: '#E32017', poorDarkContrast: false }
+ *
+ * // React / inline styles (works in any CSS setup)
+ * <span style={{ color: colors.hex }}>Central</span>
+ * <div style={{ backgroundColor: colors.hex }} />
  */
 export const getLineColor = (lineId: string): LineColorInfo => {
-  return LINE_COLORS[lineId] || DEFAULT_LINE_COLOR;
+  const normalized = normalizeLineId(lineId);
+  return LINE_COLORS[normalized] || DEFAULT_LINE_COLOR;
 };
 
 /**
@@ -386,7 +323,7 @@ export const getAccessibleSeverityLabel = (severityLevel: SeverityLevel, descrip
  * const order = getLineOrder('unknown'); // LINE_ORDER.length (lowest priority)
  */
 export const getLineOrder = (lineId: string): number => {
-  const index = LINE_ORDER.indexOf(lineId);
+  const index = LINE_ORDER.indexOf(normalizeLineId(lineId));
   return index === -1 ? LINE_ORDER.length : index;
 };
 
@@ -453,6 +390,28 @@ export const getLineAriaLabel = (
   });
   
   return `${lineName} line: ${statusLabels.join(', ')}`;
+};
+
+/**
+ * Get inline style properties for common line color UI patterns.
+ *
+ * @example
+ * const styles = getLineInlineStyles('central');
+ * // { color: '#E32017', backgroundColor: '#E32017', borderLeftColor: '#E32017' }
+ *
+ * <div style={{ ...styles, borderLeftWidth: 4, borderLeftStyle: 'solid' }} />
+ */
+export const getLineInlineStyles = (lineId: string): {
+  color: string;
+  backgroundColor: string;
+  borderLeftColor: string;
+} => {
+  const { hex } = getLineColor(lineId);
+  return {
+    color: hex,
+    backgroundColor: hex,
+    borderLeftColor: hex,
+  };
 };
 
 /**

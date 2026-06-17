@@ -72,7 +72,7 @@ Works in Node.js 18+, browsers, and edge runtimes. Zero runtime dependencies.
 ## Example 1: Tube line status board
 
 ```typescript
-import TflClient, { sortLinesBySeverityAndOrder, getSeverityCategory } from 'tfl-ts';
+import TflClient, { sortLinesBySeverityAndOrder, getSeverityCategory, getLineColor } from 'tfl-ts';
 
 const client = new TflClient();
 
@@ -82,8 +82,23 @@ const sorted = sortLinesBySeverityAndOrder(statuses);
 for (const line of sorted) {
   const worst = line.lineStatuses?.[0];
   const category = getSeverityCategory(worst?.statusSeverity ?? 10);
-  console.log(`${line.name}: ${worst?.statusSeverityDescription} [${category}]`);
+  const colors = getLineColor(line.id ?? ''); // hex only — use with inline styles
+  console.log(`${line.name} (${colors.hex}): ${worst?.statusSeverityDescription} [${category}]`);
 }
+```
+
+### Line colors (framework-agnostic)
+
+`getLineColor()` returns hex values, not CSS framework classes. Use inline styles so colors work regardless of Tailwind/CSS setup:
+
+```tsx
+import { getLineColor, getLineCssProps } from 'tfl-ts';
+
+const colors = getLineColor(line.id ?? ''); // normalizes elizabeth-line → elizabeth
+
+<span style={{ color: colors.hex }}>{line.name}</span>
+<div style={{ backgroundColor: colors.hex, height: 4 }} />
+<article style={{ ...getLineCssProps(line.id ?? ''), borderLeft: `4px solid ${colors.hex}` }} />
 ```
 
 ## Example 2: Search stop → get arrivals
@@ -174,6 +189,8 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Trap | Wrong | Right |
 |------|-------|-------|
 | Line ID casing | `'Central'`, `'ELIZABETH'` | `'central'`, `'elizabeth'` |
+| Line color lookup | Tailwind classes from `getLineColor()` | `colors.hex` with inline styles |
+| Elizabeth line ID | `getLineColor('elizabeth')` only | `getLineColor('elizabeth-line')` auto-normalizes |
 | Stop ID format | `'Oxford Circus'` as ID | Search first → `'940GZZLUOXC'` |
 | Polling too fast | `setInterval(..., 1000)` on arrivals | 10–15s minimum per stop |
 | Hardcoding metadata | `['tube', 'bus', 'dlr']` inline | `client.stopPoint.MODE_NAMES` |

@@ -400,28 +400,36 @@ console.log(Object.keys(overlay));
 
 ### Line Colors and Branding
 
-Get official TfL line colors with accessibility considerations:
+Get official TfL line hex colors — framework-agnostic, use with inline styles or your own CSS:
 
 ```typescript
-import { getLineColor, getLineCssProps } from 'tfl-ts';
+import { getLineColor, getLineCssProps, getLineInlineStyles } from 'tfl-ts';
 
-// Get line color information
+// Get line color (hex only — no Tailwind or other framework classes)
 const colors = getLineColor('central');
 console.log(colors);
-// Output: { 
-//   hex: '#E32017', 
-//   text: 'text-[#E32017]', 
-//   bg: 'bg-[#E32017]', 
-//   poorDarkContrast: false 
-// }
+// Output: { hex: '#E32017', poorDarkContrast: false }
 
-// Get CSS custom properties for CSS-in-JS
+// API mode IDs are normalized automatically
+const elizabeth = getLineColor('elizabeth-line');
+// Output: { hex: '#6950A1', poorDarkContrast: false }
+
+// Inline styles for React, Vue, plain HTML, etc.
+const styles = getLineInlineStyles('central');
+// { color: '#E32017', backgroundColor: '#E32017', borderLeftColor: '#E32017' }
+
+// React example
+// <span style={{ color: colors.hex }}>Central</span>
+// <div style={{ backgroundColor: colors.hex, height: 4 }} />
+// <article style={{ ...getLineCssProps(line.id), borderLeft: `4px solid ${colors.hex}` }} />
+
+// CSS custom properties for CSS-in-JS or style={{ ...cssProps }}
 const cssProps = getLineCssProps('central');
 console.log(cssProps);
-// Output: { 
-//   '--line-color': '#E32017', 
-//   '--line-color-rgb': '227, 32, 23', 
-//   '--line-color-contrast': '#000000' 
+// Output: {
+//   '--line-color': '#E32017',
+//   '--line-color-rgb': '227, 32, 23',
+//   '--line-color-contrast': '#000000'
 // }
 ```
 

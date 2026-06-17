@@ -13,6 +13,7 @@ import TflClient, {
   sortLinesBySeverityAndOrder,
   getSeverityCategory,
   getLineColor,
+  getLineCssProps,
 } from 'tfl-ts';
 
 // ISR: revalidate every 60 seconds (line status changes on disruptions)
@@ -38,11 +39,13 @@ export default async function StatusPage() {
           const severity = worst?.statusSeverity ?? 10;
           const category = getSeverityCategory(severity);
           const colors = getLineColor(line.id ?? '');
+          const cssProps = getLineCssProps(line.id ?? '');
 
           return (
             <li
               key={line.id}
               className="flex items-center justify-between rounded-lg border p-4"
+              style={{ borderLeft: `4px solid ${colors.hex}`, ...cssProps }}
               aria-label={`${line.name}: ${worst?.statusSeverityDescription ?? 'Unknown'}`}
             >
               <span className="font-medium" style={{ color: colors.hex }}>

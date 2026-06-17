@@ -8,6 +8,7 @@ import TflClient, {
   getLineAriaLabel,
   getLineColor,
   getLineCssProps,
+  getLineInlineStyles,
   getLineDisplayName,
   getLineStatusSummary,
   getSeverityCategory,
@@ -25,10 +26,13 @@ const main = async (): Promise<void> => {
   printSection('UI helpers demo');
 
   printSubsection('Line colors');
-  ['central', 'victoria', 'elizabeth'].forEach((lineId) => {
+  ['central', 'victoria', 'elizabeth-line'].forEach((lineId) => {
     const color = getLineColor(lineId);
-    console.log(`${lineId}: ${color.hex} (${color.text})`);
+    console.log(`${lineId}: ${color.hex}`);
   });
+
+  printSubsection('Inline style helpers');
+  console.log(getLineInlineStyles('central'));
 
   printSubsection('Severity helpers');
   [6, 10, 20].forEach((severity) => {
