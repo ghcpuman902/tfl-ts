@@ -6,19 +6,19 @@
     "source": "https://api.tfl.gov.uk/swagger/docs/v1",
     "pathCount": 84
   },
-  "generatedAt": "2026-06-17T10:48:35.935Z",
+  "generatedAt": "2026-06-17T10:51:58.438Z",
   "artifacts": {
     "types": {
-      "generatedAt": "2026-06-17T10:48:22.619Z",
+      "generatedAt": "2026-06-17T10:51:56.919Z",
       "tool": "swagger-typescript-api",
       "toolVersion": "13.12.2"
     },
     "raw": {
-      "generatedAt": "2026-06-17T10:48:35.935Z",
+      "generatedAt": "2026-06-17T10:51:57.694Z",
       "endpointCount": 84
     },
     "jsdoc": {
-      "generatedAt": "2026-06-17T10:48:24.621Z",
+      "generatedAt": "2026-06-17T10:51:58.438Z",
       "endpointCount": 84,
       "sectionCount": 14
     }
