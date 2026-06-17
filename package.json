@@ -28,6 +28,7 @@
     "test:watch": "jest --watch",
     "playground": "ts-node playground/index.ts",
     "demo": "ts-node playground/demo.ts",
+    "demo:smoke": "ts-node script/demoSmoke.ts",
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.ts\"",
     "sync:spec": "ts-node script/syncSpec.ts",

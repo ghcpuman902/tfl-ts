@@ -139,7 +139,7 @@ main().catch(console.error);
 run the code with
 
 ```bash
-pnpm dlx ts-node demo.ts
+pnpm run demo
 ```
 
 
@@ -151,7 +151,18 @@ The TfL TypeScript client provides comprehensive error handling with typed error
 
 ## Examples
 
-see the [playgorund/demo folder](playground/demo) for complete set of examples for each endpoint.
+See the [playground/demo](playground/demo) folder for runnable v2 examples covering all 14 friendly modules, plus `raw`, `realtime`, UI helpers, and constants.
+
+Quick commands:
+
+```bash
+pnpm run demo              # v2 tour across wrappers, raw, and errors
+pnpm run playground        # local web playground
+pnpm run demo:smoke        # compile + demo catalog checks (no live API)
+pnpm run demo:smoke -- --live  # optional live TfL API smoke for key demos
+```
+
+Every REST endpoint remains reachable via `client.raw.*` and `pnpm exec tfl list`; friendly-wrapper demos focus on the curated public API. Individual demos are still runnable by path, for example `pnpm dlx ts-node playground/demo/raw.ts`.
 
 ### Autocomplete
 Autocomplete for line IDs, modes, etc.
@@ -308,7 +319,7 @@ console.log(client.line.LINE_NAMES);
   */
 ```
 
-Please see the [playgorund/demo folder](playground/demo) for complete set of examples for each endpoint.
+Please see the [playground/demo](playground/demo) folder for runnable module examples.
 
 ### Search module example
 ```typescript
@@ -481,7 +492,8 @@ pnpm run generate        # Regenerate from committed snapshot
 pnpm run check:drift     # Compare snapshot vs live REST paths
 pnpm run check:generated # Verify committed generated files
 pnpm run test            # Run tests
-pnpm run demo            # Run demo
+pnpm run demo            # Run v2 tour demo
+pnpm run demo:smoke      # Demo catalog + compile smoke check
 pnpm run playground      # Interactive playground
 pnpm exec tfl list       # List raw endpoints
 pnpm exec tfl smoke      # Smoke test live API

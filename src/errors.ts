@@ -1,4 +1,18 @@
 /**
+ * Structured body returned by the TfL API on error responses.
+ * Parsed lazily from `TflHttpError.responseBody`.
+ */
+export interface TflApiErrorBody {
+  $type?: string;
+  timestampUtc?: string;
+  exceptionType?: string;
+  httpStatusCode?: number;
+  httpStatus?: string;
+  relativeUri?: string;
+  message?: string;
+}
+
+/**
  * Base error class for TfL API errors
  */
 export class TflError extends Error {
@@ -29,47 +43,93 @@ export class TflError extends Error {
 export class TflHttpError extends TflError {
   public readonly isHttpError = true;
 
+  /** Lazily-parsed TfL error body; null if the body is not valid JSON. */
+  private _parsedBody: TflApiErrorBody | null | undefined = undefined;
+
   constructor(
     message: string,
     public readonly statusCode: number,
     public readonly statusText: string,
-    public readonly responseBody?: any,
+    public readonly responseBody?: string,
     public readonly url?: string,
     originalError?: Error,
     requestId?: string
   ) {
     super(message, statusCode, originalError, requestId);
     this.name = 'TflHttpError';
-    
+
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, TflHttpError);
     }
   }
 
   /**
-   * Check if this is a client error (4xx)
+   * Parsed TfL API error body, or null if the response was not a TfL JSON error.
+   * Accessing this is safe — it will never throw.
    */
+  get parsedBody(): TflApiErrorBody | null {
+    if (this._parsedBody === undefined) {
+      if (typeof this.responseBody === 'string') {
+        try {
+          this._parsedBody = JSON.parse(this.responseBody) as TflApiErrorBody;
+        } catch {
+          this._parsedBody = null;
+        }
+      } else {
+        this._parsedBody = null;
+      }
+    }
+    return this._parsedBody;
+  }
+
+  /**
+   * Human-readable message from the TfL API error body, e.g.
+   * "The following line id is not recognised: elizabeth-line"
+   */
+  get tflMessage(): string | undefined {
+    return this.parsedBody?.message;
+  }
+
+  /**
+   * TfL exception category, e.g. "EntityNotFoundException", "ValidationException".
+   */
+  get tflExceptionType(): string | undefined {
+    return this.parsedBody?.exceptionType;
+  }
+
+  /**
+   * The relative URI from the TfL error body (without credentials).
+   */
+  get tflRelativeUri(): string | undefined {
+    return this.parsedBody?.relativeUri?.replace(/\?.*$/, '');
+  }
+
+  /** Check if this is a client error (4xx) */
   public isClientError(): boolean {
     return this.statusCode >= 400 && this.statusCode < 500;
   }
 
-  /**
-   * Check if this is a server error (5xx)
-   */
+  /** Check if this is a server error (5xx) */
   public isServerError(): boolean {
     return this.statusCode >= 500 && this.statusCode < 600;
   }
 
-  /**
-   * Check if this is an authentication error (401)
-   */
+  /** Check if this is an authentication error (401) */
   public isAuthError(): boolean {
     return this.statusCode === 401;
   }
 
-  /**
-   * Check if this is a rate limit error (429)
-   */
+  /** Check if this is a forbidden error (403) */
+  public isForbiddenError(): boolean {
+    return this.statusCode === 403;
+  }
+
+  /** Check if this is a not-found error (404) */
+  public isNotFoundError(): boolean {
+    return this.statusCode === 404;
+  }
+
+  /** Check if this is a rate limit error (429) */
   public isRateLimitError(): boolean {
     return this.statusCode === 429;
   }

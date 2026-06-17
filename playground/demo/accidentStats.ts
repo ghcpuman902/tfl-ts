@@ -1,3 +1,6 @@
+// run by:
+// pnpm dlx ts-node playground/demo/accidentStats.ts
+
 import TflClient from '../../src/index';
 import dotenv from 'dotenv';
 

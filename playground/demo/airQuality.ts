@@ -1,3 +1,6 @@
+// run by:
+// pnpm dlx ts-node playground/demo/airQuality.ts
+
 import TflClient from '../../src/index';
 import dotenv from 'dotenv';
 

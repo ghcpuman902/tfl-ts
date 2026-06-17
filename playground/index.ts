@@ -1,411 +1,355 @@
 import express from 'express';
 import { config } from 'dotenv';
-import TflClient, { ModeName, TflLineId } from '../src/index';
+import TflClient, {
+  ENDPOINT_COUNT,
+  MODES,
+  ModeName,
+  TflLineId,
+  getLineColor,
+  getSeverityCategory,
+} from '../src/index';
 
 config();
 
-// Initialize Tfl client
 const client = new TflClient();
 
-// Enhanced wrapper functions showcasing our added value
+const PAGE_STYLES = `
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; line-height: 1.5; color: #212529; }
+  .form-group { margin: 20px 0; }
+  label { display: block; margin-bottom: 5px; font-weight: 600; }
+  select, button, input[type="text"] { padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; }
+  button { background: #007bff; color: white; cursor: pointer; border: none; }
+  button:hover { background: #0056b3; }
+  .header { text-align: center; margin-bottom: 30px; }
+  .description, .feature-section, .info-card, .error-card { margin: 20px 0; padding: 20px; border-radius: 8px; }
+  .description { background: #f8f9fa; }
+  .feature-section { background: #e9ecef; }
+  .info-card { background: #fff; border: 1px solid #dee2e6; }
+  .error-card { background: #fff5f5; border: 1px solid #f5c2c7; color: #842029; }
+  .feature-title { color: #0056b3; margin: 0 0 10px; }
+  .feature-list { list-style: none; padding: 0; margin: 0; }
+  .feature-item { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }
+  .code-snippet { margin-top: 15px; background: #1e1e1e; border-radius: 4px; overflow: hidden; }
+  .code-snippet pre { margin: 0; padding: 15px; color: #d4d4d4; font-family: Consolas, Monaco, monospace; font-size: 14px; overflow-x: auto; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #e7f1ff; color: #004085; font-size: 13px; }
+  .back-link { display: inline-block; margin-bottom: 20px; color: #6c757d; text-decoration: none; }
+  .back-link:hover { color: #495057; }
+  .route-list, .status-list { list-style: none; padding: 0; }
+  .route-item, .status-item { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff; }
+  .route-item a { text-decoration: none; color: #007bff; font-weight: 600; }
+  .status-good { color: #28a745; }
+  .status-warning { color: #ffc107; }
+  .status-bad { color: #dc3545; }
+  .details-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+  .detail-section { background: #f8f9fa; padding: 20px; border-radius: 4px; }
+  .json-container { background: #f8f9fa; padding: 20px; border-radius: 4px; overflow-x: auto; }
+  pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+  @media (max-width: 768px) { .details-container { grid-template-columns: 1fr; } }
+`;
+
+const renderLayout = (title: string, body: string): string => `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+    <style>${PAGE_STYLES}</style>
+  </head>
+  <body>${body}</body>
+  </html>
+`;
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
 export const getAvailableModes = async (): Promise<string[]> => {
   try {
     const meta = await client.line.getMeta();
-    return meta.modes.map(mode => mode.modeName || '').filter(Boolean);
+    return meta.modes.map((mode) => mode.modeName || '').filter(Boolean);
   } catch (error) {
     console.error('Error getting available modes:', error);
     return ['tube', 'bus', 'dlr', 'overground', 'tram'];
   }
 };
 
-// Showcase batch request capabilities
-export const getMultipleRouteStatus = async (ids: string[]): Promise<any[]> => {
-  try {
-    return await client.line.getStatus({ ids: ids as TflLineId[] });
-  } catch (error) {
-    console.error('Error getting multiple route status:', error);
+export const getMultipleRouteStatus = async (lineIds: string[]): Promise<any[]> => {
+  if (!lineIds.length) {
     return [];
   }
+
+  return client.line.getStatus({ lineIds: lineIds as TflLineId[] });
 };
 
-// Showcase parallel processing of different data types
-export const getRouteDetails = async (mode: string, id: string): Promise<any> => {
+export const getRouteDetails = async (mode: string, lineId: string): Promise<any> => {
   try {
     const [lineInfo, routeInfo, statusInfo, disruptions] = await Promise.all([
-      client.line.get({ ids: [id as TflLineId] }),
-      client.line.getRoute({ ids: [id as TflLineId] }),
-      client.line.getStatus({ ids: [id as TflLineId] }),
-      client.line.getDisruption({ ids: [id as TflLineId] })
+      client.line.get({ lineIds: [lineId as TflLineId] }),
+      client.line.getRoute({ lineIds: [lineId as TflLineId] }),
+      client.line.getStatus({ lineIds: [lineId as TflLineId] }),
+      client.line.getDisruption({ lineIds: [lineId as TflLineId] }),
     ]);
+
+    const lineColor = getLineColor(lineId);
+    const severity = statusInfo[0]?.lineStatuses?.[0]?.statusSeverity;
+    const severityCategory = severity !== undefined ? getSeverityCategory(severity) : 'unknown';
 
     return {
       basic: lineInfo[0] || {},
       route: routeInfo[0] || {},
       status: statusInfo[0] || {},
       disruptions: disruptions || [],
-      mode
+      mode,
+      ui: {
+        lineColor,
+        severityCategory,
+      },
     };
   } catch (error) {
-    console.error(`Error getting details for route ${id}:`, error);
-    return { error: 'Failed to fetch route details', mode, id };
+    console.error(`Error getting details for route ${lineId}:`, error);
+    return { error: 'Failed to fetch route details', mode, id: lineId };
   }
 };
 
-// Showcase stop point batch requests
-export const getMultipleStopPoints = async (ids: string[]): Promise<any[]> => {
-  try {
-    return await client.stopPoint.get({ ids });
-  } catch (error) {
-    console.error('Error getting multiple stop points:', error);
+export const getMultipleStopPoints = async (stopPointIds: string[]): Promise<any[]> => {
+  if (!stopPointIds.length) {
     return [];
   }
+
+  return client.stopPoint.get({ stopPointIds });
 };
 
-// Express app setup
 const app = express();
 
-app.get('/', async (req, res) => {
+app.get('/', async (_req, res) => {
   try {
     const modes = await getAvailableModes();
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Tfl API Playground</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .form-group { margin: 20px 0; }
-          label { display: block; margin-bottom: 5px; font-weight: 600; }
-          select, button { padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; }
-          button { background: #007bff; color: white; cursor: pointer; }
-          button:hover { background: #0056b3; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .description { background: #f8f9fa; padding: 20px; border-radius: 4px; margin-bottom: 30px; }
-          .feature-section { margin: 20px 0; padding: 20px; background: #e9ecef; border-radius: 4px; }
-          .feature-title { color: #0056b3; margin-bottom: 10px; }
-          .feature-list { list-style: none; padding: 0; }
-          .feature-item { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }
-          .code-snippet { 
-            margin-top: 15px; 
-            background: #1e1e1e; 
-            border-radius: 4px; 
-            overflow: hidden;
-          }
-          .code-snippet pre { 
-            margin: 0; 
-            padding: 15px; 
-            color: #d4d4d4; 
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            overflow-x: auto;
-          }
-          .code-snippet code {
-            font-family: inherit;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>🚇 Tfl API Playground</h1>
-          <p>Explore Transport for London API data with enhanced features</p>
-        </div>
-        
-        <div class="description">
-          <h3>Enhanced Features</h3>
-          <div class="feature-section">
-            <h4 class="feature-title">🔧 Raw escape hatch</h4>
-            <ul class="feature-list">
-              <li class="feature-item">✓ Every REST endpoint via <code>client.raw.&lt;tag&gt;.&lt;method&gt;()</code></li>
-              <li class="feature-item">✓ CLI: <code>tfl list</code>, <code>tfl raw line.get --modes tube</code></li>
-            </ul>
-            <div class="code-snippet">
-              <pre><code>// Call any endpoint directly
-await client.raw.line.statusByIds({ ids: ['central'] });</code></pre>
-            </div>
-          </div>
+    const modeNames = Object.keys(MODES).slice(0, 8);
+    const centralColor = getLineColor('central');
 
-          <div class="feature-section">
-            <h4 class="feature-title">🎯 Batch Processing</h4>
-            <ul class="feature-list">
-              <li class="feature-item">✓ Multiple line status requests in one call</li>
-              <li class="feature-item">✓ Batch stop point information retrieval</li>
-              <li class="feature-item">✓ Automatic request chunking and rate limiting</li>
-            </ul>
-            <div class="code-snippet">
-              <pre><code>// Example of batch processing multiple line statuses
-const statuses = await client.line.getStatus({ 
-  ids: ['central', 'victoria', 'jubilee'] 
-});</code></pre>
-            </div>
-          </div>
+    res.send(renderLayout('Tfl API Playground', `
+      <div class="header">
+        <h1>TfL API Playground (v2)</h1>
+        <p>Explore friendly wrappers, raw endpoints, constants, and UI helpers.</p>
+      </div>
 
-          <div class="feature-section">
-            <h4 class="feature-title">⚡ Performance Optimizations</h4>
-            <ul class="feature-list">
-              <li class="feature-item">✓ Parallel processing of independent requests</li>
-              <li class="feature-item">✓ Automatic retry mechanism for failed requests</li>
-              <li class="feature-item">✓ Efficient data caching and response mapping</li>
-            </ul>
-            <div class="code-snippet">
-              <pre><code>// Example of parallel processing
-const [lineInfo, routeInfo, statusInfo] = await Promise.all([
-  client.line.get({ ids: ['central'] }),
-  client.line.getRoute({ ids: ['central'] }),
-  client.line.getStatus({ ids: ['central'] })
-]);</code></pre>
-            </div>
-          </div>
-
-          <div class="feature-section">
-            <h4 class="feature-title">🛡️ Error Handling</h4>
-            <ul class="feature-list">
-              <li class="feature-item">✓ Consistent error propagation</li>
-              <li class="feature-item">✓ Detailed error messages and logging</li>
-              <li class="feature-item">✓ Graceful fallbacks for failed requests</li>
-            </ul>
-            <div class="code-snippet">
-              <pre><code>// Example of error handling with retries
-try {
-  const stopPoints = await client.stopPoint.get({ 
-    ids: ['940GZZLUASL', '940GZZLUBST'] 
-  });
-} catch (error) {
-  console.error('Failed to fetch stop points:', error);
-  // Automatic retry is handled by BatchRequest
-}</code></pre>
-            </div>
+      <div class="description">
+        <h2>v2 quick reference</h2>
+        <div class="info-card">
+          <p><strong>${ENDPOINT_COUNT}</strong> REST operations available via <code>client.raw.*</code></p>
+          <p>Friendly wrappers use explicit params such as <code>lineIds</code> and <code>stopPointIds</code>.</p>
+          <div class="pill-row">
+            <span class="pill">client.raw</span>
+            <span class="pill">client.realtime.pollArrivals</span>
+            <span class="pill">pnpm exec tfl list</span>
+            <span class="pill">pnpm exec tfl smoke</span>
           </div>
         </div>
+      </div>
 
-        <form method="GET" action="/explore">
-          <div class="form-group">
-            <label for="mode">Select Transport Mode:</label>
-            <select name="mode" id="mode" required>
-              ${modes.map(m => `<option value="${m}">${m.charAt(0).toUpperCase() + m.slice(1)}</option>`).join('')}
-            </select>
-          </div>
-          <button type="submit">🔍 Explore Routes</button>
-        </form>
-      </body>
-      </html>
-    `);
+      <div class="feature-section">
+        <h3 class="feature-title">Raw escape hatch</h3>
+        <ul class="feature-list">
+          <li class="feature-item">Every REST endpoint via <code>client.raw.&lt;tag&gt;.&lt;method&gt;()</code></li>
+          <li class="feature-item">CLI discovery: <code>pnpm exec tfl list --tag line</code></li>
+        </ul>
+        <div class="code-snippet"><pre><code>await client.raw.line.statusByIds({ ids: ['central'] });
+await client.raw.mode.getActiveServiceTypes({});</code></pre></div>
+      </div>
+
+      <div class="feature-section">
+        <h3 class="feature-title">Friendly wrappers (v2 params)</h3>
+        <div class="code-snippet"><pre><code>await client.line.getStatus({ lineIds: ['central', 'victoria'] });
+await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });</code></pre></div>
+      </div>
+
+      <div class="feature-section">
+        <h3 class="feature-title">Realtime + CLI demos</h3>
+        <ul class="feature-list">
+          <li class="feature-item"><code>pnpm dlx ts-node playground/demo/realtime.ts</code></li>
+          <li class="feature-item"><code>pnpm dlx ts-node playground/demo/raw.ts</code></li>
+          <li class="feature-item"><code>pnpm run demo:smoke</code> for compile + catalog checks</li>
+        </ul>
+      </div>
+
+      <div class="feature-section">
+        <h3 class="feature-title">Constants and UI helpers</h3>
+        <p>Sample modes: ${modeNames.map((mode) => `<code>${escapeHtml(mode)}</code>`).join(', ')}</p>
+        <p>Central line color: <span style="color:${centralColor.hex}">${centralColor.hex}</span> (${centralColor.text})</p>
+      </div>
+
+      <form method="GET" action="/explore">
+        <div class="form-group">
+          <label for="mode">Select transport mode</label>
+          <select name="mode" id="mode" required>
+            ${modes.map((mode) => `<option value="${escapeHtml(mode)}">${escapeHtml(mode.charAt(0).toUpperCase() + mode.slice(1))}</option>`).join('')}
+          </select>
+        </div>
+        <button type="submit">Explore routes</button>
+      </form>
+    `));
   } catch (error) {
-    res.status(500).send('Error loading available modes');
+    console.error(error);
+    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load playground</h1><p>Check your TfL credentials in <code>.env</code>.</p></div>'));
   }
 });
 
 app.get('/explore', async (req, res) => {
   try {
-    const { mode } = req.query;
+    const mode = String(req.query.mode || 'tube');
     const routes = await client.line.get({ modes: [mode as ModeName] });
-    
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Routes for ${mode}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .route-list { list-style: none; padding: 0; }
-          .route-item { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff; }
-          .route-item a { text-decoration: none; color: #007bff; font-weight: 600; }
-          .route-item a:hover { color: #0056b3; }
-          .back-link { display: inline-block; margin-bottom: 20px; color: #6c757d; text-decoration: none; }
-          .back-link:hover { color: #495057; }
-          .route-count { color: #6c757d; margin-bottom: 20px; }
-          .batch-status { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
-        </style>
-      </head>
-      <body>
-        <a href="/" class="back-link">← Back to Transport Modes</a>
-        
-        <div class="header">
-          <h1>${(mode as string).charAt(0).toUpperCase() + (mode as string).slice(1)} Routes</h1>
-        </div>
-        
-        <div class="route-count">
-          Found ${routes.length} route${routes.length === 1 ? '' : 's'}
-        </div>
 
-        <ul class="route-list">
-          ${routes.map((r: any) => `
-            <li class="route-item">
-              <a href="/route?mode=${mode}&id=${r.id}">
-                ${r.name || r.id} ${r.modeName ? `(${r.modeName})` : ''}
-              </a>
-            </li>
-          `).join('')}
-        </ul>
+    res.send(renderLayout(`Routes for ${mode}`, `
+      <a href="/" class="back-link">← Back to home</a>
+      <div class="header">
+        <h1>${escapeHtml(mode.charAt(0).toUpperCase() + mode.slice(1))} routes</h1>
+        <p>Found ${routes.length} route${routes.length === 1 ? '' : 's'}</p>
+      </div>
 
-        <div class="batch-status">
-          <h3>Batch Processing Demo</h3>
-          <p>Try getting status for multiple routes at once:</p>
-          <form method="GET" action="/batch-status">
-            <input type="hidden" name="mode" value="${mode}">
-            <input type="text" name="ids" placeholder="Enter route IDs (comma-separated)" style="width: 100%; padding: 10px; margin-bottom: 10px;">
-            <button type="submit">Get Batch Status</button>
-          </form>
-        </div>
-      </body>
-      </html>
-    `);
+      <ul class="route-list">
+        ${routes.map((route) => `
+          <li class="route-item">
+            <a href="/route?mode=${encodeURIComponent(mode)}&id=${encodeURIComponent(route.id || '')}">
+              ${escapeHtml(route.name || route.id || 'Unknown')}
+              ${route.modeName ? `(${escapeHtml(route.modeName)})` : ''}
+            </a>
+          </li>
+        `).join('')}
+      </ul>
+
+      <div class="feature-section">
+        <h3 class="feature-title">Batch status demo</h3>
+        <p>Try multiple line IDs separated by commas, e.g. <code>central,victoria</code>.</p>
+        <form method="GET" action="/batch-status">
+          <input type="hidden" name="mode" value="${escapeHtml(mode)}">
+          <div class="form-group">
+            <label for="ids">Line IDs</label>
+            <input type="text" id="ids" name="ids" placeholder="central,victoria,jubilee" style="width:100%;">
+          </div>
+          <button type="submit">Get batch status</button>
+        </form>
+      </div>
+    `));
   } catch (error) {
-    res.status(500).send('Error loading routes');
+    console.error(error);
+    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load routes</h1><p>Try another mode or verify your API credentials.</p></div>'));
   }
 });
 
 app.get('/batch-status', async (req, res) => {
   try {
-    const { ids, mode } = req.query;
-    const routeIds = (ids as string).split(',').map(id => id.trim());
-    const statuses = await getMultipleRouteStatus(routeIds);
-    
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Batch Status Results</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .status-list { list-style: none; padding: 0; }
-          .status-item { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; }
-          .status-good { color: #28a745; }
-          .status-warning { color: #ffc107; }
-          .status-bad { color: #dc3545; }
-          .back-link { display: inline-block; margin-bottom: 20px; color: #6c757d; text-decoration: none; }
-          .back-link:hover { color: #495057; }
-        </style>
-      </head>
-      <body>
-        <a href="/explore?mode=${mode}" class="back-link">← Back to Routes</a>
-        
-        <div class="header">
-          <h1>Batch Status Results</h1>
-          <p>Showing status for ${routeIds.length} routes</p>
-        </div>
+    const mode = String(req.query.mode || 'tube');
+    const rawIds = String(req.query.ids || '').trim();
 
-        <ul class="status-list">
-          ${statuses.map((status: any) => `
-            <li class="status-item">
-              <h3>${status.name || status.id}</h3>
-              ${status.lineStatuses?.map((lineStatus: any) => `
-                <div style="margin: 10px 0;">
-                  <p><strong>Status:</strong> <span class="${lineStatus.statusSeverity <= 10 ? 'status-good' : lineStatus.statusSeverity <= 15 ? 'status-warning' : 'status-bad'}">${lineStatus.statusSeverityDescription || 'Unknown'}</span></p>
-                  ${lineStatus.reason ? `<p><strong>Reason:</strong> ${lineStatus.reason}</p>` : ''}
-                </div>
-              `).join('') || '<p>No status information available</p>'}
-            </li>
-          `).join('')}
-        </ul>
-      </body>
-      </html>
-    `);
+    if (!rawIds) {
+      res.status(400).send(renderLayout('Missing line IDs', `
+        <a href="/explore?mode=${encodeURIComponent(mode)}" class="back-link">← Back to routes</a>
+        <div class="error-card">
+          <h1>Enter at least one line ID</h1>
+          <p>Example: <code>central,victoria,jubilee</code></p>
+        </div>
+      `));
+      return;
+    }
+
+    const routeIds = rawIds.split(',').map((id) => id.trim()).filter(Boolean);
+    const statuses = await getMultipleRouteStatus(routeIds);
+
+    res.send(renderLayout('Batch status results', `
+      <a href="/explore?mode=${encodeURIComponent(mode)}" class="back-link">← Back to routes</a>
+      <div class="header">
+        <h1>Batch status results</h1>
+        <p>Showing status for ${routeIds.length} line${routeIds.length === 1 ? '' : 's'}</p>
+      </div>
+
+      <ul class="status-list">
+        ${statuses.length ? statuses.map((status) => `
+          <li class="status-item">
+            <h3>${escapeHtml(status.name || status.id || 'Unknown')}</h3>
+            ${status.lineStatuses?.map((lineStatus: any) => `
+              <div style="margin:10px 0;">
+                <p><strong>Status:</strong>
+                  <span class="${lineStatus.statusSeverity <= 10 ? 'status-good' : lineStatus.statusSeverity <= 15 ? 'status-warning' : 'status-bad'}">
+                    ${escapeHtml(lineStatus.statusSeverityDescription || 'Unknown')}
+                  </span>
+                </p>
+                ${lineStatus.reason ? `<p><strong>Reason:</strong> ${escapeHtml(lineStatus.reason)}</p>` : ''}
+              </div>
+            `).join('') || '<p>No status information available</p>'}
+          </li>
+        `).join('') : '<li class="status-item">No statuses returned. Check the line IDs and try again.</li>'}
+      </ul>
+    `));
   } catch (error) {
-    res.status(500).send('Error loading batch status');
+    console.error(error);
+    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load batch status</h1><p>Verify the line IDs and your API credentials.</p></div>'));
   }
 });
 
 app.get('/route', async (req, res) => {
   try {
-    const { mode, id } = req.query;
-    const details = await getRouteDetails(mode as string, id as string);
-    
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Route Detail: ${id}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .back-link { display: inline-block; margin-bottom: 20px; color: #6c757d; text-decoration: none; }
-          .back-link:hover { color: #495057; }
-          .details-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-          .detail-section { background: #f8f9fa; padding: 20px; border-radius: 4px; }
-          .detail-section h3 { margin-top: 0; color: #495057; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
-          .status-good { color: #28a745; }
-          .status-warning { color: #ffc107; }
-          .status-bad { color: #dc3545; }
-          .json-container { background: #f8f9fa; padding: 20px; border-radius: 4px; overflow-x: auto; }
-          pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
-          .enhanced-features { margin-top: 20px; padding: 20px; background: #e9ecef; border-radius: 4px; }
-          @media (max-width: 768px) {
-            .details-container { grid-template-columns: 1fr; }
-          }
-        </style>
-      </head>
-      <body>
-        <a href="/explore?mode=${mode}" class="back-link">← Back to ${mode} routes</a>
-        
-        <div class="header">
-          <h1>🚇 Route Details</h1>
-          <h2>${details.basic?.name || id}</h2>
-        </div>
+    const mode = String(req.query.mode || 'tube');
+    const id = String(req.query.id || '');
+    const details = await getRouteDetails(mode, id);
+    const lineColor = details.ui?.lineColor;
 
-        <div class="details-container">
-          <div class="detail-section">
-            <h3>📋 Basic Information</h3>
-            <p><strong>ID:</strong> ${details.basic?.id || 'N/A'}</p>
-            <p><strong>Name:</strong> ${details.basic?.name || 'N/A'}</p>
-            <p><strong>Mode:</strong> ${details.basic?.modeName || mode}</p>
-            <p><strong>Created:</strong> ${details.basic?.created ? new Date(details.basic.created).toLocaleDateString() : 'N/A'}</p>
-          </div>
+    res.send(renderLayout(`Route detail: ${id}`, `
+      <a href="/explore?mode=${encodeURIComponent(mode)}" class="back-link">← Back to ${escapeHtml(mode)} routes</a>
+      <div class="header">
+        <h1>Route details</h1>
+        <h2 style="color:${lineColor?.hex || '#212529'}">${escapeHtml(details.basic?.name || id)}</h2>
+        <p>Severity category: <strong>${escapeHtml(String(details.ui?.severityCategory || 'unknown'))}</strong></p>
+      </div>
 
-          <div class="detail-section">
-            <h3>🚦 Current Status</h3>
-            ${details.status?.lineStatuses?.map((status: any) => `
-              <div style="margin-bottom: 10px;">
-                <p><strong>Status:</strong> <span class="${status.statusSeverity <= 10 ? 'status-good' : status.statusSeverity <= 15 ? 'status-warning' : 'status-bad'}">${status.statusSeverityDescription || 'Unknown'}</span></p>
-                ${status.reason ? `<p><strong>Reason:</strong> ${status.reason}</p>` : ''}
-              </div>
-            `).join('') || '<p>No status information available</p>'}
-          </div>
-        </div>
-
-        <div class="enhanced-features">
-          <h3>✨ Enhanced Features</h3>
-          <div class="details-container">
-            <div class="detail-section">
-              <h4>🔄 Parallel Processing</h4>
-              <p>This data was fetched using parallel requests for:</p>
-              <ul>
-                <li>Basic line information</li>
-                <li>Route details</li>
-                <li>Current status</li>
-                <li>Disruption information</li>
-              </ul>
-            </div>
-
-            <div class="detail-section">
-              <h4>🛡️ Error Handling</h4>
-              <p>Features implemented:</p>
-              <ul>
-                <li>Automatic retries for failed requests</li>
-                <li>Graceful fallbacks</li>
-                <li>Detailed error logging</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
+      <div class="details-container">
         <div class="detail-section">
-          <h3>🔧 Full API Response</h3>
-          <div class="json-container">
-            <pre>${JSON.stringify(details, null, 2)}</pre>
-          </div>
+          <h3>Basic information</h3>
+          <p><strong>ID:</strong> ${escapeHtml(details.basic?.id || 'N/A')}</p>
+          <p><strong>Name:</strong> ${escapeHtml(details.basic?.name || 'N/A')}</p>
+          <p><strong>Mode:</strong> ${escapeHtml(details.basic?.modeName || mode)}</p>
         </div>
-      </body>
-      </html>
-    `);
+        <div class="detail-section">
+          <h3>Current status</h3>
+          ${details.status?.lineStatuses?.map((status: any) => `
+            <div style="margin-bottom:10px;">
+              <p><strong>Status:</strong>
+                <span class="${status.statusSeverity <= 10 ? 'status-good' : status.statusSeverity <= 15 ? 'status-warning' : 'status-bad'}">
+                  ${escapeHtml(status.statusSeverityDescription || 'Unknown')}
+                </span>
+              </p>
+              ${status.reason ? `<p><strong>Reason:</strong> ${escapeHtml(status.reason)}</p>` : ''}
+            </div>
+          `).join('') || '<p>No status information available</p>'}
+        </div>
+      </div>
+
+      <div class="feature-section">
+        <h3 class="feature-title">Fetched in parallel with v2 params</h3>
+        <div class="code-snippet"><pre><code>await Promise.all([
+  client.line.get({ lineIds: ['${escapeHtml(id)}'] }),
+  client.line.getRoute({ lineIds: ['${escapeHtml(id)}'] }),
+  client.line.getStatus({ lineIds: ['${escapeHtml(id)}'] }),
+  client.line.getDisruption({ lineIds: ['${escapeHtml(id)}'] }),
+]);</code></pre></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Full API response</h3>
+        <div class="json-container"><pre>${escapeHtml(JSON.stringify(details, null, 2))}</pre></div>
+      </div>
+    `));
   } catch (error) {
-    res.status(500).send('Error loading route details');
+    console.error(error);
+    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load route details</h1></div>'));
   }
 });
 
 app.listen(3000, () => {
-  console.log('🚇 Tfl API Playground running at http://localhost:3000');
-  console.log('Make sure you have your Tfl API credentials set up in .env file or environment variables');
-}); 
+  console.log('TfL API Playground running at http://localhost:3000');
+  console.log('Set TFL_APP_ID and TFL_APP_KEY in .env before exploring live data.');
+});
