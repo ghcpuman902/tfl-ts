@@ -18,7 +18,10 @@
     "dist/generated/",
     "README.md",
     "LICENSE",
-    "docs/"
+    "docs/",
+    "examples/",
+    "CLAUDE.md",
+    ".claude/"
   ],
   "scripts": {
     "build": "tsc",
@@ -85,7 +88,13 @@
     "public-api",
     "transport-api",
     "gtfs",
-    "mobility"
+    "mobility",
+    "mcp",
+    "claude-skill",
+    "ai-agent",
+    "nextjs",
+    "llm",
+    "agent"
   ],
   "author": "Mangle Kuo <manglekuo@gmail.com>",
   "license": "MIT",

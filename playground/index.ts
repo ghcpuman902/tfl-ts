@@ -7,6 +7,11 @@ import TflClient, {
   TflLineId,
   getLineColor,
   getSeverityCategory,
+  TflError,
+  TflHttpError,
+  TflNetworkError,
+  TflTimeoutError,
+  TflConfigError,
 } from '../src/index';
 
 config();
@@ -26,6 +31,7 @@ const PAGE_STYLES = `
   .feature-section { background: #e9ecef; }
   .info-card { background: #fff; border: 1px solid #dee2e6; }
   .error-card { background: #fff5f5; border: 1px solid #f5c2c7; color: #842029; }
+  .error-detail { font-size: 13px; margin-top: 6px; color: #6c757d; }
   .feature-title { color: #0056b3; margin: 0 0 10px; }
   .feature-list { list-style: none; padding: 0; margin: 0; }
   .feature-item { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }
@@ -67,6 +73,114 @@ const escapeHtml = (value: string): string =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+
+const renderTflError = (error: unknown, context: string): string => {
+  const detail = (label: string, value: string) =>
+    `<p class="error-detail"><strong>${label}:</strong> <code>${escapeHtml(value)}</code></p>`;
+
+  if (error instanceof TflHttpError) {
+    const tflMsg = error.tflMessage;
+    const exType = error.tflExceptionType;
+    const extraDetails = [
+      exType ? detail('Exception type', exType) : '',
+      error.tflRelativeUri ? detail('Endpoint', error.tflRelativeUri) : '',
+    ].join('');
+
+    if (error.isNotFoundError()) {
+      return `
+        <div class="error-card">
+          <h1>Not Found — 404</h1>
+          <p>${tflMsg ? escapeHtml(tflMsg) : 'One or more of the requested IDs were not recognised by TfL.'}</p>
+          <p>Check that the identifiers are correct. You can browse valid IDs from the <a href="/explore">explore</a> page.</p>
+          ${extraDetails}
+        </div>`;
+    }
+
+    if (error.isAuthError()) {
+      return `
+        <div class="error-card">
+          <h1>Unauthorised — 401</h1>
+          <p>Your API credentials are missing or invalid.</p>
+          <p>Set <code>TFL_APP_ID</code> and <code>TFL_APP_KEY</code> in <code>.env</code>, then restart the server.</p>
+          <p>Register at <a href="https://api-portal.tfl.gov.uk/" target="_blank">api-portal.tfl.gov.uk</a> to get credentials.</p>
+        </div>`;
+    }
+
+    if (error.isForbiddenError()) {
+      return `
+        <div class="error-card">
+          <h1>Forbidden — 403</h1>
+          <p>Your API key does not have permission to access this resource.</p>
+          ${tflMsg ? `<p>${escapeHtml(tflMsg)}</p>` : ''}
+        </div>`;
+    }
+
+    if (error.isRateLimitError()) {
+      return `
+        <div class="error-card">
+          <h1>Rate Limited — 429</h1>
+          <p>You have exceeded the TfL API rate limit. Wait a moment, then try again.</p>
+        </div>`;
+    }
+
+    if (error.isServerError()) {
+      return `
+        <div class="error-card">
+          <h1>TfL API Error — ${error.statusCode}</h1>
+          <p>${tflMsg ? escapeHtml(tflMsg) : 'The TfL API returned a server error. Please try again shortly.'}</p>
+          ${extraDetails}
+        </div>`;
+    }
+
+    return `
+      <div class="error-card">
+        <h1>${escapeHtml(context)} — HTTP ${error.statusCode}</h1>
+        <p>${tflMsg ? escapeHtml(tflMsg) : escapeHtml(error.message)}</p>
+        ${extraDetails}
+      </div>`;
+  }
+
+  if (error instanceof TflNetworkError) {
+    return `
+      <div class="error-card">
+        <h1>Network Error</h1>
+        <p>Could not reach the TfL API. Check your internet connection and try again.</p>
+        ${error.url ? detail('URL', error.url) : ''}
+      </div>`;
+  }
+
+  if (error instanceof TflTimeoutError) {
+    return `
+      <div class="error-card">
+        <h1>Request Timeout</h1>
+        <p>The TfL API did not respond within ${error.timeoutMs / 1000}s. Please try again.</p>
+        ${error.url ? detail('URL', error.url) : ''}
+      </div>`;
+  }
+
+  if (error instanceof TflConfigError) {
+    return `
+      <div class="error-card">
+        <h1>Configuration Error</h1>
+        <p>Set <code>TFL_APP_ID</code> and <code>TFL_APP_KEY</code> in <code>.env</code>, then restart the server.</p>
+      </div>`;
+  }
+
+  if (error instanceof TflError) {
+    return `
+      <div class="error-card">
+        <h1>${escapeHtml(context)}</h1>
+        <p>${escapeHtml(error.message)}</p>
+      </div>`;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return `
+    <div class="error-card">
+      <h1>${escapeHtml(context)}</h1>
+      <p>${escapeHtml(message)}</p>
+    </div>`;
+};
 
 export const getAvailableModes = async (): Promise<string[]> => {
   try {
@@ -195,7 +309,7 @@ await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });</code></pre></div
     `));
   } catch (error) {
     console.error(error);
-    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load playground</h1><p>Check your TfL credentials in <code>.env</code>.</p></div>'));
+    res.status(500).send(renderLayout('Error', renderTflError(error, 'Could not load playground')));
   }
 });
 
@@ -237,7 +351,8 @@ app.get('/explore', async (req, res) => {
     `));
   } catch (error) {
     console.error(error);
-    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load routes</h1><p>Try another mode or verify your API credentials.</p></div>'));
+    const statusCode = error instanceof TflHttpError ? error.statusCode : 500;
+    res.status(statusCode).send(renderLayout('Error', renderTflError(error, 'Could not load routes')));
   }
 });
 
@@ -287,7 +402,11 @@ app.get('/batch-status', async (req, res) => {
     `));
   } catch (error) {
     console.error(error);
-    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load batch status</h1><p>Verify the line IDs and your API credentials.</p></div>'));
+    const statusCode = error instanceof TflHttpError ? error.statusCode : 500;
+    res.status(statusCode).send(renderLayout('Error', `
+      <a href="/explore?mode=${encodeURIComponent(String(req.query.mode || 'tube'))}" class="back-link">← Back to routes</a>
+      ${renderTflError(error, 'Could not load batch status')}
+    `));
   }
 });
 
@@ -345,7 +464,11 @@ app.get('/route', async (req, res) => {
     `));
   } catch (error) {
     console.error(error);
-    res.status(500).send(renderLayout('Error', '<div class="error-card"><h1>Could not load route details</h1></div>'));
+    const statusCode = error instanceof TflHttpError ? error.statusCode : 500;
+    res.status(statusCode).send(renderLayout('Error', `
+      <a href="/explore?mode=${encodeURIComponent(String(req.query.mode || 'tube'))}" class="back-link">← Back to routes</a>
+      ${renderTflError(error, 'Could not load route details')}
+    `));
   }
 });
 

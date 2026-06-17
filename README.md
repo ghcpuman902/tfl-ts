@@ -16,6 +16,34 @@
 - **Better parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
 - **Comprehensive error handling:** Comprehensive error handling with typed error classes and automatic retry logic. All errors are instances of `TflError` or its subclasses, making it easy to handle different types of errors appropriately.
 
+## For AI Agents
+
+tfl-ts separates **build-time static metadata** (line names, mode lists, severity labels — no API call) from **runtime live data** (status, arrivals, journeys — hits TfL API). Check static constants like `client.line.LINE_NAMES` before making network requests.
+
+| Resource | Purpose |
+|----------|---------|
+| [CLAUDE.md](CLAUDE.md) | Repo-level agent quick-start |
+| [docs/agent.md](docs/agent.md) | Full module reference, caching, Next.js patterns |
+| [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill — usage patterns, gotchas, examples |
+| [examples/](examples/) | Copy-paste: Next.js, Node CLI, caching |
+
+**MCP server (coming soon):** when published, add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "tfl-ts": {
+      "command": "npx",
+      "args": ["-y", "tfl-ts-mcp@latest"],
+      "env": {
+        "TFL_APP_ID": "your-app-id",
+        "TFL_APP_KEY": "your-app-key"
+      }
+    }
+  }
+}
+```
+
 ## Architecture (v2)
 
 tfl-ts v2 uses a **layered architecture** so generator and TfL schema changes never break friendly wrappers:

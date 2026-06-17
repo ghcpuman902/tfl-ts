@@ -31,6 +31,7 @@ import {
   TflConfigError,
   TflErrorHandler,
 } from './errors';
+import type { TflApiErrorBody } from './errors';
 
 type ModeName = typeof Modes[number]['modeName'];
 type ServiceType = typeof ServiceTypes[number];
@@ -242,6 +243,7 @@ export {
   TflConfigError,
   TflErrorHandler,
 };
+export type { TflApiErrorBody };
 export { RawClient } from './generated/raw';
 export { ENDPOINTS, ENDPOINT_COUNT } from './generated/endpoints';
 export type { EndpointDefinition } from './generated/endpoints';

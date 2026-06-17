@@ -50,7 +50,7 @@ importers:
         specifier: ^3.8.4
         version: 3.8.4
       swagger-typescript-api:
-        specifier: ^13.12.2
+        specifier: 13.12.2
         version: 13.12.2
       ts-jest:
         specifier: ^29.4.11
