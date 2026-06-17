@@ -58,7 +58,7 @@ OpenAPI snapshot (committed)
 
 - **`pnpm run build`** compiles TypeScript only — no network, no regeneration.
 - **`client.raw.<tag>.<method>()`** always exposes every REST endpoint, even before a wrapper exists.
-- **`client.realtime.pollArrivals()`** provides instant-pull polling; SignalR/URA push is deferred ([REALTIME.md](docs/REALTIME.md)).
+- **`client.realtime`** provides instant-pull polling over REST arrivals (`pollArrivals`, `pollLineArrivals`, `pollVehicleArrivals`). SignalR/URA push is deferred — see [REALTIME.md](docs/REALTIME.md).
 - **CLI:** `tfl raw`, `tfl list`, `tfl smoke` (see [Migration Guide](docs/MIGRATION-v2.md)).
 
 ```typescript
@@ -68,6 +68,29 @@ await client.line.getStatus({ lineIds: ['central'] });
 // Raw escape hatch (always available)
 await client.raw.line.statusByIds({ ids: ['central'] });
 ```
+
+### Realtime (instant pull)
+
+Poll live arrivals without SignalR or extra credentials — uses the same `app_key` as REST:
+
+```typescript
+const stop = client.realtime.pollArrivals(
+  {
+    stopPointIds: ['940GZZLUOXC', '940GZZLUVIC'],
+    sortBy: 'timeToStation',
+    intervalMs: 30_000,
+  },
+  (arrivals, meta) => {
+    console.log(`[tick ${meta.tick}]`, arrivals.length, 'predictions');
+  },
+  (error, meta) => console.error(meta.tick, error),
+);
+
+// stop polling when done
+stop();
+```
+
+Interactive demo: `pnpm run playground` → `/arrivals`. CLI: `pnpm run demo:realtime`.
 
 ## Getting Started
 
@@ -185,7 +208,8 @@ Quick commands:
 
 ```bash
 pnpm run demo              # v2 tour across wrappers, raw, and errors
-pnpm run playground        # local web playground
+pnpm run demo:realtime     # instant-pull polling demo (live API)
+pnpm run playground        # local web playground (includes /arrivals board)
 pnpm run demo:smoke        # compile + demo catalog checks (no live API)
 pnpm run demo:smoke -- --live  # optional live TfL API smoke for key demos
 ```

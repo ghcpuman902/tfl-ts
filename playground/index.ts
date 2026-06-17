@@ -47,6 +47,14 @@ const PAGE_STYLES = `
   .status-good { color: #28a745; }
   .status-warning { color: #ffc107; }
   .status-bad { color: #dc3545; }
+  .arrivals-board { margin-top: 20px; }
+  .arrival-row { display: grid; grid-template-columns: 100px 1fr 80px; gap: 12px; padding: 12px 15px; background: #fff; border-radius: 4px; border-left: 4px solid #007bff; margin: 8px 0; align-items: center; }
+  .arrival-line { font-weight: 700; }
+  .arrival-dest { color: #495057; }
+  .arrival-time { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .arrival-meta { font-size: 13px; color: #6c757d; margin-top: 8px; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; background: #28a745; border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .details-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
   .detail-section { background: #f8f9fa; padding: 20px; border-radius: 4px; }
   .json-container { background: #f8f9fa; padding: 20px; border-radius: 4px; overflow-x: auto; }
@@ -285,6 +293,7 @@ await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });</code></pre></div
       <div class="feature-section">
         <h3 class="feature-title">Realtime + CLI demos</h3>
         <ul class="feature-list">
+          <li class="feature-item"><a href="/arrivals">Live arrivals board</a> (SSE via <code>client.realtime.pollArrivals</code>)</li>
           <li class="feature-item"><code>pnpm dlx ts-node playground/demo/realtime.ts</code></li>
           <li class="feature-item"><code>pnpm dlx ts-node playground/demo/raw.ts</code></li>
           <li class="feature-item"><code>pnpm run demo:smoke</code> for compile + catalog checks</li>
@@ -471,6 +480,125 @@ app.get('/route', async (req, res) => {
       ${renderTflError(error, 'Could not load route details')}
     `));
   }
+});
+
+const ARRIVAL_STOP_PRESETS: { id: string; label: string }[] = [
+  { id: '940GZZLUOXC', label: 'Oxford Circus (tube)' },
+  { id: '940GZZLUODS', label: 'Old Street (tube)' },
+  { id: '940GZZLUVIC', label: 'Victoria (tube)' },
+  { id: '490000182E', label: 'Oxford Circus (bus)' },
+];
+
+app.get('/arrivals', (req, res) => {
+  const selectedId = String(req.query.stopPointId || '940GZZLUOXC');
+
+  res.send(renderLayout('Live Arrivals', `
+    <a href="/" class="back-link">← Back to home</a>
+    <div class="header">
+      <h1><span class="live-dot" aria-hidden="true"></span>Live Arrivals</h1>
+      <p>Instant-pull board powered by <code>client.realtime.pollArrivals</code> (30s interval).</p>
+    </div>
+
+    <form method="GET" action="/arrivals" class="form-group">
+      <label for="stopPointId">Stop point</label>
+      <select name="stopPointId" id="stopPointId" onchange="this.form.submit()">
+        ${ARRIVAL_STOP_PRESETS.map(
+          (stop) =>
+            `<option value="${escapeHtml(stop.id)}"${stop.id === selectedId ? ' selected' : ''}>${escapeHtml(stop.label)} (${escapeHtml(stop.id)})</option>`,
+        ).join('')}
+      </select>
+    </form>
+
+    <div class="arrivals-board" id="board" aria-live="polite" aria-label="Arrival predictions">
+      <p>Connecting…</p>
+    </div>
+    <p class="arrival-meta" id="meta"></p>
+
+    <div class="feature-section">
+      <h3 class="feature-title">How it works</h3>
+      <div class="code-snippet"><pre><code>const stop = client.realtime.pollArrivals(
+  { stopPointId: '${escapeHtml(selectedId)}', intervalMs: 30000, sortBy: 'timeToStation' },
+  (arrivals, meta) => console.log(arrivals, meta.fetchedAt),
+);</code></pre></div>
+    </div>
+
+    <script>
+      const stopPointId = ${JSON.stringify(selectedId)};
+      const board = document.getElementById('board');
+      const meta = document.getElementById('meta');
+      const source = new EventSource('/arrivals/stream?stopPointId=' + encodeURIComponent(stopPointId));
+
+      const formatTime = (seconds) => {
+        if (!seconds || seconds <= 0) return 'Due';
+        const mins = Math.round(seconds / 60);
+        return mins + ' min';
+      };
+
+      source.onmessage = (event) => {
+        const payload = JSON.parse(event.data);
+        const arrivals = (payload.arrivals || []).slice().sort((a, b) => (a.timeToStation || 0) - (b.timeToStation || 0));
+
+        if (!arrivals.length) {
+          board.innerHTML = '<p>No arrivals right now.</p>';
+        } else {
+          board.innerHTML = arrivals.map((a) =>
+            '<div class="arrival-row">' +
+              '<span class="arrival-line">' + (a.lineName || a.lineId || '—') + '</span>' +
+              '<span class="arrival-dest">' + (a.destinationName || a.towards || '—') + '</span>' +
+              '<span class="arrival-time">' + formatTime(a.timeToStation) + '</span>' +
+            '</div>'
+          ).join('');
+        }
+
+        const fetchedAt = payload.meta?.fetchedAt ? new Date(payload.meta.fetchedAt).toLocaleTimeString() : '—';
+        meta.textContent = 'Last update: ' + fetchedAt +
+          ' · tick ' + (payload.meta?.tick ?? '—') +
+          (payload.meta?.hadDeletions ? ' · deletions applied' : '');
+      };
+
+      source.onerror = () => {
+        board.innerHTML = '<p class="error-card">Connection lost. Refresh the page to reconnect.</p>';
+      };
+    </script>
+  `));
+});
+
+app.get('/arrivals/stream', (req, res) => {
+  const stopPointId = String(req.query.stopPointId || '940GZZLUOXC');
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const unsubscribe = client.realtime.pollArrivals(
+    {
+      stopPointId,
+      intervalMs: 30_000,
+      sortBy: 'timeToStation',
+    },
+    (arrivals, meta) => {
+      res.write(
+        `data: ${JSON.stringify({
+          arrivals,
+          meta: {
+            fetchedAt: meta.fetchedAt.toISOString(),
+            stopPointIds: meta.stopPointIds,
+            hadDeletions: meta.hadDeletions,
+            tick: meta.tick,
+          },
+        })}\n\n`,
+      );
+    },
+    (error) => {
+      res.write(`event: error\ndata: ${JSON.stringify({ message: String(error) })}\n\n`);
+    },
+  );
+
+  req.on('close', () => {
+    unsubscribe();
+    res.end();
+  });
 });
 
 app.listen(3000, () => {

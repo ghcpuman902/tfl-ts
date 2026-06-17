@@ -247,6 +247,19 @@ export type { TflApiErrorBody };
 export { RawClient } from './generated/raw';
 export { ENDPOINTS, ENDPOINT_COUNT } from './generated/endpoints';
 export type { EndpointDefinition } from './generated/endpoints';
+export { Realtime, pollArrivals, pollLineArrivals, pollVehicleArrivals } from './realtime';
+export type {
+  PollMeta,
+  PollArrivalsOptions,
+  PollLineArrivalsOptions,
+  PollVehicleArrivalsOptions,
+  PollArrivalsUnsubscribe,
+  OnArrivals,
+  OnPollError,
+  ArrivalSortBy,
+  ArrivalSortOrder,
+  Prediction as RealtimePrediction,
+} from './realtime';
 export * from './utils/ui';
 export {
   getLineColor,

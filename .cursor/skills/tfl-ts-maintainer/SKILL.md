@@ -61,13 +61,7 @@ src/index.ts                          # TflClient { raw, realtime, line, … }
 
 Single file for all generation timestamps. Updated by each generator; **excluded** from `check:generated` git diff.
 
-After `check:generated`, only this file may change (new timestamps). That is expected — revert it:
-
-```bash
-git checkout -- src/generated/generated.meta.json
-```
-
-Do not fail publish or block commits solely because this file drifted.
+After `check:generated`, only this file may change when running a full intentional `pnpm run generate`. Verification (`check:generated`, `prepublishOnly`) sets `TFL_SKIP_GENERATED_META=1` so the file is not updated during drift checks — no manual `git checkout` before publish.
 
 ## Wrapper implementation pattern
 

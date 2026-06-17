@@ -37,6 +37,8 @@ describe('TflClient', () => {
     expect(client.realtime).toBeDefined();
     expect(typeof client.raw.line.get).toBe('function');
     expect(typeof client.realtime.pollArrivals).toBe('function');
+    expect(typeof client.realtime.pollLineArrivals).toBe('function');
+    expect(typeof client.realtime.pollVehicleArrivals).toBe('function');
   });
 
   test('should expose every generated endpoint on client.raw', () => {

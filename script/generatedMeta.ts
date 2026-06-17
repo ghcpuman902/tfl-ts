@@ -62,6 +62,10 @@ export const recordGeneratedArtifact = (
   artifact: keyof GeneratedMetaFile['artifacts'],
   details: Record<string, string | number | boolean | undefined>,
 ): void => {
+  if (process.env.TFL_SKIP_GENERATED_META === '1') {
+    return;
+  }
+
   const now = new Date().toISOString();
   const existing = readExisting();
 

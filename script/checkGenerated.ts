@@ -13,6 +13,7 @@ const checkGenerated = (): void => {
   execSync('pnpm run generate:types && pnpm run generate:raw && pnpm run generate:jsdoc', {
     cwd: ROOT,
     stdio: 'inherit',
+    env: { ...process.env, TFL_SKIP_GENERATED_META: '1' },
   });
 
   console.log('Checking for uncommitted generated file changes...');
@@ -29,7 +30,9 @@ const checkGenerated = (): void => {
   }
 
   console.log('Generated artifacts match committed snapshot.');
-  console.log('(Timestamps live in src/generated/generated.meta.json and are excluded from this check.)');
+  console.log(
+    '(generated.meta.json is not updated during verification; run `pnpm run generate` to refresh timestamps.)',
+  );
 };
 
 checkGenerated();

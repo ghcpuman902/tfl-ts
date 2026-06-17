@@ -1,6 +1,6 @@
 {
   "name": "tfl-ts",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Fully-typed TypeScript client for Transport for London (TfL) API with layered architecture: generated types, stable raw client, and human-friendly wrappers.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -31,6 +31,7 @@
     "test:watch": "jest --watch",
     "playground": "ts-node playground/index.ts",
     "demo": "ts-node playground/demo.ts",
+    "demo:realtime": "ts-node playground/demo/realtime.ts",
     "demo:smoke": "ts-node script/demoSmoke.ts",
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.ts\"",
