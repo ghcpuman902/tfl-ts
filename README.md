@@ -469,6 +469,7 @@ pnpm run build
 - **Full generation** (`pnpm run generate`): Regenerate types, raw client, jsdoc, and metadata from the committed OpenAPI snapshot
 - **Sync spec** (`pnpm run sync:spec`): Maintainer-only — fetch live swagger and update snapshot
 - **Drift checks** (`pnpm run check:drift`, `pnpm run check:generated`): CI gates for schema and generator output
+- **Generation timestamps**: `src/generated/generated.meta.json` (one file; code artifacts stay deterministic)
 
 See [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) for the v1 → v2 migration guide.
 

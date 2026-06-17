@@ -1,5 +1,6 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2026-06-16T22:40:00.404Z
+// Source: openapi/tfl-v1.json (sha256: 266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854)
+// Generation timestamps: see ../generated.meta.json
 
 export const BIKEPOINT_DATA = {
   "section": "BikePoint",
@@ -52,8 +53,7 @@ export const BIKEPOINT_DATA = {
       ]
     }
   ],
-  "totalEndpoints": 3,
-  "generatedAt": "2026-06-16T22:40:00.404Z"
+  "totalEndpoints": 3
 } as const;
 
 export type BIKEPOINT_DATAType = typeof BIKEPOINT_DATA;

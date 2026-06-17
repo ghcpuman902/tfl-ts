@@ -3,6 +3,7 @@
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, isAbsolute } from 'path';
+import { readSpecProvenance, recordGeneratedArtifact } from './generatedMeta';
 
 type SwaggerParameter = {
   name: string;
@@ -46,6 +47,8 @@ type SectionData = {
 };
 
 const SPEC_SOURCE = process.env.TFL_OPENAPI_SPEC ?? join(__dirname, '..', 'src', 'generated', 'openapi', 'tfl-v1.json');
+
+const GENERATION_META_HINT = '// Generation timestamps: see ../generated.meta.json';
 const OUTPUT_DIR = "src/generated/jsdoc";
 
 function jsDocEscape(s: string | undefined) {
@@ -116,9 +119,10 @@ function ensureDirectoryExists(dirPath: string) {
   }
 }
 
-function generateTypeScriptContent(data: any, variableName: string): string {
+function generateTypeScriptContent(data: unknown, variableName: string, provenance: string): string {
   return `// Auto-generated from TfL Swagger API
-// Generated at: ${new Date().toISOString()}
+// Source: ${provenance}
+${GENERATION_META_HINT}
 
 export const ${variableName} = ${JSON.stringify(data, null, 2)} as const;
 
@@ -128,6 +132,7 @@ export type ${variableName}Type = typeof ${variableName};
 
 async function main() {
   const doc: SwaggerDoc = JSON.parse(readFileSync(SPEC_SOURCE, 'utf8'));
+  const provenance = readSpecProvenance();
 
   // Organize endpoints by section
   const sections: Map<string, EndpointData[]> = new Map();
@@ -161,11 +166,10 @@ async function main() {
       section: "Meta",
       endpoints: metaEndpoints,
       totalEndpoints: metaEndpoints.length,
-      generatedAt: new Date().toISOString(),
     };
     
     const metaPath = join(OUTPUT_DIR, "Meta.ts");
-    const metaContent = generateTypeScriptContent(metaData, "META_DATA");
+    const metaContent = generateTypeScriptContent(metaData, "META_DATA", provenance);
     writeFileSync(metaPath, metaContent);
     console.log(`✓ Written ${metaEndpoints.length} meta endpoints to ${metaPath}`);
   }
@@ -176,11 +180,10 @@ async function main() {
       section,
       endpoints,
       totalEndpoints: endpoints.length,
-      generatedAt: new Date().toISOString(),
     };
     
     const sectionPath = join(OUTPUT_DIR, `${section}.ts`);
-    const sectionContent = generateTypeScriptContent(sectionData, `${section.toUpperCase()}_DATA`);
+    const sectionContent = generateTypeScriptContent(sectionData, `${section.toUpperCase()}_DATA`, provenance);
     writeFileSync(sectionPath, sectionContent);
     console.log(`✓ Written ${endpoints.length} endpoints to ${sectionPath}`);
   }
@@ -191,15 +194,20 @@ async function main() {
     totalSections: sections.size,
     totalEndpoints: Array.from(sections.values()).reduce((sum, endpoints) => sum + endpoints.length, 0),
     metaEndpoints: metaEndpoints.length,
-    generatedAt: new Date().toISOString(),
   };
   
   const indexPath = join(OUTPUT_DIR, "index.ts");
-  const indexContent = generateTypeScriptContent(indexData, "INDEX_DATA");
+  const indexContent = generateTypeScriptContent(indexData, "INDEX_DATA", provenance);
   writeFileSync(indexPath, indexContent);
   console.log(`✓ Written index summary to ${indexPath}`);
+
+  const totalEndpoints = indexData.totalEndpoints + indexData.metaEndpoints;
+  recordGeneratedArtifact('jsdoc', {
+    endpointCount: totalEndpoints,
+    sectionCount: sections.size,
+  });
   
-  console.log(`\n🎉 Generated ${sections.size} section files and 1 meta file with ${indexData.totalEndpoints + indexData.metaEndpoints} total endpoints`);
+  console.log(`\n🎉 Generated ${sections.size} section files and 1 meta file with ${totalEndpoints} total endpoints`);
 }
 
 main().catch((e) => {

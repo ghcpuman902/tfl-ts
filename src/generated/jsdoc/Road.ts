@@ -1,5 +1,6 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2026-06-16T22:40:00.405Z
+// Source: openapi/tfl-v1.json (sha256: 266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854)
+// Generation timestamps: see ../generated.meta.json
 
 export const ROAD_DATA = {
   "section": "Road",
@@ -152,8 +153,7 @@ export const ROAD_DATA = {
       ]
     }
   ],
-  "totalEndpoints": 6,
-  "generatedAt": "2026-06-16T22:40:00.405Z"
+  "totalEndpoints": 6
 } as const;
 
 export type ROAD_DATAType = typeof ROAD_DATA;

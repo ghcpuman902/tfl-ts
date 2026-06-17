@@ -6,6 +6,7 @@ import { RawClient } from './generated/raw';
 
 // Import raw data from generated meta files
 import { ROAD_DATA } from './generated/jsdoc/Road';
+import generatedMeta from './generated/generated.meta.json';
 import { 
   RoadCategory, 
   roadSeverity, 
@@ -166,8 +167,8 @@ export class Road {
   /** API section name (static, no HTTP request needed) */
   public readonly SECTION = ROAD_DATA.section;
 
-  /** Generation timestamp (static, no HTTP request needed) */
-  public readonly GENERATED_AT = ROAD_DATA.generatedAt;
+  /** Generation timestamp (see src/generated/generated.meta.json) */
+  public readonly GENERATED_AT = generatedMeta.generatedAt;
 
   /** Available road categories (static, no HTTP request needed) */
   public readonly ROAD_CATEGORIES: readonly RoadCategoryType[] = ROAD_CATEGORIES;

@@ -1,5 +1,6 @@
 // Auto-generated endpoint registry. Do not edit manually.
-// Generated at: 2026-06-16T22:39:59.629Z
+// Source: openapi/tfl-v1.json (sha256: 266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854)
+// Generation timestamps: see ./generated.meta.json
 
 export interface EndpointDefinition {
   operationId: string;

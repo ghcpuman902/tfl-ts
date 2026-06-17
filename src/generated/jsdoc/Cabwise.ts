@@ -1,5 +1,6 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2026-06-16T22:40:00.404Z
+// Source: openapi/tfl-v1.json (sha256: 266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854)
+// Generation timestamps: see ../generated.meta.json
 
 export const CABWISE_DATA = {
   "section": "Cabwise",
@@ -77,8 +78,7 @@ export const CABWISE_DATA = {
       ]
     }
   ],
-  "totalEndpoints": 1,
-  "generatedAt": "2026-06-16T22:40:00.404Z"
+  "totalEndpoints": 1
 } as const;
 
 export type CABWISE_DATAType = typeof CABWISE_DATA;

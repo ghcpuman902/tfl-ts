@@ -1,5 +1,6 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2026-06-16T22:40:00.405Z
+// Source: openapi/tfl-v1.json (sha256: 266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854)
+// Generation timestamps: see ../generated.meta.json
 
 export const OCCUPANCY_DATA = {
   "section": "Occupancy",
@@ -80,8 +81,7 @@ export const OCCUPANCY_DATA = {
       ]
     }
   ],
-  "totalEndpoints": 5,
-  "generatedAt": "2026-06-16T22:40:00.405Z"
+  "totalEndpoints": 5
 } as const;
 
 export type OCCUPANCY_DATAType = typeof OCCUPANCY_DATA;

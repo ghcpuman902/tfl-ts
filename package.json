@@ -32,7 +32,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "sync:spec": "ts-node script/syncSpec.ts",
     "generate": "npm run generate:types && npm run generate:raw && npm run generate:meta && npm run generate:jsdoc",
-    "generate:types": "swagger-typescript-api generate -p ./src/generated/openapi/tfl-v1.json -o ./src/generated -n types.ts --no-client --generate-union-enums --patch --extract-enums",
+    "generate:types": "ts-node script/generateTypes.ts",
     "generate:raw": "ts-node script/generateRawClient.ts",
     "generate:meta": "ts-node script/generateMeta.ts",
     "generate:jsdoc": "ts-node script/generateJsdoc.ts",

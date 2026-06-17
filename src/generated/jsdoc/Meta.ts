@@ -1,5 +1,6 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2026-06-16T22:40:00.403Z
+// Source: openapi/tfl-v1.json (sha256: 266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854)
+// Generation timestamps: see ../generated.meta.json
 
 export const META_DATA = {
   "section": "Meta",
@@ -170,8 +171,7 @@ export const META_DATA = {
       ]
     }
   ],
-  "totalEndpoints": 15,
-  "generatedAt": "2026-06-16T22:40:00.403Z"
+  "totalEndpoints": 15
 } as const;
 
 export type META_DATAType = typeof META_DATA;

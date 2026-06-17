@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { readSpecProvenance, recordGeneratedArtifact } from './generatedMeta';
 
 type SwaggerParameter = {
   name: string;
@@ -39,6 +40,8 @@ type EndpointDef = {
 };
 
 const SPEC_PATH = path.join(__dirname, '..', 'src', 'generated', 'openapi', 'tfl-v1.json');
+
+const GENERATION_META_HINT = '// Generation timestamps: see ./generated.meta.json';
 const ENDPOINTS_PATH = path.join(__dirname, '..', 'src', 'generated', 'endpoints.ts');
 const RAW_PATH = path.join(__dirname, '..', 'src', 'generated', 'raw.ts');
 
@@ -214,12 +217,13 @@ ${queryEntries.join('\n')}
 const generate = (): void => {
   const doc = JSON.parse(fs.readFileSync(SPEC_PATH, 'utf8')) as SwaggerDoc;
   const endpoints = buildEndpoints(doc);
-  const generatedAt = new Date().toISOString();
+  const provenance = readSpecProvenance();
 
   const argsInterfaces = endpoints.map(buildArgsInterface).join('\n\n');
 
   const endpointsFile = `// Auto-generated endpoint registry. Do not edit manually.
-// Generated at: ${generatedAt}
+// Source: ${provenance}
+${GENERATION_META_HINT}
 
 export interface EndpointDefinition {
   operationId: string;
@@ -298,7 +302,8 @@ ${methods}
     : '';
 
   const rawFile = `// Auto-generated raw TfL API client. Do not edit manually.
-// Generated at: ${generatedAt}
+// Source: ${provenance}
+${GENERATION_META_HINT}
 
 import { TflHttpClient } from '../core/http';
 ${typeImportBlock}
@@ -323,6 +328,7 @@ ${namespaceBlocks}
 
   fs.writeFileSync(ENDPOINTS_PATH, endpointsFile);
   fs.writeFileSync(RAW_PATH, rawFile);
+  recordGeneratedArtifact('raw', { endpointCount: endpoints.length });
   console.log(`Generated ${endpoints.length} endpoints -> ${ENDPOINTS_PATH}`);
   console.log(`Generated RawClient -> ${RAW_PATH}`);
 };

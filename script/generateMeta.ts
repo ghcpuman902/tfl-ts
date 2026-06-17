@@ -3,6 +3,7 @@ import path from 'path';
 import { META_DATA } from '../src/generated/jsdoc/Meta';
 import { stripTypeFields } from '../src/utils/stripTypes';
 import { config } from 'dotenv';
+import { recordGeneratedArtifact } from './generatedMeta';
 
 // Load environment variables
 config();
@@ -192,6 +193,7 @@ async function generateTypeScriptDefinitions() {
     generateTypeScriptFiles(treeStructure, outputDir);
 
     console.log('TypeScript definitions generated successfully from live TfL API data.');
+    recordGeneratedArtifact('tflMeta', { source: 'live-tfl-api' });
 
   } catch (error) {
     console.error('Failed to generate TypeScript definitions:', error);

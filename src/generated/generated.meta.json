@@ -1,0 +1,26 @@
+{
+  "spec": {
+    "path": "openapi/tfl-v1.json",
+    "sha256": "266abe0486b0abde0a4ec32c0dacdbd34b2629fa14ee4600db6934b5fa46a854",
+    "fetchedAt": "2026-06-16T22:29:13.000Z",
+    "source": "https://api.tfl.gov.uk/swagger/docs/v1",
+    "pathCount": 84
+  },
+  "generatedAt": "2026-06-17T10:48:35.935Z",
+  "artifacts": {
+    "types": {
+      "generatedAt": "2026-06-17T10:48:22.619Z",
+      "tool": "swagger-typescript-api",
+      "toolVersion": "13.12.2"
+    },
+    "raw": {
+      "generatedAt": "2026-06-17T10:48:35.935Z",
+      "endpointCount": 84
+    },
+    "jsdoc": {
+      "generatedAt": "2026-06-17T10:48:24.621Z",
+      "endpointCount": 84,
+      "sectionCount": 14
+    }
+  }
+}
