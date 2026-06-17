@@ -611,7 +611,7 @@ MIT License - see [LICENSE](LICENSE)
 
 | Package | Version | License | Size |
 |---------|---------|---------|------|
-| `tfl-ts` | 2.0.0 | MIT | ~150KB |
+| `tfl-ts` | 2.0.1 | MIT | ~150KB |
 
 | Links | URL |
 |-------|-----|

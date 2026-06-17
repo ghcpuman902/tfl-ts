@@ -1,6 +1,6 @@
 {
   "name": "tfl-ts",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Fully-typed TypeScript client for Transport for London (TfL) API with layered architecture: generated types, stable raw client, and human-friendly wrappers.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
