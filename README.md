@@ -16,6 +16,31 @@
 - **Better parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
 - **Comprehensive error handling:** Comprehensive error handling with typed error classes and automatic retry logic. All errors are instances of `TflError` or its subclasses, making it easy to handle different types of errors appropriately.
 
+## Architecture (v2)
+
+tfl-ts v2 uses a **layered architecture** so generator and TfL schema changes never break friendly wrappers:
+
+```
+OpenAPI snapshot (committed)
+  → types.ts        (swagger-typescript-api, types only)
+  → raw.ts          (owned generator, uniform object-param API)
+  → client.raw.*    (public escape hatch — 100% endpoint coverage)
+  → wrappers        (human-friendly modules: line, stopPoint, …)
+```
+
+- **`pnpm run build`** compiles TypeScript only — no network, no regeneration.
+- **`client.raw.<tag>.<method>()`** always exposes every REST endpoint, even before a wrapper exists.
+- **`client.realtime.pollArrivals()`** provides instant-pull polling; SignalR/URA push is deferred ([REALTIME.md](docs/REALTIME.md)).
+- **CLI:** `tfl raw`, `tfl list`, `tfl smoke` (see [Migration Guide](docs/MIGRATION-v2.md)).
+
+```typescript
+// Friendly wrapper (recommended)
+await client.line.getStatus({ lineIds: ['central'] });
+
+// Raw escape hatch (always available)
+await client.raw.line.statusByIds({ ids: ['central'] });
+```
+
 ## Getting Started
 
 ### 1. Get your API credentials from TfL
@@ -285,6 +310,54 @@ console.log(client.line.LINE_NAMES);
 
 Please see the [playgorund/demo folder](playground/demo) for complete set of examples for each endpoint.
 
+### Search module example
+```typescript
+const results = await client.search.search({ query: 'Oxford Circus' });
+console.log(results.matches?.slice(0, 3));
+```
+
+### Vehicle module example
+```typescript
+const predictions = await client.vehicle.getArrivals({
+  vehicleIds: ['LX58CFV', 'LX11AZB']
+});
+console.log(predictions.length);
+```
+
+### Occupancy module example
+```typescript
+const carParks = await client.occupancy.getAllCarParks();
+console.log(carParks[0]?.name, carParks[0]?.bays?.length);
+```
+
+### Place module example
+```typescript
+const places = await client.place.search({
+  name: 'Bank',
+  placeTypes: ['StopPoint']
+});
+console.log(places.slice(0, 2));
+```
+
+### TravelTimes module example
+```typescript
+const overlay = await client.travelTimes.getOverlay({
+  z: 12,
+  mapCenterLat: 51.5074,
+  mapCenterLon: -0.1278,
+  pinLat: 51.5154,
+  pinLon: -0.1419,
+  width: 256,
+  height: 256,
+  scenarioTitle: 'Example',
+  timeOfDayId: 'AM',
+  modeId: 'tube',
+  direction: 'From',
+  travelTimeInterval: 15
+});
+console.log(Object.keys(overlay));
+```
+
 
 ### Line Colors and Branding
 
@@ -391,16 +464,26 @@ pnpm run build
 ```
 
 ### Build Process
-- **Fast Build** (`pnpm run build`): Types only, no API calls
-- **Full Build** (`pnpm run build:full`): Includes fresh metadata
+
+- **Build** (`pnpm run build`): TypeScript compile only — fast, deterministic, no API calls
+- **Full generation** (`pnpm run generate`): Regenerate types, raw client, jsdoc, and metadata from the committed OpenAPI snapshot
+- **Sync spec** (`pnpm run sync:spec`): Maintainer-only — fetch live swagger and update snapshot
+- **Drift checks** (`pnpm run check:drift`, `pnpm run check:generated`): CI gates for schema and generator output
+
+See [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) for the v1 → v2 migration guide.
 
 ### Scripts
 ```bash
-pnpm run build        # Fast build
-pnpm run build:full   # Full build with metadata
-pnpm run test         # Run tests
-pnpm run demo         # Run demo
-pnpm run playground   # Interactive playground
+pnpm run build           # Compile only (default)
+pnpm run build:full      # Generate + compile
+pnpm run generate        # Regenerate from committed snapshot
+pnpm run check:drift     # Compare snapshot vs live REST paths
+pnpm run check:generated # Verify committed generated files
+pnpm run test            # Run tests
+pnpm run demo            # Run demo
+pnpm run playground      # Interactive playground
+pnpm exec tfl list       # List raw endpoints
+pnpm exec tfl smoke      # Smoke test live API
 ```
 
 ### Development Pattern
@@ -416,7 +499,7 @@ Each API module maps to a generated JSDoc file without importing from it. See [L
 | Feature | Status | Coverage |
 |---------|--------|----------|
 | Core Infrastructure | ✅ Complete | 100% |
-| API Modules | 🔄 9/14 Complete | 64% |
+| API Modules | ✅ 14/14 Complete | 100% |
 | Type Generation | ✅ Complete | 100% |
 | Test Coverage | ✅ Good | 85%+ |
 | Documentation | ✅ Complete | 100% |
@@ -433,23 +516,24 @@ Each API module maps to a generated JSDoc file without importing from it. See [L
 | ✅ `cabwise` | Complete | 3+ |
 | ✅ `road` | Complete | 8+ |
 | ✅ `mode` | Complete | 2/2 |
-| ❌ `occupancy` | Planned | 0/4 |
-| ❌ `place` | Planned | 0/8 |
-| ❌ `search` | Planned | 0/3 |
-| ❌ `travelTimes` | Planned | 0/5 |
-| ❌ `vehicle` | Planned | 0/3 |
+| ✅ `search` | Complete | 5 (2 search + 3 meta) |
+| ✅ `vehicle` | Complete | 1 |
+| ✅ `occupancy` | Complete | 5 |
+| ✅ `place` | Complete | 9 (7 + 2 meta) |
+| ✅ `travelTimes` | Complete | 2 |
 
-**Progress: 9/14 modules complete (64%)**
+**Progress: 14/14 modules complete (100%)**
 
 ## 📚 API Reference
 
 ### Core Classes
-- `TflClient` - Main client class
-- `LineApi` - Line and route information
-- `StopPointApi` - Stop point and arrival information  
-- `JourneyApi` - Journey planning
-- `RoadApi` - Road traffic information
-- `ModeApi` - Transport mode information
+- `TflClient` - Main client class with `raw` and `realtime` namespaces
+- `RawClient` - Direct access to all 84 REST endpoints via `client.raw`
+- `Line` - Line and route information
+- `StopPoint` - Stop point and arrival information  
+- `Journey` - Journey planning
+- `Road` - Road traffic information
+- `Mode` - Transport mode information
 
 ### Key Methods
 - `line.getStatus()` - Get line status and disruptions
@@ -486,7 +570,7 @@ MIT License - see [LICENSE](LICENSE)
 
 | Package | Version | License | Size |
 |---------|---------|---------|------|
-| `tfl-ts` | 1.0.0 | MIT | ~150KB |
+| `tfl-ts` | 2.0.0 | MIT | ~150KB |
 
 | Links | URL |
 |-------|-----|

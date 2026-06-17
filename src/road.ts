@@ -1,9 +1,8 @@
 import { 
-  Api, 
   TflApiPresentationEntitiesRoadCorridor,
   TflApiPresentationEntitiesRoadDisruption
-} from './generated/tfl';
-import { stripTypeFields } from './utils/stripTypes';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 
 // Import raw data from generated meta files
 import { ROAD_DATA } from './generated/jsdoc/Road';
@@ -179,7 +178,7 @@ export class Road {
   /** Road severity by mode mapping (static, no HTTP request needed) */
   public readonly SEVERITY_BY_MODE = SeverityByMode;
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Gets all roads managed by TfL
@@ -202,8 +201,7 @@ export class Road {
    * });
    */
   async get(options: { keepTflTypes?: boolean } = {}): Promise<TflApiPresentationEntitiesRoadCorridor[]> {
-    return this.api.road.roadGet()
-      .then(response => stripTypeFields(response.data, options.keepTflTypes));
+    return this.raw.road.get({ keepTflTypes: options.keepTflTypes });
   }
 
   /**
@@ -222,8 +220,10 @@ export class Road {
    * const road = await client.road.getById(['A406']);
    */
   async getById(ids: string[], options: { keepTflTypes?: boolean } = {}): Promise<TflApiPresentationEntitiesRoadCorridor[]> {
-    return this.api.road.roadGet2(ids)
-      .then((response: any) => stripTypeFields(response.data, options.keepTflTypes));
+    return this.raw.road.roadGet({
+      ids,
+      keepTflTypes: options.keepTflTypes,
+    });
   }
 
   /**
@@ -255,11 +255,12 @@ export class Road {
    */
   async getStatus(options: RoadStatusQuery): Promise<TflApiPresentationEntitiesRoadCorridor[]> {
     const { ids, dateRange, keepTflTypes } = options;
-    return this.api.road.roadStatus({
-      ids: Array.isArray(ids) ? ids : [ids],
-      dateRangeNullableStartDate: dateRange?.startDate,
-      dateRangeNullableEndDate: dateRange?.endDate
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.road.status({
+      ids,
+      ...(dateRange?.startDate !== undefined && { "dateRangeNullable.startDate": dateRange.startDate }),
+      ...(dateRange?.endDate !== undefined && { "dateRangeNullable.endDate": dateRange.endDate }),
+      keepTflTypes,
+    });
   }
 
   /**
@@ -292,13 +293,14 @@ export class Road {
    */
   async getDisruptions(options: RoadDisruptionQuery): Promise<TflApiPresentationEntitiesRoadDisruption[]> {
     const { ids, stripContent, severities, categories, closures, keepTflTypes } = options;
-    return this.api.road.roadDisruption({
-      ids: Array.isArray(ids) ? ids : [ids],
+    return this.raw.road.disruption({
+      ids,
       stripContent,
       severities,
       categories,
-      closures
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      closures,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -324,10 +326,11 @@ export class Road {
    */
   async getDisruptedStreets(options: RoadStreetDisruptionQuery): Promise<any> {
     const { startDate, endDate, keepTflTypes } = options;
-    return this.api.road.roadDisruptedStreets({
+    return this.raw.road.disruptedStreets({
       startDate,
-      endDate
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      endDate,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -353,10 +356,11 @@ export class Road {
    */
   async getDisruptionById(options: RoadDisruptionByIdQuery): Promise<TflApiPresentationEntitiesRoadDisruption> {
     const { disruptionIds, stripContent, keepTflTypes } = options;
-    return this.api.road.roadDisruptionById({
-      disruptionIds: Array.isArray(disruptionIds) ? disruptionIds : [disruptionIds],
-      stripContent
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.road.disruptionById({
+      disruptionIds,
+      stripContent,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -376,7 +380,7 @@ export class Road {
    * const categories = client.road.ROAD_CATEGORIES;
    * const severities = client.road.ROAD_SEVERITY_DESCRIPTIONS;
    */
-  async getMeta(options: { keepTflTypes?: boolean } = {}): Promise<{
+  async getMeta(_options: { keepTflTypes?: boolean } = {}): Promise<{
     endpoints: typeof ROAD_DATA.endpoints;
     totalEndpoints: number;
     section: string;

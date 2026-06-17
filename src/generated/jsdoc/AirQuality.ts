@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-08-22T11:23:57.225Z
+// Generated at: 2026-06-16T22:40:00.404Z
 
 export const AIRQUALITY_DATA = {
   "section": "AirQuality",
@@ -17,7 +17,7 @@ export const AIRQUALITY_DATA = {
     }
   ],
   "totalEndpoints": 1,
-  "generatedAt": "2025-08-22T11:23:57.225Z"
+  "generatedAt": "2026-06-16T22:40:00.404Z"
 } as const;
 
 export type AIRQUALITY_DATAType = typeof AIRQUALITY_DATA;

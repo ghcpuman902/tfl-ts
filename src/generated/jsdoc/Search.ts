@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-08-22T11:23:57.227Z
+// Generated at: 2026-06-16T22:40:00.405Z
 
 export const SEARCH_DATA = {
   "section": "Search",
@@ -42,7 +42,7 @@ export const SEARCH_DATA = {
     }
   ],
   "totalEndpoints": 2,
-  "generatedAt": "2025-08-22T11:23:57.227Z"
+  "generatedAt": "2026-06-16T22:40:00.405Z"
 } as const;
 
 export type SEARCH_DATAType = typeof SEARCH_DATA;

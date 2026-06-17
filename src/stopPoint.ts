@@ -1,7 +1,6 @@
 // this code is not generated, please edit to add additional features
 
 import { 
-  Api, 
   TflApiPresentationEntitiesStopPoint,
   TflApiPresentationEntitiesPrediction,
   TflApiPresentationEntitiesStopPointsResponse,
@@ -12,13 +11,10 @@ import {
   TflApiPresentationEntitiesArrivalDeparture,
   TflApiPresentationEntitiesStopPointRouteSection,
   TflApiPresentationEntitiesDisruptedPoint,
-  TflApiPresentationEntitiesSearchResponse,
-  TflApiPresentationEntitiesMatchedStop,
-  SystemObject,
-  DirectionEnum2
-} from './generated/tfl';
+  SystemObject
+} from './generated/types';
+import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
-import { stripTypeFields } from './utils/stripTypes';
 
 // 🚨 ALWAYS use generated metadata (never hardcode!)
 import { 
@@ -215,7 +211,7 @@ interface StopPointCrowdingQuery {
   /** Line ID */
   line: string;
   /** Direction of travel */
-  direction?: DirectionEnum2;
+  direction?: 'inbound' | 'outbound' | 'all';
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -519,8 +515,8 @@ export class StopPoint {
   /** Categories with their available keys (static, no HTTP request needed) */
   public readonly CATEGORIES_WITH_KEYS = this.buildCategoriesWithKeys();
 
-  constructor(private api: Api<{}>) {
-    this.batchRequest = new BatchRequest(api);
+  constructor(private raw: RawClient) {
+    this.batchRequest = new BatchRequest(raw);
   }
 
   /**
@@ -587,8 +583,7 @@ export class StopPoint {
    * const categories = await client.stopPoint.getCategories();
    */
   async getCategories(): Promise<TflApiPresentationEntitiesStopPointCategory[]> {
-    return this.api.stopPoint.stopPointMetaCategories()
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.metaCategories({});
   }
 
   /**
@@ -598,8 +593,7 @@ export class StopPoint {
    * const types = await client.stopPoint.getTypes();
    */
   async getTypes(): Promise<string[]> {
-    return this.api.stopPoint.stopPointMetaStopTypes()
-      .then(response => response.data);
+    return this.raw.stopPoint.metaStopTypes({}) as Promise<string[]>;
   }
 
   /**
@@ -609,8 +603,7 @@ export class StopPoint {
    * const modes = await client.stopPoint.getModes();
    */
   async getModes(): Promise<TflApiPresentationEntitiesMode[]> {
-    return this.api.stopPoint.stopPointMetaModes()
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.metaModes({});
   }
 
   /**
@@ -646,8 +639,7 @@ export class StopPoint {
     if (typeof input === 'string') {
       return this.batchRequest.processBatch(
         [input],
-        async (chunk) => this.api.stopPoint.stopPointGet({ ids: chunk })
-          .then(response => stripTypeFields(response.data[0]))
+        async (chunk) => this.raw.stopPoint.get({ ids: chunk }).then(response => [response[0]])
       );
     }
 
@@ -658,8 +650,7 @@ export class StopPoint {
       }
       return this.batchRequest.processBatch(
         input,
-        async (chunk) => this.api.stopPoint.stopPointGet({ ids: chunk })
-          .then(response => stripTypeFields(response.data))
+        async (chunk) => this.raw.stopPoint.get({ ids: chunk })
       );
     }
 
@@ -671,8 +662,7 @@ export class StopPoint {
 
     return this.batchRequest.processBatch(
       stopPointIds,
-      async (chunk) => this.api.stopPoint.stopPointGet({ ids: chunk })
-        .then(response => stripTypeFields(response.data, input.keepTflTypes))
+      async (chunk) => this.raw.stopPoint.get({ ids: chunk, keepTflTypes: input.keepTflTypes })
     );
   }
 
@@ -692,8 +682,7 @@ export class StopPoint {
    * }
    */
   async getPlaces(id: string, placeTypes: string[]): Promise<TflApiPresentationEntitiesPlace[]> {
-    return this.api.stopPoint.stopPointGet2({ id, placeTypes })
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.stopPointGet({ id, placeTypes });
   }
 
   /**
@@ -709,11 +698,12 @@ export class StopPoint {
    */
   async getCrowding(options: StopPointCrowdingQuery): Promise<TflApiPresentationEntitiesStopPoint[]> {
     const { id, line, direction, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointCrowding({ 
+    return this.raw.stopPoint.crowding({
       id, 
       line, 
-      direction: direction || 'all'
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      direction: direction || 'all',
+      keepTflTypes,
+    });
   }
 
   /**
@@ -731,8 +721,7 @@ export class StopPoint {
    * }
    */
   async getByType(types: string[]): Promise<TflApiPresentationEntitiesStopPoint[]> {
-    return this.api.stopPoint.stopPointGetByType(types)
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.getByType({ types });
   }
 
   /**
@@ -744,8 +733,7 @@ export class StopPoint {
    * const metroStations = await client.stopPoint.getByTypeWithPagination(['NaptanMetroStation'], 1);
    */
   async getByTypeWithPagination(types: string[], page: number): Promise<TflApiPresentationEntitiesStopPoint[]> {
-    return this.api.stopPoint.stopPointGetByTypeWithPagination(types, page)
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.getByTypeWithPagination({ types, page });
   }
 
   /**
@@ -759,8 +747,7 @@ export class StopPoint {
    * });
    */
   async getServiceTypes(options: StopPointServiceTypesQuery): Promise<TflApiPresentationEntitiesLineServiceType[]> {
-    return this.api.stopPoint.stopPointGetServiceTypes(options)
-      .then(response => stripTypeFields(response.data, options.keepTflTypes));
+    return this.raw.stopPoint.getServiceTypes(options);
   }
 
   /**
@@ -779,8 +766,7 @@ export class StopPoint {
     const arrivals = await this.batchRequest.processBatch(
       stopPointIds,
       async (chunk) => Promise.all(
-        chunk.map(id => this.api.stopPoint.stopPointArrivals(id)
-          .then(response => stripTypeFields(response.data, keepTflTypes)))
+        chunk.map(id => this.raw.stopPoint.arrivals({ id, keepTflTypes }))
       ).then(results => results.flat())
     );
     
@@ -830,8 +816,7 @@ export class StopPoint {
    */
   async getArrivalDepartures(options: StopPointArrivalDeparturesQuery): Promise<TflApiPresentationEntitiesArrivalDeparture[]> {
     const { id, lineIds, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointArrivalDepartures({ id, lineIds })
-      .then(response => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.stopPoint.arrivalDepartures({ id, lineIds, keepTflTypes });
   }
 
   /**
@@ -847,11 +832,12 @@ export class StopPoint {
    */
   async getReachableFrom(options: StopPointReachableFromQuery): Promise<TflApiPresentationEntitiesStopPoint[]> {
     const { id, lineId, serviceTypes, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointReachableFrom({ 
+    return this.raw.stopPoint.reachableFrom({
       id, 
       lineId, 
-      serviceTypes: serviceTypes as ('Regular' | 'Night')[] | undefined 
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      serviceTypes: serviceTypes as ('Regular' | 'Night')[] | undefined,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -866,10 +852,11 @@ export class StopPoint {
    */
   async getRoute(options: StopPointRouteQuery): Promise<TflApiPresentationEntitiesStopPointRouteSection[]> {
     const { id, serviceTypes, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointRoute({ 
+    return this.raw.stopPoint.route({
       id, 
-      serviceTypes: serviceTypes as ('Regular' | 'Night')[] | undefined 
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      serviceTypes: serviceTypes as ('Regular' | 'Night')[] | undefined,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -893,8 +880,7 @@ export class StopPoint {
     includeRouteBlockedStops?: boolean; 
     keepTflTypes?: boolean 
   }): Promise<TflApiPresentationEntitiesDisruptedPoint[]> {
-    return this.api.stopPoint.stopPointDisruptionByMode({ modes, ...options })
-      .then(response => stripTypeFields(response.data, options?.keepTflTypes));
+    return this.raw.stopPoint.disruptionByMode({ modes, ...options });
   }
 
   /**
@@ -909,12 +895,13 @@ export class StopPoint {
    */
   async getDisruption(options: StopPointDisruptionQuery): Promise<TflApiPresentationEntitiesDisruptedPoint[]> {
     const { stopPointIds, getFamily, includeRouteBlockedStops, flattenResponse, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointDisruption({ 
+    return this.raw.stopPoint.disruption({
       ids: stopPointIds, 
       getFamily, 
       includeRouteBlockedStops, 
-      flattenResponse 
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      flattenResponse,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -930,8 +917,7 @@ export class StopPoint {
    */
   async getDirection(options: StopPointDirectionQuery): Promise<string> {
     const { id, toStopPointId, lineId, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointDirection({ id, toStopPointId, lineId })
-      .then(response => response.data);
+    return this.raw.stopPoint.direction({ id, toStopPointId, lineId, keepTflTypes });
   }
 
   /**
@@ -948,15 +934,16 @@ export class StopPoint {
    */
   async getByGeoPoint(options: StopPointGeoQuery): Promise<TflApiPresentationEntitiesStopPointsResponse> {
     const { lat, lon, radius, useStopPointHierarchy, categories, returnLines, stoptypes, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointGetByGeoPoint({
-      locationLat: lat,
-      locationLon: lon,
+    return this.raw.stopPoint.getByGeoPoint({
+      "location.lat": lat,
+      "location.lon": lon,
       radius,
       useStopPointHierarchy,
       categories: categories || [],
       returnLines,
-      stopTypes: stoptypes || []
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      stopTypes: stoptypes || [],
+      keepTflTypes,
+    });
   }
 
   /**
@@ -971,10 +958,11 @@ export class StopPoint {
    */
   async getByMode(options: StopPointModeQuery): Promise<TflApiPresentationEntitiesStopPointsResponse> {
     const { modes, page, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointGetByMode({ 
+    return this.raw.stopPoint.getByMode({
       modes, 
-      page
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      page,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -994,19 +982,16 @@ export class StopPoint {
    */
   async search(options: StopPointSearchQuery): Promise<ExtendedSearchResponse> {
     const { query, modes, maxResults, lineIds, tflOperatedNationalRailStationsOnly, faresOnly, includeHubs, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointSearch({
+    return this.raw.stopPoint.search({
       query,
       modes,
       maxResults,
       lines: lineIds,
       tflOperatedNationalRailStationsOnly,
       faresOnly,
-      includeHubs
-    }).then(response => {
-      const data = response.data;
-      const sanitized = JSON.parse(JSON.stringify(data));
-      return stripTypeFields(sanitized, keepTflTypes) as ExtendedSearchResponse;
-    });
+      includeHubs,
+      keepTflTypes,
+    }) as Promise<ExtendedSearchResponse>;
   }
 
   /**
@@ -1021,8 +1006,7 @@ export class StopPoint {
    */
   async getBySms(options: StopPointSmsQuery): Promise<SystemObject> {
     const { id, output, keepTflTypes } = options;
-    return this.api.stopPoint.stopPointGetBySms({ id, output })
-      .then(response => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.stopPoint.getBySms({ id, output, keepTflTypes });
   }
 
   /**
@@ -1033,8 +1017,7 @@ export class StopPoint {
    * const taxiRanks = await client.stopPoint.getTaxiRanks('940GZZLUOXC');
    */
   async getTaxiRanks(stopPointId: string): Promise<TflApiPresentationEntitiesPlace[]> {
-    return this.api.stopPoint.stopPointGetTaxiRanksByIds(stopPointId)
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.getTaxiRanksByIds({ stopPointId });
   }
 
   /**
@@ -1045,8 +1028,7 @@ export class StopPoint {
    * const carParks = await client.stopPoint.getCarParks('940GZZLUOXC');
    */
   async getCarParks(stopPointId: string): Promise<TflApiPresentationEntitiesPlace[]> {
-    return this.api.stopPoint.stopPointGetCarParksById(stopPointId)
-      .then(response => stripTypeFields(response.data));
+    return this.raw.stopPoint.getCarParksById({ stopPointId });
   }
 }
 

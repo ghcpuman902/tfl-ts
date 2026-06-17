@@ -37,23 +37,15 @@
  */
 
 import { 
-  Api, 
   TflApiPresentationEntitiesJourneyPlannerItineraryResult,
   TflApiPresentationEntitiesMode,
-  JourneyJourneyResultsParams,
-  TimeIsEnum,
-  JourneyPreferenceEnum,
-  AccessibilityPreferenceEnum,
-  WalkingSpeedEnum,
-  CyclePreferenceEnum,
-  BikeProficiencyEnum,
   TflApiPresentationEntitiesJourneyPlannerJourney,
   TflApiPresentationEntitiesJourneyPlannerLeg,
   TflApiPresentationEntitiesJourneyPlannerJourneyFare
-} from './generated/tfl';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 
-import { stripTypeFields } from './utils/stripTypes';
-import { formatDistance, formatDuration } from './utils/format';
+import { formatDistance } from './utils/format';
 
 // Import generated metadata (NEVER hardcode!)
 import { 
@@ -363,11 +355,40 @@ export interface JourneyResult {
  *   throw new Error(`Invalid modes: ${userInput.filter(mode => !client.journey.MODE_NAMES.includes(mode)).join(', ')}`);
  * }
  */
-export interface JourneyQuery extends Partial<JourneyJourneyResultsParams> {
+export interface JourneyQuery {
   /** Origin of the journey. Can be WGS84 coordinates, UK postcode, Naptan ID, or free-text string */
   from: string;
   /** Destination of the journey. Can be WGS84 coordinates, UK postcode, Naptan ID, or free-text string */
   to: string;
+  via?: string;
+  nationalSearch?: boolean;
+  date?: string;
+  time?: string;
+  timeIs?: string;
+  journeyPreference?: string;
+  mode?: string[];
+  accessibilityPreference?: string[];
+  fromName?: string;
+  toName?: string;
+  viaName?: string;
+  maxTransferMinutes?: string;
+  maxWalkingMinutes?: string;
+  walkingSpeed?: string;
+  cyclePreference?: string;
+  adjustment?: string;
+  bikeProficiency?: string[];
+  alternativeCycle?: boolean;
+  alternativeWalking?: boolean;
+  applyHtmlMarkup?: boolean;
+  useMultiModalCall?: boolean;
+  walkingOptimization?: boolean;
+  taxiOnlyTrip?: boolean;
+  routeBetweenEntrances?: boolean;
+  useRealTimeLiveArrivals?: boolean;
+  calcOneDirection?: boolean;
+  includeAlternativeRoutes?: boolean;
+  overrideMultiModalScenario?: boolean;
+  combineTransferLegs?: boolean;
   /** Whether to keep TfL type fields in the response (default: false) */
   keepTflTypes?: boolean;
 }
@@ -573,7 +594,7 @@ export class Journey {
   /** Available bike proficiency levels */
   public readonly BIKE_PROFICIENCIES: readonly string[] = ['Easy', 'Moderate', 'Fast'];
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Plan a journey between two locations
@@ -656,8 +677,10 @@ export class Journey {
     }
     
     try {
-      const result = await this.api.journey.journeyJourneyResults(apiOptions)
-        .then(response => stripTypeFields(response.data, keepTflTypes));
+      const result = await this.raw.journey.journeyResults({
+        ...apiOptions,
+        keepTflTypes,
+      });
       
       return this.simplifyJourneyResult(result);
     } catch (error: any) {
@@ -710,7 +733,7 @@ export class Journey {
    * const modeNames = client.journey.MODE_NAMES; // ['tube', 'bus', 'dlr', ...]
    */
   async getModes(): Promise<TflApiPresentationEntitiesMode[]> {
-    return this.api.journey.journeyMeta().then(response => response.data);
+    return this.raw.journey.meta({});
   }
 
   /**
@@ -1273,7 +1296,7 @@ export class Journey {
     const destination = leg.routeInfo?.destination;
     const platform = leg.routeInfo?.platform;
     
-    let instruction = '';
+    let instruction: string;
     
     if (isFirst) {
       instruction = `${verbs.imperative.charAt(0).toUpperCase() + verbs.imperative.slice(1)} ${article}${lineInfo} ${modeDisplay}`;
@@ -1487,7 +1510,7 @@ export class Journey {
   /**
    * Extract station name from instruction text
    */
-  private extractStationNameFromInstruction(instruction: string, isArrival: boolean = false): string | undefined {
+  private extractStationNameFromInstruction(instruction: string, _isArrival: boolean = false): string | undefined {
     if (!instruction) return undefined;
     
     // Look for patterns like "Walk to Oxford Circus Underground Station"

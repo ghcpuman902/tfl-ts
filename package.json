@@ -1,32 +1,45 @@
 {
   "name": "tfl-ts",
-  "version": "1.0.2",
-  "description": "🚇 Fully-typed TypeScript client for Transport for London (TfL) API • Zero dependencies • Auto-generated types • Real-time arrivals • Journey planning • Universal compatibility",
+  "version": "2.0.0",
+  "description": "Fully-typed TypeScript client for Transport for London (TfL) API with layered architecture: generated types, stable raw client, and human-friendly wrappers.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "tfl": "dist/bin/tfl.js"
+  },
   "files": [
     "dist/*.js",
     "dist/*.d.ts",
+    "dist/bin/",
+    "dist/core/",
+    "dist/api/",
+    "dist/realtime/",
     "dist/utils/",
     "dist/generated/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "docs/"
   ],
   "scripts": {
-    "build": "npm run generate:types && tsc",
+    "build": "tsc",
     "build:dist": "tsc",
     "build:full": "npm run generate && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "playground": "ts-node playground/index.ts",
     "demo": "ts-node playground/demo.ts",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint src",
     "format": "prettier --write \"src/**/*.ts\"",
-    "generate": "npm run generate:types && npm run generate:meta",
-    "generate:types": "swagger-typescript-api -p https://api.tfl.gov.uk/swagger/docs/v1 -o ./src/generated -n tfl.ts --union-enums --extract-request-params --patch --extract-enums && ts-node script/generateJsDoc.ts",
+    "sync:spec": "ts-node script/syncSpec.ts",
+    "generate": "npm run generate:types && npm run generate:raw && npm run generate:meta && npm run generate:jsdoc",
+    "generate:types": "swagger-typescript-api generate -p ./src/generated/openapi/tfl-v1.json -o ./src/generated -n types.ts --no-client --generate-union-enums --patch --extract-enums",
+    "generate:raw": "ts-node script/generateRawClient.ts",
     "generate:meta": "ts-node script/generateMeta.ts",
+    "generate:jsdoc": "ts-node script/generateJsdoc.ts",
+    "check:drift": "ts-node script/checkDrift.ts",
+    "check:generated": "ts-node script/checkGenerated.ts",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run build:dist",
+    "prepublishOnly": "npm run test && npm run check:generated && npm run build:dist",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean"
   },
@@ -75,7 +88,7 @@
   ],
   "author": "Mangle Kuo <manglekuo@gmail.com>",
   "license": "MIT",
-  "packageManager": "pnpm@10.4.1",
+  "packageManager": "pnpm@10.33.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ghcpuman902/tfl-ts.git"
@@ -88,23 +101,36 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.0.0",
-    "@types/node": "^20.0.0",
-    "@types/express": "^4.17.21",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.56.0",
-    "jest": "^29.0.0",
-    "prettier": "^3.2.0",
-    "swagger-typescript-api": "^13.0.23",
-    "ts-jest": "^29.0.0",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.0.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.18.2"
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.9.3",
+    "dotenv": "^17.4.2",
+    "eslint": "^10.5.0",
+    "express": "^5.2.1",
+    "globals": "^17.6.0",
+    "jest": "^30.4.2",
+    "prettier": "^3.8.4",
+    "swagger-typescript-api": "13.12.2",
+    "ts-jest": "^29.4.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1"
   },
-  "dependencies": {},
   "peerDependencies": {
     "typescript": ">=5.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@babel/helpers": "^7.26.10",
+      "brace-expansion@^1": "1.1.12",
+      "brace-expansion@^2": "^2.0.2",
+      "diff": "^4.0.4",
+      "flatted": "^3.4.2",
+      "js-yaml": "^4.1.1",
+      "minimatch": "^9.0.6",
+      "picomatch": "^4.0.4",
+      "yaml": "^2.8.3"
+    }
   }
 }

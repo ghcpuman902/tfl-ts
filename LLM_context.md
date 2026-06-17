@@ -1,5 +1,34 @@
 ## 📋 Progress Summary for TfL API TypeScript Wrapper Development
 
+### **🚨 v2 ARCHITECTURE (2026)**
+
+tfl-ts v2 separates **generation** from **build** and insulates friendly wrappers from generator changes.
+
+**Layer stack:**
+```
+src/generated/openapi/tfl-v1.json   # committed OpenAPI snapshot
+  → generate:types → src/generated/types.ts      (swagger-typescript-api, --no-client)
+  → generate:raw   → src/generated/raw.ts         (owned generator, uniform object-param API)
+                   → src/generated/endpoints.ts    (endpoint registry)
+src/core/http.ts                      # stable transport (auth, retry, timeout, errors)
+src/*.ts wrappers                     # human-friendly API; call this.raw.* internally
+src/index.ts → TflClient { raw, realtime, line, stopPoint, … }
+```
+
+**Rules for AI agents implementing wrappers:**
+- ✅ Import types from `./generated/types` (never depend on generated method signatures)
+- ✅ Call `this.raw.<tag>.<method>({ ... })` — do not call swagger-typescript-api client methods
+- ✅ Expose friendly object-param methods with specific names (`lineIds`, `stopPointIds`, …)
+- ✅ `build` = `tsc` only; run `pnpm run generate` explicitly when updating the snapshot
+- ✅ Every endpoint must remain reachable via `client.raw.*` even if no wrapper exists
+- ✅ Realtime: use `client.realtime.pollArrivals()` now; SignalR/URA deferred ([docs/REALTIME.md](../docs/REALTIME.md))
+
+**Raw client naming:** swagger `Line_Get` → `client.raw.line.get()`, `Line_StatusByIds` → `client.raw.line.statusByIds()`.
+
+**CLI:** `pnpm exec tfl list`, `pnpm exec tfl raw line.get --modes tube`, `pnpm exec tfl smoke`.
+
+See [docs/MIGRATION-v2.md](../docs/MIGRATION-v2.md) for v1 → v2 migration.
+
 ### **🚨 CRITICAL REFERENCE FOR AI AGENTS**
 
 **IMPORTANT DECISION (2024)**: We use **flexible `string[]` types** instead of strict TypeScript types for better developer experience.
@@ -181,7 +210,7 @@ The `bikePoint.ts` module represents one of the most comprehensive implementatio
 - **Real-time Data**: Current bike/dock availability and operational status
 
 #### **📝 Comprehensive Documentation**
-- **Rich JSDoc Examples**: Every method includes practical usage examples
+- **Rich JSDoc Examples**: Every method includes practical usage examples -> always check and try to align with the demo file, as the demo file would contains example that was tested
 - **Data Structure Examples**: Detailed interface documentation with sample data
 - **Validation Examples**: Shows how to validate user input before API calls
 - **Utility Function Examples**: Demonstrates advanced filtering and sorting
@@ -433,64 +462,73 @@ This analysis demonstrates how a simple JSDoc file can be transformed into a com
 
 #### **Module Status (14 total) - Current Status**
 
-| API wrapper file | Status | Description | JSDoc file used | Size/Complexity |
-|------------------|--------|-------------|-----------------|-----------------|
-| `accidentStats.ts` | ✅ Complete | Accident statistics | AccidentStats.ts | Simple (160 lines) |
-| `airQuality.ts` | ✅ Complete | Air quality data and forecasts | AirQuality.ts | Medium (318 lines) |
-| `bikePoint.ts` | ✅ Complete | Bike point information and search | BikePoint.ts | **Large (610 lines)** |
-| `cabwise.ts` | ✅ Complete | Taxi/minicab search (functional API) | Cabwise.ts | Simple (238 lines) |
-| `journey.ts` | ✅ Complete | Journey planning and routing | Journey.ts | Large (567 lines) |
-| `line.ts` | ✅ Complete | Line status, routes, disruptions | Line.ts | Large (799 lines) |
-| `road.ts` | ✅ Complete | Road status and disruptions | Road.ts | Medium (417 lines) |
-| `stopPoint.ts` | ✅ Complete | Stop information, arrivals, search | StopPoint.ts | Very Large (1081 lines) |
-| **Remaining Modules** | | | |
-| `mode.ts` | ✅ Complete | Transport modes and categories | Mode.ts | Complete (347 lines) |
-| `occupancy.ts` | ❌ Missing | Occupancy data and predictions | Occupancy.ts | **TO CREATE** (~300 lines) |
-| `place.ts` | ❌ Missing | Place information and search | Place.ts | **TO CREATE** (~400 lines) |
-| `search.ts` | ❌ Missing | General search functionality | Search.ts | **TO CREATE** (~200 lines) |
-| `travelTimes.ts` | ❌ Missing | Travel time calculations | TravelTimes.ts | **TO CREATE** (~350 lines) |
-| `vehicle.ts` | ❌ Missing | Vehicle information and tracking | Vehicle.ts | **TO CREATE** (~150 lines) |
+| API wrapper file | Status | Description |
+|------------------|--------|-------------|
+| All 14 modules | ✅ Complete | line, stopPoint, journey, mode, road, bikePoint, cabwise, accidentStats, airQuality, search, vehicle, occupancy, place, travelTimes |
 
-#### **🎯 Completion Plan (100% API Coverage)**
+**Progress: 14/14 modules complete (100%)**
 
-**Phase 1: Complete Partial Module** ✅ **COMPLETED**
-- [x] **mode.ts** - Complete the existing 32-line stub to full implementation
-  - ✅ Add comprehensive method coverage
-  - ✅ Add metadata constants 
-  - ✅ Add JSDoc documentation
-  - ✅ Add utility methods for mode validation and filtering
-  - ✅ Follow established patterns from other modules
+All wrappers use the v2 pattern: types from `generated/types`, calls via `this.raw.*`.
 
-**Phase 2: Create Missing Modules** (Priority Order)
-1. [ ] **search.ts** - General search functionality (simplest remaining)
-2. [ ] **vehicle.ts** - Vehicle information and tracking
-3. [ ] **occupancy.ts** - Occupancy data and predictions  
-4. [ ] **place.ts** - Place information and search
-5. [ ] **travelTimes.ts** - Travel time calculations
+### **Development Pattern**
 
-**Phase 3: Integration & Quality Assurance**
-- [ ] Update main index.ts to export all modules
-- [ ] Add comprehensive tests for new modules
-- [ ] Update README.md examples to showcase new modules
-- [ ] Verify 100% API endpoint coverage
-- [ ] Performance testing for batch operations
+#### **File Structure**
+```
+src/
+├── core/
+│   └── http.ts           # Stable transport (never regenerated)
+├── generated/
+│   ├── openapi/          # Committed OpenAPI snapshot + spec.meta.json
+│   ├── types.ts          # Types only (swagger-typescript-api --no-client)
+│   ├── raw.ts            # RawClient (owned generator)
+│   ├── endpoints.ts      # Endpoint registry (84 operations)
+│   ├── jsdoc/            # Generated JSDoc for AI/human reference (not imported)
+│   ├── meta/             # Generated metadata (requires live API for sync)
+│   └── tfl.ts            # Deprecated re-export of types.ts
+├── realtime/
+│   └── index.ts          # pollArrivals instant-pull helper
+├── bin/
+│   └── tfl.ts            # CLI: raw, list, smoke
+├── line.ts               # Friendly wrapper → calls raw.line.*
+├── stopPoint.ts
+└── … (12 more modules)
+script/
+├── generateRawClient.ts  # Emits raw.ts + endpoints.ts from snapshot
+├── generateJsdoc.ts
+├── generateMeta.ts
+├── syncSpec.ts
+├── checkDrift.ts
+└── checkGenerated.ts
+```
 
-**Estimated Completion Timeline:**
-- **Phase 1**: 2-4 hours (1 module completion)
-- **Phase 2**: 8-12 hours (5 modules creation) 
-- **Phase 3**: 2-4 hours (integration & testing)
-- **Total**: 12-20 hours of development time
+#### **Key Principles**
+1. **Wrappers depend on types + raw only** — never on generated client method signatures
+2. **Read JSDoc for API structure** — `/src/generated/jsdoc/[ModuleName].ts`
+3. **Import types from `generated/types.ts`** — not from deprecated `tfl.ts`
+4. **Call `this.raw.<tag>.<method>()`** in wrapper implementations
+5. **Use flexible type design** — accept strings for user flexibility, provide autocomplete
+6. **🚨 NEVER HARDCODE METADATA** — always use generated data from `Meta.ts`
+7. **`build` = `tsc` only** — generation is explicit via `pnpm run generate`
 
-**Success Criteria:**
-- ✅ All 14 TfL API modules implemented
-- ✅ 100% endpoint coverage verified
-- ✅ Comprehensive test coverage (>90%)
-- ✅ Complete JSDoc documentation
-- ✅ Consistent code patterns across modules
-- ✅ Performance benchmarks pass
-- ✅ Zero linter errors
+#### **Wrapper implementation pattern (v2)**
+```typescript
+import { RawClient } from './generated/raw';
+import type { TflApiPresentationEntitiesLine } from './generated/types';
 
-### **🎯 Flexible Type Design Pattern**
+export class Line {
+  constructor(private readonly raw: RawClient) {}
+
+  async getStatus(options: LineStatusQuery): Promise<TflApiPresentationEntitiesLine[]> {
+    const { lineIds, detail, keepTflTypes } = options;
+    if (lineIds?.length) {
+      return this.raw.line.statusByIds({ ids: lineIds, detail, keepTflTypes });
+    }
+    return this.raw.line.status({ detail, keepTflTypes });
+  }
+}
+```
+
+### **Legacy section (pre-v2 notes below)**
 
 #### **Problem Statement**
 Users need **both** type safety/autocomplete **and** flexibility. The API should:

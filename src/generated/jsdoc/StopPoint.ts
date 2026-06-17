@@ -1,5 +1,5 @@
 // Auto-generated from TfL Swagger API
-// Generated at: 2025-08-22T11:23:57.227Z
+// Generated at: 2026-06-16T22:40:00.405Z
 
 export const STOPPOINT_DATA = {
   "section": "StopPoint",
@@ -592,7 +592,7 @@ export const STOPPOINT_DATA = {
     }
   ],
   "totalEndpoints": 20,
-  "generatedAt": "2025-08-22T11:23:57.227Z"
+  "generatedAt": "2026-06-16T22:40:00.405Z"
 } as const;
 
 export type STOPPOINT_DATAType = typeof STOPPOINT_DATA;

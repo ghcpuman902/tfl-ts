@@ -114,6 +114,18 @@ app.get('/', async (req, res) => {
         <div class="description">
           <h3>Enhanced Features</h3>
           <div class="feature-section">
+            <h4 class="feature-title">🔧 Raw escape hatch</h4>
+            <ul class="feature-list">
+              <li class="feature-item">✓ Every REST endpoint via <code>client.raw.&lt;tag&gt;.&lt;method&gt;()</code></li>
+              <li class="feature-item">✓ CLI: <code>tfl list</code>, <code>tfl raw line.get --modes tube</code></li>
+            </ul>
+            <div class="code-snippet">
+              <pre><code>// Call any endpoint directly
+await client.raw.line.statusByIds({ ids: ['central'] });</code></pre>
+            </div>
+          </div>
+
+          <div class="feature-section">
             <h4 class="feature-title">🎯 Batch Processing</h4>
             <ul class="feature-list">
               <li class="feature-item">✓ Multiple line status requests in one call</li>

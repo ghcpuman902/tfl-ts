@@ -1,10 +1,8 @@
 import { 
-  Api, 
-  BikePointSearchParams, 
   TflApiPresentationEntitiesAdditionalProperties, 
   TflApiPresentationEntitiesPlace
-} from './generated/tfl';
-import { stripTypeFields } from './utils/stripTypes';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 import { 
   extractStatus, 
 } from './utils/bikePoint';
@@ -166,7 +164,7 @@ export interface BikePointStatus {
  *   keepTflTypes: false
  * });
  */
-interface BikePointSearchQuery extends BikePointSearchParams {
+interface BikePointSearchQuery {
   /** The search term (e.g., "St. James") */
   query: string;
   /** Whether to keep $type fields in the response */
@@ -296,7 +294,7 @@ export class BikePoint {
     'NbEmptyDocks'
   ] as const;
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Gets all bike point locations with their current status
@@ -342,8 +340,7 @@ export class BikePoint {
    * });
    */
   async get(options: { keepTflTypes?: boolean } = {}): Promise<BikePointStatus[]> {
-    const rawData = await this.api.bikePoint.bikePointGetAll()
-      .then((response: any) => stripTypeFields(response.data, options.keepTflTypes));
+    const rawData = await this.raw.bikePoint.getAll({ keepTflTypes: options.keepTflTypes });
     
     return rawData.map((bikePoint: BikePointInfo) => extractStatus(bikePoint, options.keepTflTypes));
   }
@@ -387,8 +384,7 @@ export class BikePoint {
    * }
    */
   async getById(id: string, options: { keepTflTypes?: boolean } = {}): Promise<BikePointStatus> {
-    const rawData = await this.api.bikePoint.bikePointGet(id)
-      .then((response: any) => stripTypeFields(response.data, options.keepTflTypes));
+    const rawData = await this.raw.bikePoint.get({ id, keepTflTypes: options.keepTflTypes });
     
     return extractStatus(rawData, options.keepTflTypes);
   }
@@ -431,8 +427,7 @@ export class BikePoint {
    */
   async search(options: BikePointSearchQuery): Promise<BikePointInfo[]> {
     const { query, keepTflTypes } = options;
-    return this.api.bikePoint.bikePointSearch({ query })
-      .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.bikePoint.search({ query, keepTflTypes });
   }
 
 
@@ -492,28 +487,19 @@ export class BikePoint {
    */
   async getByRadius(options: BikePointRadiusQuery): Promise<BikePointRadiusResponse> {
     const { lat, lon, radius = 200, keepTflTypes } = options;
-    
-    // Build query parameters
-    const queryParams = new URLSearchParams();
-    queryParams.append('lat', lat.toString());
-    queryParams.append('lon', lon.toString());
-    if (radius !== 200) {
-      queryParams.append('radius', radius.toString());
-    }
-    
-    // Make direct API call to the radius endpoint
-    const response = await this.api.request({
-      path: `/BikePoint?${queryParams.toString()}`,
-      method: 'GET',
-      format: 'json'
-    });
-    
-    const rawData = stripTypeFields(response.data, keepTflTypes);
-    
-    // Transform the data to include status information
+
+    const rawData = await this.raw.bikePoint.getAll({ keepTflTypes });
+    const places = rawData
+      .map((bikePoint: BikePointInfo) => ({
+        ...bikePoint,
+        distance: this.calculateDistance(lat, lon, bikePoint.lat ?? 0, bikePoint.lon ?? 0),
+      }))
+      .filter((bikePoint) => bikePoint.distance <= radius)
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+
     return {
-      centrePoint: rawData.centrePoint,
-      places: rawData.places.map((bikePoint: BikePointInfo) => ({
+      centrePoint: [lat, lon],
+      places: places.map((bikePoint: BikePointInfo) => ({
         ...extractStatus(bikePoint, keepTflTypes),
         distance: bikePoint.distance
       }))
@@ -579,22 +565,35 @@ export class BikePoint {
     const neLat = Math.max(point1.lat, point2.lat);
     const neLon = Math.max(point1.lon, point2.lon);
     
-    // Build query parameters
-    const queryParams = new URLSearchParams();
-    queryParams.append('swLat', swLat.toString());
-    queryParams.append('swLon', swLon.toString());
-    queryParams.append('neLat', neLat.toString());
-    queryParams.append('neLon', neLon.toString());
-    
-    // Make direct API call to the bounds endpoint
-    const response = await this.api.request({
-      path: `/BikePoint?${queryParams.toString()}`,
-      method: 'GET',
-      format: 'json'
-    });
-    
-    const rawData = stripTypeFields(response.data, keepTflTypes);
-    return rawData.map((bikePoint: BikePointInfo) => extractStatus(bikePoint, keepTflTypes));
+    const rawData = await this.raw.bikePoint.getAll({ keepTflTypes });
+    return rawData
+      .filter((bikePoint: BikePointInfo) => {
+        if (bikePoint.lat === undefined || bikePoint.lon === undefined) {
+          return false;
+        }
+
+        return (
+          bikePoint.lat >= swLat
+          && bikePoint.lat <= neLat
+          && bikePoint.lon >= swLon
+          && bikePoint.lon <= neLon
+        );
+      })
+      .map((bikePoint: BikePointInfo) => extractStatus(bikePoint, keepTflTypes));
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const earthRadius = 6371000;
+    const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
+
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+    const a = (
+      Math.sin(dLat / 2) ** 2
+      + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2
+    );
+
+    return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
 

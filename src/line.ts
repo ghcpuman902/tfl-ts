@@ -1,9 +1,7 @@
 import { 
-  Api,
   TflApiPresentationEntitiesLineStatus as TflLineStatus,
   TflApiPresentationEntitiesLine as TflLine,
   TflApiPresentationEntitiesDisruption as TflDisruption,
-  TflApiPresentationEntitiesCrowding as TflCrowding,
   TflApiPresentationEntitiesMode as TflApiMode,
   TflApiPresentationEntitiesStatusSeverity as TflStatusSeverity,
   TflApiPresentationEntitiesRouteSearchResponse as TflRouteSearchResponse,
@@ -11,9 +9,9 @@ import {
   TflApiPresentationEntitiesStopPoint as TflStopPoint,
   TflApiPresentationEntitiesTimetableResponse as TflTimetableResponse,
   TflApiPresentationEntitiesPrediction as TflPrediction
-} from './generated/tfl';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
-import { stripTypeFields } from './utils/stripTypes';
 
 // Import raw data from generated meta files
 import { Lines } from './generated/meta/Line';
@@ -34,8 +32,6 @@ type TflLineId = typeof Lines[number]['id'];
 type ModeName = typeof Modes[number]['modeName'];
 type ServiceType = typeof ServiceTypes[number];
 type DisruptionCategory = typeof DisruptionCategories[number];
-type SeverityLevel = typeof Severity[number]['severityLevel'];
-type SeverityDescription = typeof Severity[number]['description'];
 
 // Create LINE_NAMES mapping
 const LINE_NAMES: Record<TflLineId, string> = Lines.reduce((acc, line) => {
@@ -48,24 +44,6 @@ const LINE_INFO: Record<TflLineId, typeof Lines[number]> = Lines.reduce((acc, li
   acc[line.id as TflLineId] = line;
   return acc;
 }, {} as Record<TflLineId, typeof Lines[number]>);
-
-// Extract unique service types from all lines
-const allServiceTypes = new Set<string>();
-Lines.forEach(line => {
-  line.serviceTypes?.forEach(st => {
-    if (st.name) allServiceTypes.add(st.name);
-  });
-});
-const serviceTypesArray = Array.from(allServiceTypes);
-type ServiceTypeFromData = typeof serviceTypesArray[number];
-
-// Extract unique mode names from all lines
-const allModeNames = new Set<string>();
-Lines.forEach(line => {
-  allModeNames.add(line.modeName);
-});
-const modeNamesArray = Array.from(allModeNames);
-type ModeNameFromData = typeof modeNamesArray[number];
 
 // Create mode metadata from the generated Modes data
 const modeMetadata: Record<string, any> = Modes.reduce((acc, mode) => {
@@ -395,8 +373,8 @@ export class Line {
   /** All severity levels and descriptions (static, no HTTP request needed) */
   public readonly ALL_SEVERITY: readonly typeof Severity[number][] = Severity;
 
-  constructor(private api: Api<{}>) {
-    this.batchRequest = new BatchRequest(api);
+  constructor(private raw: RawClient) {
+    this.batchRequest = new BatchRequest(raw);
   }
 
   /**
@@ -428,21 +406,21 @@ export class Line {
     if (lineIds?.length) {
       const response = await this.batchRequest.processBatch(
         lineIds,
-        async (chunk) => this.api.line.lineGet(chunk).then(response => response.data)
+        async (chunk) => this.raw.line.get({ ids: chunk, keepTflTypes })
       );
-      return stripTypeFields(response, keepTflTypes) as LineInfo[];
+      return response as LineInfo[];
     }
 
     if (modes?.length) {
       const response = await this.batchRequest.processBatch(
         modes,
-        async (chunk) => this.api.line.lineGetByMode(chunk).then(response => response.data)
+        async (chunk) => this.raw.line.getByMode({ modes: chunk, keepTflTypes })
       );
-      return stripTypeFields(response, keepTflTypes) as LineInfo[];
+      return response as LineInfo[];
     }
 
-    const response = await this.api.line.lineGet([]).then(response => response.data);
-    return stripTypeFields(response, keepTflTypes) as LineInfo[];
+    const response = await this.raw.line.get({ ids: [], keepTflTypes });
+    return response as LineInfo[];
   }
 
   /**
@@ -476,17 +454,25 @@ export class Line {
     const { lineIds, modes, keepTflTypes } = options;
 
     if (lineIds?.length) {
-      return this.api.line.lineLineRoutesByIds({ ids: lineIds, serviceTypes: options.serviceTypes as ServiceType[] })
-        .then(response => stripTypeFields(response.data, keepTflTypes));
+      return this.raw.line.lineRoutesByIds({
+        ids: lineIds,
+        serviceTypes: options.serviceTypes as ServiceType[],
+        keepTflTypes,
+      });
     }
 
     if (modes?.length) {
-      return this.api.line.lineRouteByMode({ modes, serviceTypes: options.serviceTypes as ServiceType[] })
-        .then(response => stripTypeFields(response.data, keepTflTypes));
+      return this.raw.line.routeByMode({
+        modes,
+        serviceTypes: options.serviceTypes as ServiceType[],
+        keepTflTypes,
+      });
     }
 
-    return this.api.line.lineRoute({ serviceTypes: options.serviceTypes as ServiceType[] })
-      .then(response => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.line.route({
+      serviceTypes: options.serviceTypes as ServiceType[],
+      keepTflTypes,
+    });
   }
 
   /**
@@ -515,12 +501,13 @@ export class Line {
   async getRouteSequence(options: LineRouteSequenceQuery): Promise<TflRouteSequence> {
     const { id, direction, serviceTypes, excludeCrowding, keepTflTypes } = options;
     
-    return this.api.line.lineRouteSequence({
+    return this.raw.line.routeSequence({
       id,
       direction,
       serviceTypes: serviceTypes as ServiceType[],
-      excludeCrowding
-    }).then((response: any) => stripTypeFields(response.data, keepTflTypes));
+      excludeCrowding,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -545,48 +532,54 @@ export class Line {
 
     // Handle severity-based status (new endpoint)
     if (severity !== undefined && !lineIds?.length && !modes?.length) {
-      return this.api.line.lineStatusBySeverity(severity)
-        .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+      return this.raw.line.statusBySeverity({
+        severity,
+        keepTflTypes,
+      });
     }
 
     if (dateRange && lineIds?.length) {
       return this.batchRequest.processBatch(
         lineIds,
-        async (chunk) => this.api.line.lineStatus({
+        async (chunk) => this.raw.line.status({
           ids: chunk,
           startDate: dateRange.startDate,
           endDate: dateRange.endDate,
-          detail
-        }).then((response: any) => stripTypeFields(response.data, keepTflTypes))
+          detail,
+          keepTflTypes,
+        })
       );
     }
 
     if (lineIds?.length) {
       return this.batchRequest.processBatch(
         lineIds,
-        async (chunk) => this.api.line.lineStatusByIds({ 
+        async (chunk) => this.raw.line.statusByIds({
           ids: chunk,
-          detail
-        }).then((response: any) => stripTypeFields(response.data, keepTflTypes))
+          detail,
+          keepTflTypes,
+        })
       );
     }
 
     // Handle mode specific status
     if (modes?.length) {
-      return this.api.line.lineStatusByMode({ 
+      return this.raw.line.statusByMode({
         modes: modes as string[],
         detail,
-        severityLevel
-      }).then((response: any) => stripTypeFields(response.data, keepTflTypes));
+        severityLevel,
+        keepTflTypes,
+      });
     }
 
     // Default: get all modes first, then get status for all modes
-    const allModes = await this.api.line.lineMetaModes().then((response: any) => response.data);
+    const allModes = await this.raw.line.metaModes({ keepTflTypes });
     const modeNames = allModes.map((mode: any) => mode.modeName).filter((name: any): name is string => name !== undefined);
-    return this.api.line.lineStatusByMode({ 
+    return this.raw.line.statusByMode({
       modes: modeNames,
-      detail
-    }).then((response: any) => stripTypeFields(response.data, keepTflTypes));
+      detail,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -608,21 +601,19 @@ export class Line {
     const { lineIds, modes, keepTflTypes } = options;
 
     if (lineIds?.length) {
-      return this.api.line.lineDisruption(lineIds)
-        .then(response => stripTypeFields(response.data, keepTflTypes));
+      return this.raw.line.disruption({ ids: lineIds, keepTflTypes });
     }
 
     if (modes?.length) {
-      return this.api.line.lineDisruptionByMode(modes as string[])
-        .then(response => stripTypeFields(response.data, keepTflTypes));
+      return this.raw.line.disruptionByMode({ modes: modes as string[], keepTflTypes });
     }
 
-    return this.api.line.lineMetaDisruptionCategories()
-      .then(response => stripTypeFields(response.data.map(category => ({
-        category: category as DisruptionCategory,
-        type: '',
-        description: '',
-      })), keepTflTypes));
+    const categories = await this.raw.line.metaDisruptionCategories({ keepTflTypes });
+    return categories.map(category => ({
+      category: category as DisruptionCategory,
+      type: '',
+      description: '',
+    })) as TflDisruption[];
   }
 
   /**
@@ -646,10 +637,11 @@ export class Line {
   async getStopPoints(options: LineStopPointsQuery): Promise<TflStopPoint[]> {
     const { id, tflOperatedNationalRailStationsOnly, keepTflTypes } = options;
     
-    return this.api.line.lineStopPoints({
+    return this.raw.line.stopPoints({
       id,
-      tflOperatedNationalRailStationsOnly
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      tflOperatedNationalRailStationsOnly,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -678,12 +670,19 @@ export class Line {
     const { id, fromStopPointId, toStopPointId, keepTflTypes } = options;
     
     if (toStopPointId) {
-      return this.api.line.lineTimetableTo(fromStopPointId, id, toStopPointId)
-        .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+      return this.raw.line.timetableTo({
+        fromStopPointId,
+        id,
+        toStopPointId,
+        keepTflTypes,
+      });
     }
     
-    return this.api.line.lineTimetable(fromStopPointId, id)
-      .then((response: any) => stripTypeFields(response.data, keepTflTypes));
+    return this.raw.line.timetable({
+      fromStopPointId,
+      id,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -711,12 +710,13 @@ export class Line {
   async getArrivals(options: LineArrivalsQuery): Promise<TflPrediction[]> {
     const { lineIds, stopPointId, direction, destinationStationId, keepTflTypes } = options;
     
-    return this.api.line.lineArrivals({
+    return this.raw.line.arrivals({
       ids: lineIds,
       stopPointId,
       direction,
-      destinationStationId
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      destinationStationId,
+      keepTflTypes,
+    });
   }
 
   /**
@@ -738,11 +738,12 @@ export class Line {
    */
   async search(options: LineSearchQuery & { keepTflTypes?: boolean }): Promise<TflRouteSearchResponse> {
     const { query, modes, serviceTypes, keepTflTypes } = options;
-    return this.api.line.lineSearch({ 
+    return this.raw.line.search({
       query, 
       modes: modes as string[],
-      serviceTypes: serviceTypes as ServiceType[]
-    }).then(response => stripTypeFields(response.data, keepTflTypes));
+      serviceTypes: serviceTypes as ServiceType[],
+      keepTflTypes,
+    });
   }
 
   /**
@@ -769,17 +770,17 @@ export class Line {
     serviceTypes: string[];
   }> {
     const [modes, severities, disruptions, serviceTypes] = await Promise.all([
-      this.api.line.lineMetaModes().then(response => response.data),
-      this.api.line.lineMetaSeverity().then(response => response.data),
-      this.api.line.lineMetaDisruptionCategories().then(response => response.data),
-      this.api.line.lineMetaServiceTypes().then(response => response.data)
+      this.raw.line.metaModes({ keepTflTypes: options.keepTflTypes }),
+      this.raw.line.metaSeverity({ keepTflTypes: options.keepTflTypes }),
+      this.raw.line.metaDisruptionCategories({ keepTflTypes: options.keepTflTypes }),
+      this.raw.line.metaServiceTypes({ keepTflTypes: options.keepTflTypes }),
     ]);
 
     return {
-      modes: stripTypeFields(modes, options.keepTflTypes),
-      severities: stripTypeFields(severities, options.keepTflTypes),
-      disruptionCategories: stripTypeFields(disruptions, options.keepTflTypes),
-      serviceTypes: stripTypeFields(serviceTypes, options.keepTflTypes)
+      modes,
+      severities,
+      disruptionCategories: disruptions as string[],
+      serviceTypes: serviceTypes as string[],
     };
   }
 }

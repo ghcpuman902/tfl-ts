@@ -240,7 +240,7 @@ async function journeyDemo() {
       modes.forEach(mode => {
         const verbs = client.journey.getModeVerbs(mode);
         const modeDisplay = client.journey.getModeDisplayName(mode);
-        
+
         if (modeDisplay === '') {
           // For modes like walking that don't need an article or object
           console.log(`   ${mode}: ${verbs.imperative}`);
@@ -341,19 +341,23 @@ async function journeyDemo() {
     }
     console.log('');
 
-    // 9. Real-time Journey with Live Arrivals
-    console.log('9️⃣ Real-time Journey with Live Arrivals');
-    console.log('Planning journey with real-time data...\n');
+    // 9. Future Journey
+    console.log('9️⃣ Future Journey');
+    console.log('Planning journey happening in the future...\n');
 
-    const realTimeJourney = await client.journey.plan({
+    const futureDate = new Date(new Date().setDate(new Date().getDate() + 7)); // next weekend Saturday 10am
+    const futureJourney = await client.journey.plan({
       from: '940GZZLUOXC', // Oxford Circus
-      to: '940GZZLUVIC'    // Victoria
+      to: '940GZZLUVIC',    // Victoria
+      timeIs: 'Arriving',
+      date: client.journey.formatDate(futureDate), // yyyyMMdd format
+      time: client.journey.formatTime('16:00') // HHmm format (4pm)
     });
 
-    if (realTimeJourney.journeys && realTimeJourney.journeys.length > 0) {
-      displayJourneys(realTimeJourney.journeys, client, '✅ Real-time ');
+    if (futureJourney.journeys && futureJourney.journeys.length > 0) {
+      displayJourneys(futureJourney.journeys, client, '✅ Future ');
     } else {
-      console.log('❌ No real-time journeys found');
+      console.log('❌ No future journeys found');
     }
     console.log('');
 
@@ -363,7 +367,8 @@ async function journeyDemo() {
 
     const walkingJourney = await client.journey.plan({
       from: '940GZZLUOXC', // Oxford Circus
-      to: '940GZZLUVIC'    // Victoria
+      to: '940GZZLUVIC',    // Victoria
+      journeyPreference: 'LeastWalking' 
     });
 
     if (walkingJourney.journeys && walkingJourney.journeys.length > 0) {
@@ -371,8 +376,6 @@ async function journeyDemo() {
     } else {
       console.log('❌ No walking-optimized journeys found');
     }
-
-
 
     console.log('\n🎉 Journey Planning Demo Complete!');
 
@@ -436,3 +439,283 @@ const main = async () => {
 };
 
 main(); 
+
+
+/* example output:
+🚇 Journey Planning Demo
+
+1️⃣ Basic Journey Planning
+Planning journey from Oxford Circus to Victoria...
+
+✅ Journey found: 4 journeys
+   Journey A: 3 minutes (tube)
+      Cost: £2.90
+      Start: today 09:21 am
+      Arrival: today 09:24 am
+      Steps:
+        1. 🚇 Take the tube for 3 minutes
+
+   Journey B: 3 minutes (tube)
+      Cost: £2.90
+      Start: today 09:23 am
+      Arrival: today 09:26 am
+      Steps:
+        1. 🚇 Take the tube for 3 minutes
+
+   Journey C: 4 minutes (tube)
+      Cost: £2.90
+      Start: today 09:24 am
+      Arrival: today 09:28 am
+      Steps:
+        1. 🚇 Take the tube for 4 minutes
+
+   Journey D: 35 minutes (walking)
+      Start: today 09:20 am
+      Arrival: today 09:55 am
+      Steps:
+        1. 🚶 Walk 35 minutes (2,267m)
+
+
+2️⃣ Disambiguation Handling
+Planning journey from 'Westminster' to 'Bank' (ambiguous locations)...
+
+🔍 Multiple options found! Disambiguation required.
+
+📍 From options:
+   1. Westminster (London), Westminster Pier (1002085) | StopPoint | 96.7%
+   2. City of Westminster, Westminster Hall (51.499887251393,-0.125352379181) | PointOfInterest | 96.7%
+   3. City of Westminster, Westminster Arms (51.50055186582,-0.129806010901) | PointOfInterest | 96.7%
+   4. Westminster (London), Westminster Abbey (1014495) | StopPoint | 96.4%
+   5. Palmers Green, Westminster Drive (1019109) | StopPoint | 96.4%
+
+🎯 To options:
+   1. City of London, Bank (1000013) | StopPoint | 100%
+   2. London Borough of Tower Hamlets, Bankrupt (51.52407942006,-0.071684599032) | PointOfInterest | 96.4%
+   3. Southwark, BANKSIDE (51.508173117253,-0.097661185688) | StopPoint | 96.4%
+   4. Enfield (London), BANKSIDE (51.661709605436,-0.094288236636) | StopPoint | 96.4%
+   5. Ealing, BANKSIDE (51.511561760287,-0.390703976564) | StopPoint | 96.4%
+
+Selecting the 1st options and trying again with '1002085' to '1000013'...
+
+✅ Specific ✅ Journey found: 4 journeys
+   Journey A: 20 minutes (walking, tube)
+      Cost: £2.90
+      Start: today 09:20 am
+      Arrival: today 09:40 am
+      Steps:
+        1. 🚶 Walk 6 minutes (200m)
+        2. 🚇 Then take the tube for 10 minutes
+        3. 🚶 Then walk 4 minutes (299m)
+
+   Journey B: 19 minutes (walking, tube)
+      Cost: £2.80
+      Start: today 09:23 am
+      Arrival: today 09:42 am
+      Steps:
+        1. 🚶 Walk 6 minutes (200m)
+        2. 🚇 Then take the tube for 9 minutes
+        3. 🚶 Then walk 4 minutes (299m)
+
+   Journey C: 23 minutes (walking, tube)
+      Cost: £2.80
+      Start: today 09:24 am
+      Arrival: today 09:47 am
+      Steps:
+        1. 🚶 Walk 8 minutes (400m)
+        2. 🚇 Then take the tube for 1 minute
+        3. 🚇 Then take the tube for 4 minutes
+
+   Journey D: 49 minutes (walking)
+      Start: today 09:20 am
+      Arrival: today 10:09 am
+      Steps:
+        1. 🚶 Walk 49 minutes (3,153m)
+
+
+3️⃣ Accessibility Journey Planning
+Planning accessible journey from Kings Cross to London Bridge...
+
+✅ Accessible ✅ Journey found: 4 journeys
+   Journey A: 35 minutes (walking, tube)
+      Cost: £2.80
+      Start: today 09:20 am
+      Arrival: today 09:55 am
+      Steps:
+        1. 🚶 Walk 11 minutes (368m)
+        2. 🚇 Then take the tube for 9 minutes
+        3. 🚶 Then walk 15 minutes
+
+   Journey B: 31 minutes (walking, tube)
+      Cost: £2.80
+      Start: today 09:24 am
+      Arrival: today 09:55 am
+      Steps:
+        1. 🚶 Walk 7 minutes (154m)
+        2. 🚇 Then take the tube for 17 minutes
+        3. 🚶 Then walk 7 minutes
+
+   Journey C: 35 minutes (walking, tube)
+      Cost: £2.80
+      Start: today 09:25 am
+      Arrival: today 10:00 am
+      Steps:
+        1. 🚶 Walk 11 minutes (368m)
+        2. 🚇 Then take the tube for 9 minutes
+        3. 🚶 Then walk 15 minutes
+
+   Journey D: 1 hour 3 minutes (walking)
+      Start: today 09:20 am
+      Arrival: today 10:23 am
+      Steps:
+        1. 🚶 Walk 63 minutes (3,949m)
+
+
+4️⃣ Cycling Journey Planning
+Planning cycling journey from Buckingham Palace to Kensington Palace...
+
+✅ Cycling ✅ Journey found: 1 journeys
+   Journey A: 14 minutes (cycle)
+      Start: today 09:20 am
+      Arrival: today 09:34 am
+      Steps:
+        1. 🚲 Cycle for 14 minutes
+           📏 Distance: 3,771m
+
+
+5️⃣ Natural Language Journey Instructions
+Generating human-readable journey instructions...
+
+🗣️  Natural Language Description:
+   Take the tube for 3 minutes
+
+📋 Individual Leg Instructions:
+   1. Take the tube for 3 minutes
+
+🔤 Mode Verbs Examples:
+   tube: take the tube
+   bus: board the bus
+   walking: walk walking
+   cycle: cycle bike
+   river-bus: board the river bus
+
+6️⃣ Multi-Modal Journey
+Planning multi-modal (tube and bus) journey from London Bridge to Canary Wharf...
+
+✅ Multi-Modal ✅ Journey found: 2 journeys
+   Journey A: 20 minutes (walking, tube)
+      Cost: £3.50
+      Start: today 09:20 am
+      Arrival: today 09:40 am
+      Steps:
+        1. 🚶 Walk 8 minutes (217m)
+        2. 🚇 Then take the tube for 7 minutes
+           ⚠️  Disrupted
+        3. 🚶 Then walk 5 minutes (126m)
+
+   Journey B: 20 minutes (walking, tube)
+      Cost: £2.90
+      Start: today 09:22 am
+      Arrival: today 09:42 am
+      Steps:
+        1. 🚶 Walk 8 minutes (217m)
+        2. 🚇 Then take the tube for 7 minutes
+           ⚠️  Disrupted
+        3. 🚶 Then walk 5 minutes (126m)
+
+
+6️⃣ Input Validation
+Validating journey options...
+
+   Valid options:
+   ✅ Valid
+
+   Invalid modes:
+   ❌ Invalid:
+      - Invalid modes: invalid-mode. Valid modes: bus, cable-car, coach, cycle, cycle-hire, dlr, elizabeth-line, interchange-keep-sitting, interchange-secure, national-rail, overground, replacement-bus, river-bus, river-tour, taxi, tram, tube, walking
+
+   Invalid timeIs:
+   ❌ Invalid:
+      - Invalid timeIs: InvalidTime. Valid options: Arriving, Departing
+
+7️⃣ Metadata and Constants
+Available journey planning options:
+
+   Transport modes: 18 available
+   Journey preferences: LeastInterchange, LeastTime, LeastWalking
+   Accessibility options: NoRequirements, NoSolidStairs, NoEscalators, NoElevators, StepFreeToVehicle, StepFreeToPlatform
+   Walking speeds: Slow, Average, Fast
+   Cycle preferences: None, LeaveAtStation, TakeOnTransport, AllTheWay, CycleHire
+   Bike proficiencies: Easy, Moderate, Fast
+
+8️⃣ Station Name Extraction
+Extracting station names from journey results...
+
+   From: Victoria
+   To: Victoria
+
+9️⃣ Real-time Journey with Live Arrivals
+Planning journey with real-time data...
+
+✅ Real-time ✅ Journey found: 4 journeys
+   Journey A: 3 minutes (tube)
+      Cost: £2.90
+      Start: today 09:22 am
+      Arrival: today 09:25 am
+      Steps:
+        1. 🚇 Take the tube for 3 minutes
+
+   Journey B: 3 minutes (tube)
+      Cost: £2.90
+      Start: today 09:23 am
+      Arrival: today 09:26 am
+      Steps:
+        1. 🚇 Take the tube for 3 minutes
+
+   Journey C: 4 minutes (tube)
+      Cost: £2.90
+      Start: today 09:24 am
+      Arrival: today 09:28 am
+      Steps:
+        1. 🚇 Take the tube for 4 minutes
+
+   Journey D: 35 minutes (walking)
+      Start: today 09:20 am
+      Arrival: today 09:55 am
+      Steps:
+        1. 🚶 Walk 35 minutes (2,267m)
+
+
+🔟 Journey with Specific Preferences
+Planning journey with least walking preference...
+
+✅ Walking-optimized ✅ Journey found: 4 journeys
+   Journey A: 3 minutes (tube)
+      Cost: £2.90
+      Start: today 09:22 am
+      Arrival: today 09:25 am
+      Steps:
+        1. 🚇 Take the tube for 3 minutes
+
+   Journey B: 3 minutes (tube)
+      Cost: £2.90
+      Start: today 09:23 am
+      Arrival: today 09:26 am
+      Steps:
+        1. 🚇 Take the tube for 3 minutes
+
+   Journey C: 4 minutes (tube)
+      Cost: £2.90
+      Start: today 09:24 am
+      Arrival: today 09:28 am
+      Steps:
+        1. 🚇 Take the tube for 4 minutes
+
+   Journey D: 35 minutes (walking)
+      Start: today 09:20 am
+      Arrival: today 09:55 am
+      Steps:
+        1. 🚶 Walk 35 minutes (2,267m)
+
+
+🎉 Journey Planning Demo Complete!
+*/

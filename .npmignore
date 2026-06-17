@@ -15,7 +15,7 @@ test-import.js
 # Configuration files
 tsconfig.json
 jest.config.ts
-.eslintrc.json
+eslint.config.mjs
 .prettierrc
 .gitignore
 .npmignore

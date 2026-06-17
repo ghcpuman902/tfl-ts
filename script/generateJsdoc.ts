@@ -1,8 +1,8 @@
 // this code is run by user during build time, so it can use fs and path
 // the end user import the generated code as a module, not this file
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
+import { join, isAbsolute } from 'path';
 
 type SwaggerParameter = {
   name: string;
@@ -45,7 +45,7 @@ type SectionData = {
   endpoints: EndpointData[];
 };
 
-const SWAGGER_URL = "https://api.tfl.gov.uk/swagger/docs/v1";
+const SPEC_SOURCE = process.env.TFL_OPENAPI_SPEC ?? join(__dirname, '..', 'src', 'generated', 'openapi', 'tfl-v1.json');
 const OUTPUT_DIR = "src/generated/jsdoc";
 
 function jsDocEscape(s: string | undefined) {
@@ -127,11 +127,7 @@ export type ${variableName}Type = typeof ${variableName};
 }
 
 async function main() {
-  const resp = await fetch(SWAGGER_URL);
-  if (!resp.ok) {
-    throw new Error(`Failed to fetch: ${resp.statusText}`);
-  }
-  const doc: SwaggerDoc = await resp.json();
+  const doc: SwaggerDoc = JSON.parse(readFileSync(SPEC_SOURCE, 'utf8'));
 
   // Organize endpoints by section
   const sections: Map<string, EndpointData[]> = new Map();

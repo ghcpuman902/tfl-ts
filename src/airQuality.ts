@@ -1,5 +1,4 @@
-import { Api } from './generated/tfl';
-import { stripTypeFields } from './utils/stripTypes';
+import { RawClient } from './generated/raw';
 
 
 
@@ -173,7 +172,7 @@ export class AirQuality {
     'NO2', 'O3', 'PM10', 'PM25', 'SO2'
   ] as const;
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Gets air quality data feed
@@ -226,8 +225,9 @@ export class AirQuality {
    * }
    */
   async get(options: { keepTflTypes?: boolean } = {}): Promise<AirQualityInfo> {
-    return this.api.airQuality.airQualityGet()
-      .then(response => stripTypeFields(response.data, options.keepTflTypes));
+    return this.raw.airQuality.get({
+      keepTflTypes: options.keepTflTypes,
+    });
   }
 
 

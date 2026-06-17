@@ -29,11 +29,8 @@
  */
 
 import { 
-  Api,
-  CabwiseGetParams,
-  SystemObject
-} from './generated/tfl';
-import { stripTypeFields } from './utils/stripTypes';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 
 // Import raw data from generated meta files
 import { 
@@ -90,7 +87,7 @@ export type CabwiseOperatorType =
  *   optype: 'Minicab' // TypeScript provides autocomplete for valid operator types
  * });
  */
-export interface CabwiseSearchParams extends CabwiseGetParams {
+export interface CabwiseSearchParams {
   /** Latitude coordinate (must be between -90 and 90) */
   lat: number;
   /** Longitude coordinate (must be between -180 and 180) */
@@ -369,7 +366,7 @@ export class Cabwise {
     'Unknown'
   ] as const;
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Gets taxis and minicabs contact information
@@ -404,10 +401,12 @@ export class Cabwise {
    * });
    */
   async search(params: CabwiseSearchParams): Promise<CabwiseInfo> {
-    const { keepTflTypes, ...searchParams } = params;
-    
-    return this.api.cabwise.cabwiseGet(searchParams)
-      .then(response => stripTypeFields(response.data, keepTflTypes));
+    const { keepTflTypes = false, ...searchParams } = params;
+
+    return this.raw.cabwise.get({
+      ...searchParams,
+      keepTflTypes,
+    });
   }
 
   /**

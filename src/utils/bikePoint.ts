@@ -16,7 +16,7 @@
  * console.log(`Found ${eBikePoints.length} bike points with electric bikes`);
  */
 
-import { BikePointInfo, BikePointProperty, BikePointStatus } from '../bikePoint';
+import { BikePointInfo, BikePointStatus } from '../bikePoint';
 
 /**
  * Extract bike point status information from raw bike point data
@@ -161,8 +161,8 @@ export const findElectricBikes = (bikePoints: BikePointInfo[]): BikePointInfo[] 
  */
 export const sortByDistance = (
   bikePoints: BikePointInfo[], 
-  lat: number, 
-  lon: number
+  _lat: number, 
+  _lon: number
 ): BikePointInfo[] => {
   return [...bikePoints].sort((a, b) => {
     const distanceA = a.distance || 0;

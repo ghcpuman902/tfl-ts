@@ -1,4 +1,4 @@
-import { Api } from '../generated/tfl';
+import { RawClient } from '../generated/raw';
 
 interface BatchRequestOptions {
   maxConcurrent?: number;
@@ -8,10 +8,10 @@ interface BatchRequestOptions {
 }
 
 class BatchRequest {
-  private api: Api<{}>;
+  private api: RawClient;
   private options: Required<BatchRequestOptions>;
 
-  constructor(api: Api<{}>, options: BatchRequestOptions = {}) {
+  constructor(api: RawClient, options: BatchRequestOptions = {}) {
     this.api = api;
     this.options = {
       maxConcurrent: options.maxConcurrent || 5,

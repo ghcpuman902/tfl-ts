@@ -1,8 +1,7 @@
 import { 
-  Api, 
   TflApiPresentationEntitiesAccidentStatsAccidentDetail as TflAccidentDetail
-} from './generated/tfl';
-import { stripTypeFields } from './utils/stripTypes';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 
 
 
@@ -87,7 +86,7 @@ export interface AccidentStatsInfo {
  */
 export class AccidentStats {
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Gets all accident details for accidents occurring in the specified year
@@ -121,8 +120,7 @@ export class AccidentStats {
    */
   async get(options: AccidentStatsQuery): Promise<TflAccidentDetail[]> {
     const { year, keepTflTypes } = options;
-    return this.api.accidentStats.accidentStatsGet(year)
-      .then((response: any) => stripTypeFields(response.data, keepTflTypes))
+    return this.raw.accidentStats.get({ year, keepTflTypes })
       .catch((error: any) => {
         // The error is a Response object, not an axios-style error
         if (error instanceof Response) {

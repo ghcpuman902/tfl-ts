@@ -6,12 +6,11 @@
  */
 
 import { 
-  Api, 
   TflApiPresentationEntitiesMode,
   TflApiPresentationEntitiesPrediction,
   TflApiPresentationEntitiesActiveServiceType,
-  ModeArrivalsParams
-} from './generated/tfl';
+} from './generated/types';
+import { RawClient } from './generated/raw';
 
 // Import generated metadata (NEVER hardcode!)
 import { 
@@ -25,8 +24,6 @@ import {
   Sorts,
   StopTypes
 } from './generated/meta/Meta';
-
-import { stripTypeFields } from './utils/stripTypes';
 
 // Types and interfaces
 export interface ModeArrivalsQuery {
@@ -93,7 +90,7 @@ export class Mode {
   public readonly FARE_PAYING_MODES = this.buildFarePayingModes();
   public readonly SCHEDULED_SERVICE_MODES = this.buildScheduledServiceModes();
 
-  constructor(private api: Api<{}>) {}
+  constructor(private raw: RawClient) {}
 
   /**
    * Gets the active service types for transport modes
@@ -118,10 +115,8 @@ export class Mode {
    */
   async getActiveServiceTypes(options: ModeServiceQuery = {}): Promise<TflActiveServiceType[]> {
     const { keepTflTypes = false } = options;
-    
-    return this.api.mode.modeGetActiveServiceTypes().then(response => 
-      stripTypeFields(response.data, keepTflTypes)
-    );
+
+    return this.raw.mode.getActiveServiceTypes({ keepTflTypes });
   }
 
   /**
@@ -163,15 +158,12 @@ export class Mode {
    */
   async getArrivals(options: ModeArrivalsQuery): Promise<TflPrediction[]> {
     const { mode, count, keepTflTypes = false } = options;
-    
-    const params: ModeArrivalsParams = {
+
+    return this.raw.mode.arrivals({
       mode,
-      ...(count !== undefined && { count })
-    };
-    
-    return this.api.mode.modeArrivals(params).then(response => 
-      stripTypeFields(response.data, keepTflTypes)
-    );
+      ...(count !== undefined && { count }),
+      keepTflTypes,
+    });
   }
 
   // 🚨 Build derived metadata from generated data
