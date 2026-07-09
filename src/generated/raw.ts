@@ -332,6 +332,12 @@ export interface PlaceGetByGeoArgs {
     "placeGeo.neLon"?: string | number | boolean | string[];
     "placeGeo.lat"?: string | number | boolean | string[];
     "placeGeo.lon"?: string | number | boolean | string[];
+    lat?: string | number | boolean | string[];
+    lon?: string | number | boolean | string[];
+    swLat?: string | number | boolean | string[];
+    swLon?: string | number | boolean | string[];
+    neLat?: string | number | boolean | string[];
+    neLon?: string | number | boolean | string[];
     keepTflTypes?: boolean;
     signal?: AbortSignal;
 }
@@ -519,8 +525,10 @@ export interface StopPointGetByGeoPointArgs {
     modes?: string | number | boolean | string[];
     categories?: string | number | boolean | string[];
     returnLines?: string | number | boolean | string[];
-    "location.lat": string | number | boolean | string[];
-    "location.lon": string | number | boolean | string[];
+    "location.lat"?: string | number | boolean | string[];
+    "location.lon"?: string | number | boolean | string[];
+    lat: string | number | boolean | string[];
+    lon: string | number | boolean | string[];
     keepTflTypes?: boolean;
     signal?: AbortSignal;
 }
@@ -1421,12 +1429,12 @@ export class RawClient {
     if (args.type !== undefined) query["type"] = args.type;
     if (args.activeOnly !== undefined) query["activeOnly"] = args.activeOnly;
     if (args.numberOfPlacesToReturn !== undefined) query["numberOfPlacesToReturn"] = args.numberOfPlacesToReturn;
-    if (args["placeGeo.swLat"] !== undefined) query["placeGeo.swLat"] = args["placeGeo.swLat"];
-    if (args["placeGeo.swLon"] !== undefined) query["placeGeo.swLon"] = args["placeGeo.swLon"];
-    if (args["placeGeo.neLat"] !== undefined) query["placeGeo.neLat"] = args["placeGeo.neLat"];
-    if (args["placeGeo.neLon"] !== undefined) query["placeGeo.neLon"] = args["placeGeo.neLon"];
-    if (args["placeGeo.lat"] !== undefined) query["placeGeo.lat"] = args["placeGeo.lat"];
-    if (args["placeGeo.lon"] !== undefined) query["placeGeo.lon"] = args["placeGeo.lon"];
+    if ((args["placeGeo.swLat"] !== undefined ? args["placeGeo.swLat"] : args.swLat) !== undefined) query["swLat"] = (args["placeGeo.swLat"] !== undefined ? args["placeGeo.swLat"] : args.swLat);
+    if ((args["placeGeo.swLon"] !== undefined ? args["placeGeo.swLon"] : args.swLon) !== undefined) query["swLon"] = (args["placeGeo.swLon"] !== undefined ? args["placeGeo.swLon"] : args.swLon);
+    if ((args["placeGeo.neLat"] !== undefined ? args["placeGeo.neLat"] : args.neLat) !== undefined) query["neLat"] = (args["placeGeo.neLat"] !== undefined ? args["placeGeo.neLat"] : args.neLat);
+    if ((args["placeGeo.neLon"] !== undefined ? args["placeGeo.neLon"] : args.neLon) !== undefined) query["neLon"] = (args["placeGeo.neLon"] !== undefined ? args["placeGeo.neLon"] : args.neLon);
+    if ((args["placeGeo.lat"] !== undefined ? args["placeGeo.lat"] : args.lat) !== undefined) query["lat"] = (args["placeGeo.lat"] !== undefined ? args["placeGeo.lat"] : args.lat);
+    if ((args["placeGeo.lon"] !== undefined ? args["placeGeo.lon"] : args.lon) !== undefined) query["lon"] = (args["placeGeo.lon"] !== undefined ? args["placeGeo.lon"] : args.lon);
     return this.http.request<TflApiPresentationEntitiesStopPoint[]>({
       method: 'GET',
       path: `/Place`,
@@ -1910,8 +1918,8 @@ export class RawClient {
     if (args.modes !== undefined) query["modes"] = args.modes;
     if (args.categories !== undefined) query["categories"] = args.categories;
     if (args.returnLines !== undefined) query["returnLines"] = args.returnLines;
-    if (args["location.lat"] !== undefined) query["location.lat"] = args["location.lat"];
-    if (args["location.lon"] !== undefined) query["location.lon"] = args["location.lon"];
+    if ((args["location.lat"] !== undefined ? args["location.lat"] : args.lat) !== undefined) query["lat"] = (args["location.lat"] !== undefined ? args["location.lat"] : args.lat);
+    if ((args["location.lon"] !== undefined ? args["location.lon"] : args.lon) !== undefined) query["lon"] = (args["location.lon"] !== undefined ? args["location.lon"] : args.lon);
     return this.http.request<TflApiPresentationEntitiesStopPointsResponse>({
       method: 'GET',
       path: `/StopPoint`,

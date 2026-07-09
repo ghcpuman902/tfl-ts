@@ -323,6 +323,8 @@ interface StopPointGeoQuery {
   lon: number;
   /** Search radius in meters */
   radius?: number;
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
+  modes?: string[];
   /** Whether to use stop point hierarchy */
   useStopPointHierarchy?: boolean;
   /** Array of categories to include */
@@ -933,15 +935,29 @@ export class StopPoint {
    * });
    */
   async getByGeoPoint(options: StopPointGeoQuery): Promise<TflApiPresentationEntitiesStopPointsResponse> {
-    const { lat, lon, radius, useStopPointHierarchy, categories, returnLines, stoptypes, keepTflTypes } = options;
-    return this.raw.stopPoint.getByGeoPoint({
-      "location.lat": lat,
-      "location.lon": lon,
+    const {
+      lat,
+      lon,
       radius,
+      modes,
       useStopPointHierarchy,
-      categories: categories || [],
+      categories,
       returnLines,
-      stopTypes: stoptypes || [],
+      stoptypes,
+      keepTflTypes,
+    } = options;
+
+    const defaultBusStopTypes = this.STOP_POINT_TYPES.filter((type) => type.includes('Bus'));
+
+    return this.raw.stopPoint.getByGeoPoint({
+      lat,
+      lon,
+      radius,
+      modes,
+      useStopPointHierarchy,
+      categories,
+      returnLines,
+      stopTypes: stoptypes ?? defaultBusStopTypes,
       keepTflTypes,
     });
   }

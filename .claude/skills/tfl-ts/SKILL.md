@@ -129,6 +129,27 @@ for (const a of sorted.slice(0, 5)) {
 }
 ```
 
+## Example 2b: Nearby stops by GPS
+
+```typescript
+import TflClient from 'tfl-ts';
+
+const client = new TflClient();
+
+// Truncate GPS to ~3 decimal places (~100 m) in UI demos to avoid mobile jitter re-fetching
+const stops = await client.stopPoint.getByGeoPoint({
+  lat: 51.508,
+  lon: -0.065,
+  radius: 400,
+  modes: ['bus'],
+  stoptypes: ['NaptanPublicBusCoachTram'],
+});
+
+for (const stop of stops.stopPoints ?? []) {
+  console.log(stop.commonName, stop.id);
+}
+```
+
 ## Example 3: Journey planning
 
 ```typescript

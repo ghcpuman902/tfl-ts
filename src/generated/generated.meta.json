@@ -6,7 +6,7 @@
     "source": "https://api.tfl.gov.uk/swagger/docs/v1",
     "pathCount": 84
   },
-  "generatedAt": "2026-06-17T10:51:58.438Z",
+  "generatedAt": "2026-07-09T09:00:39.492Z",
   "artifacts": {
     "types": {
       "generatedAt": "2026-06-17T10:51:56.919Z",
@@ -14,7 +14,7 @@
       "toolVersion": "13.12.2"
     },
     "raw": {
-      "generatedAt": "2026-06-17T10:51:57.694Z",
+      "generatedAt": "2026-07-09T09:00:39.492Z",
       "endpointCount": 84
     },
     "jsdoc": {

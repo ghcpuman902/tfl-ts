@@ -180,12 +180,12 @@ export class Place {
     type?: string[];
     activeOnly?: boolean;
     numberOfPlacesToReturn?: number;
-    "placeGeo.swLat"?: number;
-    "placeGeo.swLon"?: number;
-    "placeGeo.neLat"?: number;
-    "placeGeo.neLon"?: number;
-    "placeGeo.lat"?: number;
-    "placeGeo.lon"?: number;
+    lat?: number;
+    lon?: number;
+    swLat?: number;
+    swLon?: number;
+    neLat?: number;
+    neLon?: number;
   } {
     const base = {
       categories: options.categories,
@@ -198,17 +198,17 @@ export class Place {
     if (isBoundsQuery(options)) {
       return {
         ...base,
-        "placeGeo.swLat": options.swLat,
-        "placeGeo.swLon": options.swLon,
-        "placeGeo.neLat": options.neLat,
-        "placeGeo.neLon": options.neLon,
+        swLat: options.swLat,
+        swLon: options.swLon,
+        neLat: options.neLat,
+        neLon: options.neLon,
       };
     }
 
     return {
       ...base,
-      "placeGeo.lat": options.lat,
-      "placeGeo.lon": options.lon,
+      lat: options.lat,
+      lon: options.lon,
       radius: options.radius,
     };
   }

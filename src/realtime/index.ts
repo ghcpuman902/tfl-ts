@@ -329,7 +329,6 @@ export const pollLineArrivals = (
     intervalMs = DEFAULT_INTERVAL_MS,
     immediate = true,
     keepTflTypes = false,
-    direction,
   } = options;
 
   return createPoller({

@@ -84,6 +84,15 @@ client.stopPoint.STOP_POINT_TYPES;
 await client.stopPoint.search({ query: 'Oxford Circus', modes: ['tube'] });
 await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });
 await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
+
+// Nearby stops by GPS (truncate coords to ~3 decimal places in UI to avoid mobile jitter re-fetching)
+const stops = await client.stopPoint.getByGeoPoint({
+  lat: 51.508,
+  lon: -0.065,
+  radius: 400,
+  modes: ['bus'],
+  stoptypes: ['NaptanPublicBusCoachTram'],
+});
 ```
 
 **Stop ID pattern:** always search → cache ID → use ID for subsequent calls.

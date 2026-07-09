@@ -41,6 +41,38 @@ type EndpointDef = {
 
 const SPEC_PATH = path.join(__dirname, '..', 'src', 'generated', 'openapi', 'tfl-v1.json');
 
+/** OpenAPI query param name → wire name on the live TfL API (when they differ). */
+const QUERY_WIRE_ALIASES: Record<string, Record<string, string>> = {
+  StopPoint_GetByGeoPoint: {
+    'location.lat': 'lat',
+    'location.lon': 'lon',
+  },
+  Place_GetByGeo: {
+    'placeGeo.lat': 'lat',
+    'placeGeo.lon': 'lon',
+    'placeGeo.swLat': 'swLat',
+    'placeGeo.swLon': 'swLon',
+    'placeGeo.neLat': 'neLat',
+    'placeGeo.neLon': 'neLon',
+  },
+};
+
+/** Friendly arg names accepted alongside dotted OpenAPI query param names. */
+const QUERY_INPUT_ALIASES: Record<string, Record<string, string>> = {
+  StopPoint_GetByGeoPoint: {
+    lat: 'location.lat',
+    lon: 'location.lon',
+  },
+  Place_GetByGeo: {
+    lat: 'placeGeo.lat',
+    lon: 'placeGeo.lon',
+    swLat: 'placeGeo.swLat',
+    swLon: 'placeGeo.swLon',
+    neLat: 'placeGeo.neLat',
+    neLon: 'placeGeo.neLon',
+  },
+};
+
 const GENERATION_META_HINT = '// Generation timestamps: see ./generated.meta.json';
 const ENDPOINTS_PATH = path.join(__dirname, '..', 'src', 'generated', 'endpoints.ts');
 const RAW_PATH = path.join(__dirname, '..', 'src', 'generated', 'raw.ts');
@@ -181,12 +213,23 @@ const paramAccessor = (param: string): string =>
 
 const buildArgsInterface = (endpoint: EndpointDef): string => {
   const lines: string[] = [];
+  const inputAliases = QUERY_INPUT_ALIASES[endpoint.operationId] ?? {};
   const uniqueParams = [...new Set([...Object.values(endpoint.pathParamMap), ...endpoint.queryParams])];
+  const friendlyParams = Object.keys(inputAliases).filter(
+    (friendly) => !uniqueParams.includes(friendly),
+  );
 
   for (const param of uniqueParams) {
-    const required = endpoint.requiredParams.includes(param);
+    const hasFriendlyAlias = Object.values(inputAliases).includes(param);
+    const required = endpoint.requiredParams.includes(param) && !hasFriendlyAlias;
     const key = param.includes('.') ? JSON.stringify(param) : param;
     lines.push(`    ${key}${required ? '' : '?'}: string | number | boolean | string[];`);
+  }
+
+  for (const friendly of friendlyParams) {
+    const canonical = inputAliases[friendly];
+    const required = endpoint.requiredParams.includes(canonical);
+    lines.push(`    ${friendly}${required ? '' : '?'}: string | number | boolean | string[];`);
   }
 
   lines.push('    keepTflTypes?: boolean;');
@@ -196,9 +239,21 @@ const buildArgsInterface = (endpoint: EndpointDef): string => {
 };
 
 const buildMethodBody = (endpoint: EndpointDef): string => {
+  const inputAliases = QUERY_INPUT_ALIASES[endpoint.operationId] ?? {};
+  const wireAliases = QUERY_WIRE_ALIASES[endpoint.operationId] ?? {};
+  const friendlyByCanonical = Object.fromEntries(
+    Object.entries(inputAliases).map(([friendly, canonical]) => [canonical, friendly]),
+  );
+
   const queryEntries = endpoint.queryParams.map((param) => {
+    const wireKey = wireAliases[param] ?? param;
     const accessor = paramAccessor(param);
-    return `    if (${accessor} !== undefined) query[${JSON.stringify(param)}] = ${accessor};`;
+    const friendly = friendlyByCanonical[param];
+    const valueExpr = friendly
+      ? `(${accessor} !== undefined ? ${accessor} : args.${friendly})`
+      : accessor;
+
+    return `    if (${valueExpr} !== undefined) query[${JSON.stringify(wireKey)}] = ${valueExpr};`;
   });
 
   const pathExpr = `\`${endpoint.pathTemplate}\``;
