@@ -2,7 +2,10 @@ import {
   DEFAULT_LINE_COLOR,
   getLineColor,
   getLineCssProps,
+  getLineDarkReadableStyles,
   getLineInlineStyles,
+  hardOutlineBoxShadow,
+  hardOutlineTextShadow,
   normalizeLineId,
 } from '../utils/ui';
 
@@ -39,6 +42,18 @@ describe('line color UI helpers', () => {
       '--line-color': '#E32017',
       '--line-color-rgb': '227, 32, 23',
       '--line-color-contrast': '#000000',
+      '--line-dark-text-shadow': 'none',
+      '--line-dark-box-shadow': 'none',
+    });
+  });
+
+  test('getLineCssProps exposes hard outline shadows for northern', () => {
+    expect(getLineCssProps('northern')).toEqual({
+      '--line-color': '#000000',
+      '--line-color-rgb': '0, 0, 0',
+      '--line-color-contrast': '#ffffff',
+      '--line-dark-text-shadow': hardOutlineTextShadow('#ffffff'),
+      '--line-dark-box-shadow': hardOutlineBoxShadow('#ffffff'),
     });
   });
 
@@ -51,6 +66,17 @@ describe('line color UI helpers', () => {
       color: '#0098D4',
       backgroundColor: '#0098D4',
       borderLeftColor: '#0098D4',
+    });
+  });
+
+  test('getLineDarkReadableStyles returns hard outline for northern, null otherwise', () => {
+    expect(getLineDarkReadableStyles('central')).toBeNull();
+    expect(getLineDarkReadableStyles('northern')).toEqual({
+      color: '#000000',
+      backgroundColor: '#000000',
+      textShadow: hardOutlineTextShadow('#ffffff'),
+      boxShadow: hardOutlineBoxShadow('#ffffff'),
+      outlineColor: '#ffffff',
     });
   });
 });

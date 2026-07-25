@@ -341,6 +341,7 @@ import {
   getLineColor,
   getLineCssProps,
   getLineInlineStyles,
+  getLineDarkReadableStyles,
   normalizeLineId,
   getSeverityCategory,
   getSeverityClasses,
@@ -357,16 +358,29 @@ Use these for styling status boards — they operate on data already fetched fro
 
 ```tsx
 const colors = getLineColor(line.id ?? ''); // normalizes elizabeth-line → elizabeth
+const cssProps = getLineCssProps(line.id ?? '');
 
-// Color bar
-<div style={{ backgroundColor: colors.hex, height: 4 }} />
+// Color bar — keep brand hex; on dark UI use hard outline vars (Northern stays black)
+<div
+  style={{ ...cssProps, backgroundColor: 'var(--line-color)', height: 4 }}
+  className="dark:[box-shadow:var(--line-dark-box-shadow)]"
+/>
 
 // Card accent
 <div style={{ borderLeft: `4px solid ${colors.hex}` }} />
 
-// Line title
-<span style={{ color: colors.hex }}>{line.name}</span>
+// Line title — do not swap Northern to white; outline for contrast instead
+<span
+  style={{ color: colors.hex, ...cssProps }}
+  className="dark:[text-shadow:var(--line-dark-text-shadow)]"
+>
+  {line.name}
+</span>
 
+// Or: getLineDarkReadableStyles('northern') → { color, textShadow, boxShadow, ... }
+```
+
+> `darkContrastHex` / `--line-color-contrast` are **outline accents**, not fill replacements. Soft glow loses brand; hard rings (`--line-dark-*-shadow`) keep Northern black.
 // Or use getLineInlineStyles / getLineCssProps for common patterns
 ```
 

@@ -31,13 +31,48 @@ export type SeverityDescription = typeof Severity[number]['description'];
  * Use `hex` with inline styles or CSS — do not rely on framework-specific class names.
  */
 export interface LineColorInfo {
-  /** Official TfL hex color code */
+  /** Official TfL hex color code — keep this as fill/text even on dark surfaces */
   hex: string;
-  /** Whether this color has poor contrast on dark backgrounds */
+  /**
+   * Whether this brand hex is hard to see on dark backgrounds (e.g. Northern black).
+   * When true, prefer a hard outline using `darkContrastHex` — do **not** replace
+   * the fill/text with white (that discards brand identity).
+   */
   poorDarkContrast: boolean;
-  /** Suggested contrasting hex when `poorDarkContrast` is true (e.g. on dark themes) */
+  /**
+   * Outline/halo accent for dark surfaces when `poorDarkContrast` is true.
+   * Use for stroke, hard text-shadow rings, or box-shadow rings — not as a fill swap.
+   * Prefer `getLineDarkReadableStyles` or `--line-dark-*-shadow` from `getLineCssProps`.
+   */
   darkContrastHex?: string;
 }
+
+/**
+ * Hard 8-direction text outline (border-like stroke). Prefer over soft glow blur.
+ * Default 0.5px reads as a hairline on dark UI without overpowering brand black.
+ */
+export const hardOutlineTextShadow = (
+  outlineHex: string,
+  widthPx = 0.5,
+): string =>
+  [
+    `-${widthPx}px -${widthPx}px 0 ${outlineHex}`,
+    `${widthPx}px -${widthPx}px 0 ${outlineHex}`,
+    `-${widthPx}px ${widthPx}px 0 ${outlineHex}`,
+    `${widthPx}px ${widthPx}px 0 ${outlineHex}`,
+    `-${widthPx}px 0 0 ${outlineHex}`,
+    `${widthPx}px 0 0 ${outlineHex}`,
+    `0 -${widthPx}px 0 ${outlineHex}`,
+    `0 ${widthPx}px 0 ${outlineHex}`,
+  ].join(', ');
+
+/**
+ * Hard ring (0 blur) — hairline border-like outline (default 0.75px).
+ */
+export const hardOutlineBoxShadow = (
+  outlineHex: string,
+  widthPx = 0.75,
+): string => `0 0 0 ${widthPx}px ${outlineHex}`;
 
 /**
  * Severity category for UI styling
@@ -220,6 +255,10 @@ export const SEVERITY_MAPPING = buildSeverityMapping();
  * @example
  * const colors = getLineColor('central');
  * // Returns: { hex: '#E32017', poorDarkContrast: false }
+ *
+ * // Northern stays black — use getLineDarkReadableStyles / CSS outline vars on dark UI
+ * // const northern = getLineColor('northern');
+ * // // { hex: '#000000', poorDarkContrast: true, darkContrastHex: '#ffffff' }
  *
  * // React / inline styles (works in any CSS setup)
  * <span style={{ color: colors.hex }}>Central</span>
@@ -415,28 +454,93 @@ export const getLineInlineStyles = (lineId: string): {
 };
 
 /**
- * Get CSS custom properties for line colors
- * 
+ * Styles that keep brand line colors readable on dark surfaces.
+ *
+ * Prefer this over swapping fill to `darkContrastHex`. Official TfL colors
+ * (especially Northern `#000000`) should stay as fill/text; use a hard white
+ * outline for contrast instead of inverting or soft-glowing.
+ *
+ * Returns `null` when no dark-surface adjustment is needed.
+ *
+ * @example
+ * const dark = getLineDarkReadableStyles('northern');
+ * // {
+ * //   color: '#000000',
+ * //   backgroundColor: '#000000',
+ * //   textShadow: '-1px -1px 0 #ffffff, ...',
+ * //   boxShadow: '0 0 0 0.75px #ffffff',
+ * //   outlineColor: '#ffffff',
+ * // }
+ *
+ * // With CSS vars from getLineCssProps (theme-safe):
+ * // className="dark:[text-shadow:var(--line-dark-text-shadow)]"
+ * // className="dark:[box-shadow:var(--line-dark-box-shadow)]"
+ */
+export const getLineDarkReadableStyles = (
+  lineId: string,
+): {
+  color: string;
+  backgroundColor: string;
+  textShadow: string;
+  boxShadow: string;
+  outlineColor: string;
+} | null => {
+  const color = getLineColor(lineId);
+  if (!color.poorDarkContrast || !color.darkContrastHex) {
+    return null;
+  }
+
+  const outline = color.darkContrastHex;
+  return {
+    color: color.hex,
+    backgroundColor: color.hex,
+    textShadow: hardOutlineTextShadow(outline),
+    boxShadow: hardOutlineBoxShadow(outline),
+    outlineColor: outline,
+  };
+};
+
+/**
+ * Get CSS custom properties for line colors.
+ *
+ * `--line-color-contrast` is an outline accent, not a fill replacement.
+ * On dark surfaces use `--line-dark-text-shadow` / `--line-dark-box-shadow`
+ * (hard rings) while keeping `--line-color` as the brand fill.
+ *
  * @param lineId - The line ID
  * @returns CSS custom properties object
- * 
+ *
  * @example
- * const cssProps = getLineCssProps('central');
- * // Returns: { '--line-color': '#E32017', '--line-color-rgb': '227, 32, 23' }
+ * const cssProps = getLineCssProps('northern');
+ * // {
+ * //   '--line-color': '#000000',
+ * //   '--line-color-rgb': '0, 0, 0',
+ * //   '--line-color-contrast': '#ffffff',
+ * //   '--line-dark-text-shadow': '-1px -1px 0 #ffffff, ...',
+ * //   '--line-dark-box-shadow': '0 0 0 0.75px #ffffff',
+ * // }
  */
 export const getLineCssProps = (lineId: string): Record<string, string> => {
   const color = getLineColor(lineId);
   const hex = color.hex;
-  
-  // Convert hex to RGB
+
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  
+
+  const outline = color.darkContrastHex ?? '#ffffff';
+  const needsDarkOutline = Boolean(color.poorDarkContrast && color.darkContrastHex);
+
   return {
     '--line-color': hex,
     '--line-color-rgb': `${r}, ${g}, ${b}`,
-    '--line-color-contrast': color.poorDarkContrast ? '#ffffff' : '#000000'
+    '--line-color-contrast': color.poorDarkContrast ? outline : '#000000',
+    '--line-dark-text-shadow': needsDarkOutline
+      ? hardOutlineTextShadow(outline)
+      : 'none',
+    '--line-dark-box-shadow': needsDarkOutline
+      ? hardOutlineBoxShadow(outline)
+      : 'none',
   };
 };
 

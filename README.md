@@ -427,7 +427,12 @@ console.log(Object.keys(overlay));
 Get official TfL line hex colors — framework-agnostic, use with inline styles or your own CSS:
 
 ```typescript
-import { getLineColor, getLineCssProps, getLineInlineStyles } from 'tfl-ts';
+import {
+  getLineColor,
+  getLineCssProps,
+  getLineInlineStyles,
+  getLineDarkReadableStyles,
+} from 'tfl-ts';
 
 // Get line color (hex only — no Tailwind or other framework classes)
 const colors = getLineColor('central');
@@ -438,6 +443,12 @@ console.log(colors);
 const elizabeth = getLineColor('elizabeth-line');
 // Output: { hex: '#6950A1', poorDarkContrast: false }
 
+// Northern stays black on dark UI — outline for contrast, do not invert fill to white
+const northern = getLineColor('northern');
+// { hex: '#000000', poorDarkContrast: true, darkContrastHex: '#ffffff' }
+const darkReadable = getLineDarkReadableStyles('northern');
+// { color: '#000000', textShadow: '...hard ring...', boxShadow: '0 0 0 0.75px #ffffff', ... }
+
 // Inline styles for React, Vue, plain HTML, etc.
 const styles = getLineInlineStyles('central');
 // { color: '#E32017', backgroundColor: '#E32017', borderLeftColor: '#E32017' }
@@ -446,6 +457,8 @@ const styles = getLineInlineStyles('central');
 // <span style={{ color: colors.hex }}>Central</span>
 // <div style={{ backgroundColor: colors.hex, height: 4 }} />
 // <article style={{ ...getLineCssProps(line.id), borderLeft: `4px solid ${colors.hex}` }} />
+// Dark mode (CSS vars): dark:[text-shadow:var(--line-dark-text-shadow)]
+//                        dark:[box-shadow:var(--line-dark-box-shadow)]
 
 // CSS custom properties for CSS-in-JS or style={{ ...cssProps }}
 const cssProps = getLineCssProps('central');
@@ -453,9 +466,13 @@ console.log(cssProps);
 // Output: {
 //   '--line-color': '#E32017',
 //   '--line-color-rgb': '227, 32, 23',
-//   '--line-color-contrast': '#000000'
+//   '--line-color-contrast': '#000000',
+//   '--line-dark-text-shadow': 'none',
+//   '--line-dark-box-shadow': 'none'
 // }
 ```
+
+> **Dark contrast:** `darkContrastHex` / `--line-color-contrast` are outline accents, not fill replacements. Soft glow shadows lose brand identity; use the hard ring helpers (`getLineDarkReadableStyles` or `--line-dark-*-shadow`).
 
 ### Severity Styling and Classification
 
