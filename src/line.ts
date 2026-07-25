@@ -12,6 +12,15 @@ import {
 } from './generated/types';
 import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
+import type {
+  LineIdInput,
+  ModeInput,
+  ModeName,
+  NamedLineId,
+  ServiceType,
+  ServiceTypeInput,
+  TflLineId,
+} from './utils/autocomplete';
 
 // Import raw data from generated meta files
 import { Lines } from './generated/meta/Line';
@@ -27,10 +36,6 @@ import {
   StopTypes
 } from './generated/meta/Meta';
 
-// Generate types from the generated meta data
-type TflLineId = typeof Lines[number]['id'];
-type ModeName = typeof Modes[number]['modeName'];
-type ServiceType = typeof ServiceTypes[number];
 type DisruptionCategory = typeof DisruptionCategories[number];
 
 // Create LINE_NAMES mapping
@@ -107,10 +112,10 @@ const severityDescriptions = buildSeverityDescriptions();
  * }
  */
 interface BaseLineQuery {
-  /** Array of line IDs (e.g., 'central', 'victoria', 'jubilee'). TypeScript provides autocomplete for known values. */
-  lineIds?: string[];
-  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
-  modes?: string[];
+  /** Array of line IDs (e.g., 'central', 'victoria', 'jubilee'). */
+  lineIds?: LineIdInput[];
+  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). */
+  modes?: ModeInput[];
   /** Whether to keep $type fields in the response */
   keepTflTypes?: boolean;
 }
@@ -135,7 +140,7 @@ interface BaseLineQuery {
  */
 interface LineRouteQuery extends BaseLineQuery {
   /** Array of service types to filter by (e.g., 'Regular', 'Night') */
-  serviceTypes?: string[];
+  serviceTypes?: ServiceTypeInput[];
 }
 
 /**
@@ -176,9 +181,9 @@ interface LineSearchQuery {
   /** Search query string */
   query: string;
   /** Filter by transport modes */
-  modes?: string[];
+  modes?: ModeInput[];
   /** Filter by service types */
-  serviceTypes?: string[];
+  serviceTypes?: ServiceTypeInput[];
 }
 
 /**
@@ -193,11 +198,11 @@ interface LineSearchQuery {
  */
 interface LineRouteSequenceQuery {
   /** Single line ID */
-  id: string;
+  id: LineIdInput;
   /** Direction of travel */
   direction: 'inbound' | 'outbound';
   /** Service types to filter by */
-  serviceTypes?: string[];
+  serviceTypes?: ServiceTypeInput[];
   /** Exclude crowding information */
   excludeCrowding?: boolean;
   /** Whether to keep $type fields in the response */
@@ -212,7 +217,7 @@ interface LineRouteSequenceQuery {
  */
 interface LineStopPointsQuery {
   /** Single line ID */
-  id: string;
+  id: LineIdInput;
   /** Filter to TfL-operated national rail stations only */
   tflOperatedNationalRailStationsOnly?: boolean;
   /** Whether to keep $type fields in the response */
@@ -231,7 +236,7 @@ interface LineStopPointsQuery {
  */
 interface LineTimetableQuery {
   /** Single line ID */
-  id: string;
+  id: LineIdInput;
   /** Originating station stop point ID */
   fromStopPointId: string;
   /** Destination station stop point ID (optional) */
@@ -259,7 +264,7 @@ interface LineTimetableQuery {
  */
 interface LineArrivalsQuery {
   /** Array of line IDs */
-  lineIds: string[];
+  lineIds: LineIdInput[];
   /** Stop point ID */
   stopPointId: string;
   /** Direction of travel */
@@ -481,30 +486,39 @@ export class Line {
    * This method returns the complete sequence of stops for a line in a specific direction,
    * including detailed information about each stop and the route sections.
    * 
-   * @param options - Query options for route sequence
+   * @param idOrOptions - Line ID, or full query options object
+   * @param direction - Direction when using positional form
+   * @param options - Optional flags when using positional form
    * @returns Promise resolving to route sequence information
    * @example
-   * // Get Central line inbound route sequence
-   * const sequence = await client.line.getRouteSequence({
-   *   id: 'central',
-   *   direction: 'inbound',
-   *   serviceTypes: ['Regular']
-   * });
-   * 
-   * // Get Victoria line outbound route sequence
+   * const sequence = await client.line.getRouteSequence('central', 'inbound');
    * const sequence = await client.line.getRouteSequence({
    *   id: 'victoria',
    *   direction: 'outbound',
    *   excludeCrowding: true
    * });
    */
-  async getRouteSequence(options: LineRouteSequenceQuery): Promise<TflRouteSequence> {
-    const { id, direction, serviceTypes, excludeCrowding, keepTflTypes } = options;
+  async getRouteSequence(
+    id: LineIdInput,
+    direction: 'inbound' | 'outbound',
+    options?: Omit<LineRouteSequenceQuery, 'id' | 'direction'>,
+  ): Promise<TflRouteSequence>;
+  async getRouteSequence(options: LineRouteSequenceQuery): Promise<TflRouteSequence>;
+  async getRouteSequence(
+    idOrOptions: LineIdInput | LineRouteSequenceQuery,
+    direction?: 'inbound' | 'outbound',
+    options?: Omit<LineRouteSequenceQuery, 'id' | 'direction'>,
+  ): Promise<TflRouteSequence> {
+    const query: LineRouteSequenceQuery =
+      typeof idOrOptions === 'string'
+        ? { id: idOrOptions, direction: direction!, ...options }
+        : idOrOptions;
+    const { id, direction: dir, serviceTypes, excludeCrowding, keepTflTypes } = query;
     
     return this.raw.line.routeSequence({
       id,
-      direction,
-      serviceTypes: serviceTypes as ServiceType[],
+      direction: dir,
+      serviceTypes: serviceTypes as ServiceType[] | undefined,
       excludeCrowding,
       keepTflTypes,
     });
@@ -622,20 +636,29 @@ export class Line {
    * This method returns all stations that serve a given line, including
    * their stop point IDs, names, and additional information.
    * 
-   * @param options - Query options for stop points
+   * @param idOrOptions - Line ID, or full query options object
+   * @param options - Optional flags when using positional form
    * @returns Promise resolving to an array of stop point information
    * @example
-   * // Get all stations for Central line
-   * const stations = await client.line.getStopPoints({ id: 'central' });
-   * 
-   * // Get TfL-operated national rail stations only
-   * const tflStations = await client.line.getStopPoints({ 
+   * const stations = await client.line.getStopPoints('central');
+   * const tflStations = await client.line.getStopPoints({
    *   id: 'elizabeth',
    *   tflOperatedNationalRailStationsOnly: true
    * });
    */
-  async getStopPoints(options: LineStopPointsQuery): Promise<TflStopPoint[]> {
-    const { id, tflOperatedNationalRailStationsOnly, keepTflTypes } = options;
+  async getStopPoints(id: LineIdInput): Promise<TflStopPoint[]>;
+  async getStopPoints(
+    id: LineIdInput,
+    options: Omit<LineStopPointsQuery, 'id'>,
+  ): Promise<TflStopPoint[]>;
+  async getStopPoints(options: LineStopPointsQuery): Promise<TflStopPoint[]>;
+  async getStopPoints(
+    idOrOptions: LineIdInput | LineStopPointsQuery,
+    options?: Omit<LineStopPointsQuery, 'id'>,
+  ): Promise<TflStopPoint[]> {
+    const query: LineStopPointsQuery =
+      typeof idOrOptions === 'string' ? { id: idOrOptions, ...options } : idOrOptions;
+    const { id, tflOperatedNationalRailStationsOnly, keepTflTypes } = query;
     
     return this.raw.line.stopPoints({
       id,
@@ -650,28 +673,38 @@ export class Line {
    * This method returns timetable information for a specific station on a line,
    * optionally including destination-specific timetables.
    * 
-   * @param options - Query options for timetable
+   * @param idOrOptions - Line ID, or full query options object
+   * @param fromStopPointId - Origin stop when using positional form
+   * @param options - Optional destination / flags when using positional form
    * @returns Promise resolving to timetable information
    * @example
-   * // Get timetable from Oxford Circus
-   * const timetable = await client.line.getTimetable({
-   *   id: 'central',
-   *   fromStopPointId: '940GZZLUOXC'
-   * });
-   * 
-   * // Get timetable from Oxford Circus to Victoria
+   * const timetable = await client.line.getTimetable('central', '940GZZLUOXC');
    * const timetable = await client.line.getTimetable({
    *   id: 'central',
    *   fromStopPointId: '940GZZLUOXC',
    *   toStopPointId: '940GZZLUVIC'
    * });
    */
-  async getTimetable(options: LineTimetableQuery): Promise<TflTimetableResponse> {
-    const { id, fromStopPointId, toStopPointId, keepTflTypes } = options;
+  async getTimetable(
+    id: LineIdInput,
+    fromStopPointId: string,
+    options?: Omit<LineTimetableQuery, 'id' | 'fromStopPointId'>,
+  ): Promise<TflTimetableResponse>;
+  async getTimetable(options: LineTimetableQuery): Promise<TflTimetableResponse>;
+  async getTimetable(
+    idOrOptions: LineIdInput | LineTimetableQuery,
+    fromStopPointId?: string,
+    options?: Omit<LineTimetableQuery, 'id' | 'fromStopPointId'>,
+  ): Promise<TflTimetableResponse> {
+    const query: LineTimetableQuery =
+      typeof idOrOptions === 'string'
+        ? { id: idOrOptions, fromStopPointId: fromStopPointId!, ...options }
+        : idOrOptions;
+    const { id, fromStopPointId: fromId, toStopPointId, keepTflTypes } = query;
     
     if (toStopPointId) {
       return this.raw.line.timetableTo({
-        fromStopPointId,
+        fromStopPointId: fromId,
         id,
         toStopPointId,
         keepTflTypes,
@@ -679,7 +712,7 @@ export class Line {
     }
     
     return this.raw.line.timetable({
-      fromStopPointId,
+      fromStopPointId: fromId,
       id,
       keepTflTypes,
     });
@@ -721,27 +754,34 @@ export class Line {
 
   /**
    * Search lines and routes
-   * @param options - Query options for search
+   * @param queryOrOptions - Search string, or full query options object
+   * @param options - Filters when using positional form
    * @returns Promise resolving to search results
    * @example
-   * // Search for lines containing "victoria"
-   * const results = await client.line.search({ 
-   *   query: "victoria",
-   *   modes: ['tube']
-   * });
-   * 
-   * // Search for night service routes
-   * const results = await client.line.search({ 
-   *   query: "central",
+   * const results = await client.line.search('victoria', { modes: ['tube'] });
+   * const results = await client.line.search({
+   *   query: 'central',
    *   serviceTypes: ['Night']
    * });
    */
-  async search(options: LineSearchQuery & { keepTflTypes?: boolean }): Promise<TflRouteSearchResponse> {
-    const { query, modes, serviceTypes, keepTflTypes } = options;
+  async search(
+    query: string,
+    options?: Omit<LineSearchQuery, 'query'> & { keepTflTypes?: boolean },
+  ): Promise<TflRouteSearchResponse>;
+  async search(options: LineSearchQuery & { keepTflTypes?: boolean }): Promise<TflRouteSearchResponse>;
+  async search(
+    queryOrOptions: string | (LineSearchQuery & { keepTflTypes?: boolean }),
+    options?: Omit<LineSearchQuery, 'query'> & { keepTflTypes?: boolean },
+  ): Promise<TflRouteSearchResponse> {
+    const queryOptions: LineSearchQuery & { keepTflTypes?: boolean } =
+      typeof queryOrOptions === 'string'
+        ? { query: queryOrOptions, ...options }
+        : queryOrOptions;
+    const { query, modes, serviceTypes, keepTflTypes } = queryOptions;
     return this.raw.line.search({
       query, 
-      modes: modes as string[],
-      serviceTypes: serviceTypes as ServiceType[],
+      modes: modes as string[] | undefined,
+      serviceTypes: serviceTypes as ServiceType[] | undefined,
       keepTflTypes,
     });
   }
@@ -806,6 +846,8 @@ export {
   severityDescriptions,
   severityByMode
 };
+
+export type { ModeName, NamedLineId, LineIdInput, ModeInput, ServiceTypeInput };
 
 // Re-export the raw Lines data
 export { Lines };

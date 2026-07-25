@@ -11,6 +11,7 @@ import {
   TflApiPresentationEntitiesActiveServiceType,
 } from './generated/types';
 import { RawClient } from './generated/raw';
+import type { ModeInput, ModeName } from './utils/autocomplete';
 
 // Import generated metadata (NEVER hardcode!)
 import { 
@@ -27,8 +28,8 @@ import {
 
 // Types and interfaces
 export interface ModeArrivalsQuery {
-  /** The mode name (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
-  mode: string;
+  /** The mode name (e.g., 'tube', 'bus', 'dlr'). */
+  mode: ModeInput;
   /** Number of arrivals to return for each stop, -1 to return all available. */
   count?: number;
   /** Whether to keep TfL internal type fields in the response */
@@ -44,7 +45,7 @@ export interface ModeServiceQuery {
 export type TflMode = TflApiPresentationEntitiesMode;
 export type TflPrediction = TflApiPresentationEntitiesPrediction;
 export type TflActiveServiceType = TflApiPresentationEntitiesActiveServiceType;
-export type ModeName = typeof Modes[number]['modeName'];
+export type { ModeName };
 
 /**
  * Mode API client for transport mode information and arrivals
@@ -125,39 +126,30 @@ export class Mode {
    * Returns the next arrival predictions for all stops that serve the specified transport mode.
    * This is useful for getting a comprehensive view of arrivals across an entire mode network.
    * 
-   * @param options - Query options including mode and count
+   * @param modeOrOptions - Mode name, or full query options object
+   * @param options - Optional count / flags when using positional form
    * @returns Promise resolving to array of arrival predictions
    * 
    * @example
    * ```typescript
-   * // Get next 3 arrivals for all tube stops
-   * const tubeArrivals = await client.mode.getArrivals({ 
-   *   mode: 'tube', 
-   *   count: 3 
-   * });
-   * 
-   * // Get all available arrivals for DLR
-   * const dlrArrivals = await client.mode.getArrivals({ 
-   *   mode: 'dlr', 
-   *   count: -1 
-   * });
-   * 
-   * // Validate mode before making request
-   * const modeName = 'elizabeth-line';
-   * if (client.mode.MODE_NAMES.includes(modeName)) {
-   *   const arrivals = await client.mode.getArrivals({ mode: modeName });
-   * } else {
-   *   throw new Error(`Invalid mode: ${modeName}`);
-   * }
-   * 
-   * // Filter arrivals by destination
-   * const filteredArrivals = tubeArrivals.filter(arrival => 
-   *   arrival.towards?.includes('Central London')
-   * );
+   * const tubeArrivals = await client.mode.getArrivals('tube', { count: 3 });
+   * const dlrArrivals = await client.mode.getArrivals({ mode: 'dlr', count: -1 });
    * ```
    */
-  async getArrivals(options: ModeArrivalsQuery): Promise<TflPrediction[]> {
-    const { mode, count, keepTflTypes = false } = options;
+  async getArrivals(
+    mode: ModeInput,
+    options?: Omit<ModeArrivalsQuery, 'mode'>,
+  ): Promise<TflPrediction[]>;
+  async getArrivals(options: ModeArrivalsQuery): Promise<TflPrediction[]>;
+  async getArrivals(
+    modeOrOptions: ModeInput | ModeArrivalsQuery,
+    options?: Omit<ModeArrivalsQuery, 'mode'>,
+  ): Promise<TflPrediction[]> {
+    const query: ModeArrivalsQuery =
+      typeof modeOrOptions === 'string'
+        ? { mode: modeOrOptions, ...options }
+        : modeOrOptions;
+    const { mode, count, keepTflTypes = false } = query;
 
     return this.raw.mode.arrivals({
       mode,

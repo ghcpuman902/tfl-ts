@@ -44,8 +44,10 @@ import {
   TflApiPresentationEntitiesJourneyPlannerJourneyFare
 } from './generated/types';
 import { RawClient } from './generated/raw';
-
+import { TflHttpError } from './errors';
 import { formatDistance } from './utils/format';
+import { stripTypeFields } from './utils/stripTypes';
+import type { ModeInput } from './utils/autocomplete';
 
 // Import generated metadata (NEVER hardcode!)
 import { 
@@ -69,6 +71,25 @@ type ServiceType = typeof ServiceTypes[number];
 type DisruptionCategory = typeof DisruptionCategories[number];
 type SeverityLevel = typeof Severity[number]['severityLevel'];
 type SeverityDescription = typeof Severity[number]['description'];
+
+const TIME_IS_OPTIONS = ['Arriving', 'Departing'] as const;
+const JOURNEY_PREFERENCES = ['LeastInterchange', 'LeastTime', 'LeastWalking'] as const;
+const ACCESSIBILITY_PREFERENCES = [
+  'NoRequirements', 'NoSolidStairs', 'NoEscalators', 'NoElevators',
+  'StepFreeToVehicle', 'StepFreeToPlatform',
+] as const;
+const WALKING_SPEEDS = ['Slow', 'Average', 'Fast'] as const;
+const CYCLE_PREFERENCES = [
+  'None', 'LeaveAtStation', 'TakeOnTransport', 'AllTheWay', 'CycleHire',
+] as const;
+const BIKE_PROFICIENCIES = ['Easy', 'Moderate', 'Fast'] as const;
+
+type TimeIs = (typeof TIME_IS_OPTIONS)[number];
+type JourneyPreference = (typeof JOURNEY_PREFERENCES)[number];
+type AccessibilityPreference = (typeof ACCESSIBILITY_PREFERENCES)[number];
+type WalkingSpeed = (typeof WALKING_SPEEDS)[number];
+type CyclePreference = (typeof CYCLE_PREFERENCES)[number];
+type BikeProficiency = (typeof BIKE_PROFICIENCIES)[number];
 
 // Create mode metadata from the generated Modes data
 const modeMetadata: Record<string, any> = Modes.reduce((acc, mode) => {
@@ -364,19 +385,19 @@ export interface JourneyQuery {
   nationalSearch?: boolean;
   date?: string;
   time?: string;
-  timeIs?: string;
-  journeyPreference?: string;
-  mode?: string[];
-  accessibilityPreference?: string[];
+  timeIs?: TimeIs;
+  journeyPreference?: JourneyPreference;
+  mode?: ModeInput[];
+  accessibilityPreference?: AccessibilityPreference[];
   fromName?: string;
   toName?: string;
   viaName?: string;
   maxTransferMinutes?: string;
   maxWalkingMinutes?: string;
-  walkingSpeed?: string;
-  cyclePreference?: string;
+  walkingSpeed?: WalkingSpeed;
+  cyclePreference?: CyclePreference;
   adjustment?: string;
-  bikeProficiency?: string[];
+  bikeProficiency?: BikeProficiency[];
   alternativeCycle?: boolean;
   alternativeWalking?: boolean;
   applyHtmlMarkup?: boolean;
@@ -572,27 +593,22 @@ export class Journey {
 
   // Journey-specific constants
   /** Available time options for journey planning */
-  public readonly TIME_IS_OPTIONS: readonly string[] = ['Arriving', 'Departing'];
+  public readonly TIME_IS_OPTIONS = TIME_IS_OPTIONS;
   
   /** Available journey preferences */
-  public readonly JOURNEY_PREFERENCES: readonly string[] = ['LeastInterchange', 'LeastTime', 'LeastWalking'];
+  public readonly JOURNEY_PREFERENCES = JOURNEY_PREFERENCES;
   
   /** Available accessibility preferences */
-  public readonly ACCESSIBILITY_PREFERENCES: readonly string[] = [
-    'NoRequirements', 'NoSolidStairs', 'NoEscalators', 'NoElevators', 
-    'StepFreeToVehicle', 'StepFreeToPlatform'
-  ];
+  public readonly ACCESSIBILITY_PREFERENCES = ACCESSIBILITY_PREFERENCES;
   
   /** Available walking speeds */
-  public readonly WALKING_SPEEDS: readonly string[] = ['Slow', 'Average', 'Fast'];
+  public readonly WALKING_SPEEDS = WALKING_SPEEDS;
   
   /** Available cycle preferences */
-  public readonly CYCLE_PREFERENCES: readonly string[] = [
-    'None', 'LeaveAtStation', 'TakeOnTransport', 'AllTheWay', 'CycleHire'
-  ];
+  public readonly CYCLE_PREFERENCES = CYCLE_PREFERENCES;
   
   /** Available bike proficiency levels */
-  public readonly BIKE_PROFICIENCIES: readonly string[] = ['Easy', 'Moderate', 'Fast'];
+  public readonly BIKE_PROFICIENCIES = BIKE_PROFICIENCIES;
 
   constructor(private raw: RawClient) {}
 
@@ -668,8 +684,22 @@ export class Journey {
    *   throw new Error(`Invalid modes: ${userInput.filter(mode => !client.journey.MODE_NAMES.includes(mode)).join(', ')}`);
    * }
    */
-  async plan(options: JourneyQuery): Promise<JourneyResult> {
-    const { keepTflTypes = false, ...apiOptions } = options;
+  async plan(
+    from: string,
+    to: string,
+    options?: Omit<JourneyQuery, 'from' | 'to'>,
+  ): Promise<JourneyResult>;
+  async plan(options: JourneyQuery): Promise<JourneyResult>;
+  async plan(
+    fromOrOptions: string | JourneyQuery,
+    to?: string,
+    options?: Omit<JourneyQuery, 'from' | 'to'>,
+  ): Promise<JourneyResult> {
+    const query: JourneyQuery =
+      typeof fromOrOptions === 'string'
+        ? { from: fromOrOptions, to: to!, ...options }
+        : fromOrOptions;
+    const { keepTflTypes = false, ...apiOptions } = query;
     
     // Fix mode parameter to be comma-separated string instead of array
     if (apiOptions.mode && Array.isArray(apiOptions.mode)) {
@@ -683,37 +713,36 @@ export class Journey {
       });
       
       return this.simplifyJourneyResult(result);
-    } catch (error: any) {
-      // Handle disambiguation responses (status 300)
-      // The generated client throws the entire Response object
-      if (error?.status === 300) {
-        // Extract the response body to get disambiguation data
-        let disambiguationData: DisambiguationResult | undefined = undefined;
-        
-        try {
-          // Clone the response and read the body
-          const responseClone = error.clone ? error.clone() : error;
-          if (responseClone.body && !responseClone.bodyUsed) {
-            const text = await responseClone.text();
-            disambiguationData = JSON.parse(text);
+    } catch (error: unknown) {
+      // TfL returns HTTP 300 with a DisambiguationResult body when from/to/via are ambiguous.
+      // That is expected — surface options on JourneyResult.disambiguation instead of throwing.
+      if (error instanceof TflHttpError && error.statusCode === 300) {
+        let disambiguationData: DisambiguationResult | undefined;
+
+        if (error.responseBody) {
+          try {
+            disambiguationData = stripTypeFields(
+              JSON.parse(error.responseBody),
+              keepTflTypes,
+            ) as DisambiguationResult;
+          } catch {
+            disambiguationData = undefined;
           }
-        } catch (parseError) {
-          console.warn('Failed to parse disambiguation response:', parseError);
         }
-        
-        // Return a special result indicating disambiguation is needed
+
         return {
           journeys: [],
           stationNames: {
-            from: options.from,
-            to: options.to
+            from: query.from,
+            to: query.to,
           },
-          stopMessages: [`Disambiguation required. Multiple options found for "${options.from}" and/or "${options.to}". Please use specific station IDs.`],
-          disambiguation: disambiguationData
+          stopMessages: [
+            `Disambiguation required. Multiple options found for "${query.from}" and/or "${query.to}". Please use specific station IDs.`,
+          ],
+          disambiguation: disambiguationData,
         };
       }
-      
-      // Re-throw other errors
+
       throw error;
     }
   }

@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### IDE autocomplete for wrapper inputs
+
+JSDoc `@example` blocks never drove Tab completion, and public options typed as plain `string` / `string[]` gave IntelliSense nothing to suggest — so `modes: ['|']` felt broken even when `ModeName` already existed in the package.
+
+Wrapper inputs now use open unions (`ModeInput`, `LineIdInput`, `ServiceTypeInput` via `AutocompleteString<T>`): known literals complete in the IDE, unknown strings (including bus route numbers) still type-check. Line ID suggestions use named/slug lines only so the list is not flooded with hundreds of bus numbers.
+
+Fixed-shape methods also gain positional overloads alongside the options-object form (`getStopPoints('central')`, `plan(from, to)`, `search(query)`, …). With `typescript.suggest.completeFunctionCalls`, Tab can place real argument placeholders instead of a single opaque `options` bag.
+
+Object-param call sites remain valid; this is additive.
+
+### Journey plan disambiguation (HTTP 300)
+
+Ambiguous `from` / `to` / `via` values make TfL respond with HTTP 300 and a disambiguation body. That path now goes through `TflHttpError` and returns options on `JourneyResult.disambiguation` instead of treating 300 as a failed fetch of a raw `Response`. Covered by unit tests; the journey playground demo prints the option list more consistently.
+
 ## 2.3.2 — 2026-07-25
 
 ### Local MCP server

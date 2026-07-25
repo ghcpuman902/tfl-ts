@@ -14,8 +14,6 @@ dotenv.config();
 
 const client = new TflClient();
 
-
-
 /**
  * Extract unique mode names from journey legs
  */
@@ -117,7 +115,6 @@ async function journeyDemo() {
     console.log('2️⃣ Disambiguation Handling');
     console.log('Planning journey from \'Westminster\' to \'Bank\' (ambiguous locations)...\n');
 
-
     let fromOption = 'Westminster';
     let toOption = 'Bank';
 
@@ -129,54 +126,80 @@ async function journeyDemo() {
     if (ambiguousJourney.disambiguation) {
       console.log('🔍 Multiple options found! Disambiguation required.');
 
-      // Show 'from' options
-      if (ambiguousJourney.disambiguation.fromLocationDisambiguation && ambiguousJourney.disambiguation.fromLocationDisambiguation.matchStatus !== 'identified') {
-        if (ambiguousJourney.disambiguation.fromLocationDisambiguation.matchStatus === 'list') {
-          console.log('\n📍 From options:');
-          ambiguousJourney.disambiguation.fromLocationDisambiguation.disambiguationOptions
-            .slice(0, 5) // Show first 5 options
-            .forEach((option, index) => {
-              console.log(`   ${index + 1}. ${option.place.commonName} (${option.parameterValue})`
-                + ` | ${option.place.placeType} | ${option.matchQuality / 10}%`);
-            });
-          fromOption = ambiguousJourney.disambiguation.fromLocationDisambiguation.disambiguationOptions[0].parameterValue;
-        } else if (ambiguousJourney.disambiguation.fromLocationDisambiguation.matchStatus === 'notidentified') {
-          console.log('❌ No from options found, try again with a different from location');
+      const pickFirstOption = (
+        label: string,
+        location?: {
+          disambiguationOptions?: Array<{
+            place: { commonName: string; placeType: string };
+            parameterValue: string;
+            matchQuality: number;
+          }>;
+          matchStatus?: string;
+        },
+      ): string | undefined => {
+        const status = location?.matchStatus;
+        const options = location?.disambiguationOptions ?? [];
+
+        if (status === 'identified') {
+          console.log(`\n${label}: already identified`);
+          return undefined;
         }
-      }
 
-      // Show 'to' options
-      if (ambiguousJourney.disambiguation.toLocationDisambiguation && ambiguousJourney.disambiguation.toLocationDisambiguation.matchStatus !== 'identified') {
-        if (ambiguousJourney.disambiguation.toLocationDisambiguation.matchStatus === 'list') {
-          console.log('\n🎯 To options:');
-          ambiguousJourney.disambiguation.toLocationDisambiguation.disambiguationOptions
-            .slice(0, 5) // Show first 5 options
-            .forEach((option, index) => {
-              console.log(`   ${index + 1}. ${option.place.commonName} (${option.parameterValue})`
-                + ` | ${option.place.placeType} | ${option.matchQuality / 10}%`);
-            });
-          toOption = ambiguousJourney.disambiguation.toLocationDisambiguation.disambiguationOptions[0].parameterValue;
-        } else if (ambiguousJourney.disambiguation.toLocationDisambiguation.matchStatus === 'notidentified') {
-          console.log('❌ No to options found, try again with a different to location');
+        if (status === 'notidentified' || options.length === 0) {
+          console.log(`\n❌ No ${label.toLowerCase()} options found`);
+          return undefined;
         }
-      }
 
-      // Use 1st options from disambiguation
-      console.log(`\nSelecting the 1st options and trying again with \'${fromOption}\' to \'${toOption}\'...\n`);
-      const specificJourney = await client.journey.plan({
-        from: fromOption,
-        to: toOption
-      });
-      // make sure not ambiguous anymore
-      if (specificJourney.disambiguation) {
-        console.log('❌ Still ambiguous');
-      }
+        console.log(`\n${label} options:`);
+        options.slice(0, 5).forEach((option, index) => {
+          const quality =
+            typeof option.matchQuality === 'number'
+              ? ` | ${Math.round(option.matchQuality / 10)}%`
+              : '';
+          console.log(
+            `   ${index + 1}. ${option.place.commonName} (${option.parameterValue})`
+              + ` | ${option.place.placeType}${quality}`,
+          );
+        });
 
-      if (specificJourney.journeys && specificJourney.journeys.length > 0) {
-        displayJourneys(specificJourney.journeys, client, '✅ Specific ');
+        return options[0].parameterValue;
+      };
+
+      const chosenFrom = pickFirstOption(
+        '📍 From',
+        ambiguousJourney.disambiguation.fromLocationDisambiguation,
+      );
+      const chosenTo = pickFirstOption(
+        '🎯 To',
+        ambiguousJourney.disambiguation.toLocationDisambiguation,
+      );
+
+      if (chosenFrom) fromOption = chosenFrom;
+      if (chosenTo) toOption = chosenTo;
+
+      if (!chosenFrom && !chosenTo) {
+        console.log('\n❌ Could not resolve ambiguous locations');
+      } else {
+        console.log(`\nSelecting top matches and retrying with '${fromOption}' to '${toOption}'...\n`);
+        const specificJourney = await client.journey.plan({
+          from: fromOption,
+          to: toOption
+        });
+
+        if (specificJourney.disambiguation) {
+          console.log('⚠️  Still ambiguous after selecting top matches');
+        }
+
+        if (specificJourney.journeys && specificJourney.journeys.length > 0) {
+          displayJourneys(specificJourney.journeys, client, 'Specific ');
+        } else if (!specificJourney.disambiguation) {
+          console.log('❌ No journeys found after disambiguation');
+        }
       }
     } else if (ambiguousJourney.journeys && ambiguousJourney.journeys.length > 0) {
-      displayJourneys(ambiguousJourney.journeys, client, '✅ Direct journey found (no disambiguation needed)');
+      displayJourneys(ambiguousJourney.journeys, client, 'Direct (no disambiguation needed) — ');
+    } else {
+      console.log('❌ No journeys found');
     }
     console.log('');
 
@@ -191,7 +214,7 @@ async function journeyDemo() {
     });
 
     if (accessibleJourney.journeys && accessibleJourney.journeys.length > 0) {
-      displayJourneys(accessibleJourney.journeys, client, '✅ Accessible ');
+      displayJourneys(accessibleJourney.journeys, client, 'Accessible ');
     } else {
       console.log('❌ No accessible journeys found');
     }
@@ -208,7 +231,7 @@ async function journeyDemo() {
     });
 
     if (cycleJourney.journeys && cycleJourney.journeys.length > 0) {
-      displayJourneys(cycleJourney.journeys, client, '✅ Cycling ');
+      displayJourneys(cycleJourney.journeys, client, 'Cycling ');
     } else {
       console.log('❌ No cycling journeys found');
     }
@@ -263,7 +286,7 @@ async function journeyDemo() {
     });
 
     if (multiModalJourney.journeys && multiModalJourney.journeys.length > 0) {
-      displayJourneys(multiModalJourney.journeys.slice(0, 2), client, '✅ Multi-Modal ');
+      displayJourneys(multiModalJourney.journeys.slice(0, 2), client, 'Multi-modal ');
     } else {
       console.log('❌ No multi-modal journeys found');
     }
@@ -355,7 +378,7 @@ async function journeyDemo() {
     });
 
     if (futureJourney.journeys && futureJourney.journeys.length > 0) {
-      displayJourneys(futureJourney.journeys, client, '✅ Future ');
+      displayJourneys(futureJourney.journeys, client, 'Future ');
     } else {
       console.log('❌ No future journeys found');
     }
@@ -372,9 +395,9 @@ async function journeyDemo() {
     });
 
     if (walkingJourney.journeys && walkingJourney.journeys.length > 0) {
-      displayJourneys(walkingJourney.journeys, client, '✅ Walking-optimized ');
+      displayJourneys(walkingJourney.journeys, client, 'Walking-optimised ');
     } else {
-      console.log('❌ No walking-optimized journeys found');
+      console.log('❌ No walking-optimised journeys found');
     }
 
     console.log('\n🎉 Journey Planning Demo Complete!');

@@ -31,29 +31,35 @@ See [docs/MIGRATION-v2.md](../docs/MIGRATION-v2.md) for v1 → v2 migration.
 
 ### **🚨 CRITICAL REFERENCE FOR AI AGENTS**
 
-**IMPORTANT DECISION (2024)**: We use **flexible `string[]` types** instead of strict TypeScript types for better developer experience.
+**IMPORTANT DECISION (2026)**: Public wrapper inputs use **literal unions with an open-string escape hatch** so IDEs autocomplete known values without rejecting unknown TfL IDs.
 
 **Key Points for AI Agents:**
-- ✅ Use `string[]` for all parameter types (modes, ids, categories, etc.)
-- ✅ Still provide autocomplete through JSDoc comments
-- ✅ Include validation examples in all method documentation
-- ✅ Don't use strict types like `TflLineId[]` or `ModeName[]`
-- ✅ Focus on beginner-friendly approach
+- ✅ Prefer `ModeInput` / `LineIdInput` / `ServiceTypeInput` from `src/utils/autocomplete.ts` on public option fields
+- ✅ `AutocompleteString<T>` = `T | (string & {})` — suggests `T`, still accepts any string
+- ✅ `NamedLineId` excludes bus route numbers so IntelliSense stays usable; bus IDs still type-check
+- ✅ For fixed-shape methods (one required id/query), add a **positional overload** plus the object form so Tab/`completeFunctionCalls` fills real placeholders
+- ❌ Do not type public inputs as plain `string` / `string[]` and claim JSDoc `@example` provides autocomplete — it does not
+- ❌ Do not make unions strict-only (`ModeName` without escape hatch) unless intentionally rejecting unknown strings
 
 **Example Pattern:**
 ```typescript
-// ✅ CORRECT: Flexible types
+import type { LineIdInput, ModeInput, ServiceTypeInput } from './utils/autocomplete';
+
+// ✅ CORRECT: Known literals complete; any string still accepted
 interface BaseLineQuery {
-  /** Array of line IDs (e.g., 'central', 'victoria'). TypeScript provides autocomplete for known values. */
-  ids?: string[];
-  /** Array of transport modes (e.g., 'tube', 'bus', 'dlr'). TypeScript provides autocomplete for known values. */
-  modes?: string[];
+  lineIds?: LineIdInput[];
+  modes?: ModeInput[];
+  serviceTypes?: ServiceTypeInput[];
 }
 
-// ❌ WRONG: Strict types
+// ✅ CORRECT: Positional + object overloads for fixed-shape calls
+async getStopPoints(id: LineIdInput): Promise<TflStopPoint[]>;
+async getStopPoints(options: LineStopPointsQuery): Promise<TflStopPoint[]>;
+
+// ❌ WRONG: Plain strings — no literal IntelliSense
 interface BaseLineQuery {
-  ids?: TflLineId[];
-  modes?: ModeName[];
+  lineIds?: string[];
+  modes?: string[];
 }
 ```
 

@@ -234,6 +234,13 @@ class TflClient {
 export default TflClient;
 export { LINE_IDS, MODES, SERVICE_TYPES, DIRECTIONS, severityByMode, severityDescriptions };
 export type { ModeName, ServiceType, DisruptionCategory };
+export type {
+  AutocompleteString,
+  ModeInput,
+  ServiceTypeInput,
+  LineIdInput,
+  NamedLineId,
+} from './utils/autocomplete';
 export {
   TflError,
   TflHttpError,

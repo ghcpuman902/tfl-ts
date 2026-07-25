@@ -83,7 +83,8 @@ export class Line {
 ```
 
 - Use specific param names: `lineIds`, `stopPointIds` (not generic `ids` in public API)
-- Use `string[]` for flexibility; document validation via metadata constants
+- Prefer `ModeInput` / `LineIdInput` / `ServiceTypeInput` (`src/utils/autocomplete.ts`) over plain `string`/`string[]` so IDEs complete known literals
+- For fixed-shape methods, add positional + object overloads so Tab fills required args
 - Never hardcode metadata — use `src/generated/meta/Meta.ts` etc.
 - Read endpoint structure from `src/generated/jsdoc/<Module>.ts` (reference only, do not import in wrappers)
 
