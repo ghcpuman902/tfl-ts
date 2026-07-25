@@ -6,7 +6,11 @@ import TflClient, {
   ModeName,
   TflLineId,
   getLineColor,
+  getLineCssProps,
   getSeverityCategory,
+  sortLinesBySeverityAndOrder,
+  isNormalService,
+  hasNightService,
   TflError,
   TflHttpError,
   TflNetworkError,
@@ -42,16 +46,29 @@ const PAGE_STYLES = `
   .back-link { display: inline-block; margin-bottom: 20px; color: #6c757d; text-decoration: none; }
   .back-link:hover { color: #495057; }
   .route-list, .status-list { list-style: none; padding: 0; }
-  .route-item, .status-item { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff; }
+  .route-item, .status-item { margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #6c757d; }
   .route-item a { text-decoration: none; color: #007bff; font-weight: 600; }
   .status-good { color: #28a745; }
-  .status-warning { color: #ffc107; }
+  .status-warning { color: #b8860b; }
   .status-bad { color: #dc3545; }
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 0; }
+  .status-grid-compact { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .line-card { padding: 14px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; }
+  .line-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
+  .line-card.compact h3 { font-size: 0.9rem; }
+  .line-bar { width: 100%; height: 6px; background: var(--line-color, #6c757d); border-radius: 1px; position: relative; }
+  .line-bar.thin { height: 4px; }
+  .line-bar-stripe { position: absolute; left: 0; top: 2px; width: 100%; height: 2px; background: #fff; }
+  .line-bar.thin .line-bar-stripe { top: 1px; }
   .arrivals-board { margin-top: 20px; }
-  .arrival-row { display: grid; grid-template-columns: 100px 1fr 80px; gap: 12px; padding: 12px 15px; background: #fff; border-radius: 4px; border-left: 4px solid #007bff; margin: 8px 0; align-items: center; }
-  .arrival-line { font-weight: 700; }
-  .arrival-dest { color: #495057; }
+  .arrival-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; padding: 12px 0; background: #fff; border-bottom: 1px solid #dee2e6; align-items: center; }
+  .arrival-row:last-child { border-bottom: none; }
+  .route-chip { display: inline-flex; min-width: 2rem; height: 1.5rem; padding: 0 0.45rem; align-items: center; justify-content: center; border-radius: 4px; background: #212529; color: #fff; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .route-chip.branded { background: var(--line-color, #212529); color: #fff; text-shadow: 0 0 0 transparent; }
+  .arrival-dest { color: #495057; min-width: 0; }
+  .arrival-dest .to { color: #6c757d; font-weight: 400; }
   .arrival-time { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .arrival-clock { display: block; font-size: 12px; font-weight: 400; color: #6c757d; }
   .arrival-meta { font-size: 13px; color: #6c757d; margin-top: 8px; }
   .live-dot { display: inline-block; width: 8px; height: 8px; background: #28a745; border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -81,6 +98,36 @@ const escapeHtml = (value: string): string =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+
+const hasOvergroundStripe = (modeName?: string) =>
+  modeName === 'overground' || modeName === 'elizabeth-line';
+
+const severityClass = (severity?: number): string => {
+  if (severity == null) return 'status-warning';
+  const category = getSeverityCategory(severity);
+  if (category === 'good') return 'status-good';
+  if (category === 'minor' || category === 'special') return 'status-warning';
+  return 'status-bad';
+};
+
+const renderLineColorBar = (lineId: string, modeName?: string, thin = false): string => {
+  const cssProps = getLineCssProps(lineId);
+  const inline = Object.entries(cssProps)
+    .map(([key, value]) => `${key}:${value}`)
+    .join(';');
+  return `
+    <div class="line-bar${thin ? ' thin' : ''}" style="${inline}">
+      ${hasOvergroundStripe(modeName) ? '<div class="line-bar-stripe"></div>' : ''}
+    </div>`;
+};
+
+const stripStatusReason = (reason: string, lineName?: string) =>
+  reason
+    .replace(new RegExp(`^${lineName?.toUpperCase()}( LINE)?: `, 'i'), '')
+    .replace(
+      /^(Hammersmith and City Line: )|(London Overground: )|(Docklands Light Railway: )\s*/,
+      '',
+    );
 
 const renderTflError = (error: unknown, context: string): string => {
   const detail = (label: string, value: string) =>
@@ -291,11 +338,12 @@ await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });</code></pre></div
       </div>
 
       <div class="feature-section">
-        <h3 class="feature-title">Realtime + CLI demos</h3>
+        <h3 class="feature-title">UI boards (clone-local)</h3>
         <ul class="feature-list">
-          <li class="feature-item"><a href="/arrivals">Live arrivals board</a> (SSE via <code>client.realtime.pollArrivals</code>)</li>
+          <li class="feature-item"><a href="/status">Tube / rail status board</a> — sort → partition → official line colours</li>
+          <li class="feature-item"><a href="/arrivals">Live arrivals board</a> — SSE via <code>client.realtime.pollArrivals</code> (tube branded chips / bus route chips)</li>
+          <li class="feature-item">Copy-paste patterns: <code>examples/README.md</code></li>
           <li class="feature-item"><code>pnpm dlx ts-node playground/demo/realtime.ts</code></li>
-          <li class="feature-item"><code>pnpm dlx ts-node playground/demo/raw.ts</code></li>
           <li class="feature-item"><code>pnpm run demo:smoke</code> for compile + catalog checks</li>
         </ul>
       </div>
@@ -335,14 +383,17 @@ app.get('/explore', async (req, res) => {
       </div>
 
       <ul class="route-list">
-        ${routes.map((route) => `
-          <li class="route-item">
-            <a href="/route?mode=${encodeURIComponent(mode)}&id=${encodeURIComponent(route.id || '')}">
+        ${routes.map((route) => {
+          const lineId = route.id || '';
+          const color = getLineColor(lineId);
+          return `
+          <li class="route-item" style="border-left-color:${color.hex}">
+            <a href="/route?mode=${encodeURIComponent(mode)}&id=${encodeURIComponent(lineId)}" style="color:${color.hex}">
               ${escapeHtml(route.name || route.id || 'Unknown')}
               ${route.modeName ? `(${escapeHtml(route.modeName)})` : ''}
             </a>
-          </li>
-        `).join('')}
+          </li>`;
+        }).join('')}
       </ul>
 
       <div class="feature-section">
@@ -362,6 +413,93 @@ app.get('/explore', async (req, res) => {
     console.error(error);
     const statusCode = error instanceof TflHttpError ? error.statusCode : 500;
     res.status(statusCode).send(renderLayout('Error', renderTflError(error, 'Could not load routes')));
+  }
+});
+
+app.get('/status', async (_req, res) => {
+  try {
+    const lineStatuses = await client.line.getStatus({
+      modes: ['tube', 'elizabeth-line', 'dlr', 'tram', 'overground'],
+    });
+    const sorted = sortLinesBySeverityAndOrder(lineStatuses);
+    const disrupted = sorted.filter((line) => !isNormalService(line.lineStatuses ?? []));
+    const goodService = sorted.filter((line) => isNormalService(line.lineStatuses ?? []));
+
+    const renderDisrupted = disrupted
+      .map((line) => {
+        const lineId = line.id ?? '';
+        const color = getLineColor(lineId);
+        const statusesHtml =
+          line.lineStatuses
+            ?.map((status) => {
+              const reason = status.reason
+                ? `<p style="margin:4px 0 0;font-size:14px;color:#495057;">${escapeHtml(stripStatusReason(status.reason, line.name))}</p>`
+                : '';
+              return `
+                <div style="margin-top:8px;">
+                  <span class="${severityClass(status.statusSeverity)}"><strong>${escapeHtml(status.statusSeverityDescription || 'Unknown')}</strong></span>
+                  ${reason}
+                </div>`;
+            })
+            .join('') || '<p>No status information</p>';
+
+        return `
+          <li class="line-card">
+            <h3 style="color:${color.hex}">${escapeHtml(line.name || lineId)}</h3>
+            ${renderLineColorBar(lineId, line.modeName)}
+            ${statusesHtml}
+          </li>`;
+      })
+      .join('');
+
+    const renderGood = goodService
+      .map((line) => {
+        const lineId = line.id ?? '';
+        const color = getLineColor(lineId);
+        const night = hasNightService(line.lineStatuses ?? []);
+        const nightLabel = night
+          ? line.lineStatuses?.find((s) => s.statusSeverity === 20)?.statusSeverityDescription
+          : undefined;
+
+        return `
+          <li class="line-card compact">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+              <h3 style="color:${color.hex}">${escapeHtml(line.name || lineId)}</h3>
+              ${nightLabel ? `<span style="font-size:12px;color:#6c757d;">${escapeHtml(nightLabel)}</span>` : ''}
+            </div>
+            ${renderLineColorBar(lineId, line.modeName, true)}
+          </li>`;
+      })
+      .join('');
+
+    res.send(renderLayout('Line status', `
+      <a href="/" class="back-link">← Back to home</a>
+      <div class="header">
+        <h1>Tube / rail status</h1>
+        <p>Showcase-aligned board: <code>sortLinesBySeverityAndOrder</code> → <code>isNormalService</code> → official colours via <code>getLineCssProps</code>.</p>
+      </div>
+
+      ${disrupted.length ? `
+        <section>
+          <h2>Service disruptions (${disrupted.length})</h2>
+          <ul class="status-grid">${renderDisrupted}</ul>
+        </section>
+      ` : '<p class="info-card">No disruptions — all listed modes reporting normal service.</p>'}
+
+      <section style="margin-top:28px;">
+        <h2>Good service (${goodService.length})</h2>
+        <ul class="status-grid status-grid-compact">${renderGood}</ul>
+      </section>
+
+      <div class="feature-section" style="margin-top:28px;">
+        <h3 class="feature-title">Copy-paste for your app</h3>
+        <p>See <code>examples/nextjs-app-router.ts</code> and <code>examples/README.md</code> (no React dependency in this package).</p>
+      </div>
+    `));
+  } catch (error) {
+    console.error(error);
+    const statusCode = error instanceof TflHttpError ? error.statusCode : 500;
+    res.status(statusCode).send(renderLayout('Error', renderTflError(error, 'Could not load line status')));
   }
 });
 
@@ -392,21 +530,25 @@ app.get('/batch-status', async (req, res) => {
       </div>
 
       <ul class="status-list">
-        ${statuses.length ? statuses.map((status) => `
-          <li class="status-item">
-            <h3>${escapeHtml(status.name || status.id || 'Unknown')}</h3>
-            ${status.lineStatuses?.map((lineStatus: any) => `
+        ${statuses.length ? statuses.map((status) => {
+          const lineId = status.id || '';
+          const color = getLineColor(lineId);
+          return `
+          <li class="status-item" style="border-left-color:${color.hex}">
+            <h3 style="color:${color.hex}">${escapeHtml(status.name || status.id || 'Unknown')}</h3>
+            ${renderLineColorBar(lineId, status.modeName, true)}
+            ${status.lineStatuses?.map((lineStatus: { statusSeverity?: number; statusSeverityDescription?: string; reason?: string }) => `
               <div style="margin:10px 0;">
                 <p><strong>Status:</strong>
-                  <span class="${lineStatus.statusSeverity <= 10 ? 'status-good' : lineStatus.statusSeverity <= 15 ? 'status-warning' : 'status-bad'}">
+                  <span class="${severityClass(lineStatus.statusSeverity)}">
                     ${escapeHtml(lineStatus.statusSeverityDescription || 'Unknown')}
                   </span>
                 </p>
-                ${lineStatus.reason ? `<p><strong>Reason:</strong> ${escapeHtml(lineStatus.reason)}</p>` : ''}
+                ${lineStatus.reason ? `<p><strong>Reason:</strong> ${escapeHtml(stripStatusReason(lineStatus.reason, status.name))}</p>` : ''}
               </div>
             `).join('') || '<p>No status information available</p>'}
-          </li>
-        `).join('') : '<li class="status-item">No statuses returned. Check the line IDs and try again.</li>'}
+          </li>`;
+        }).join('') : '<li class="status-item">No statuses returned. Check the line IDs and try again.</li>'}
       </ul>
     `));
   } catch (error) {
@@ -447,7 +589,7 @@ app.get('/route', async (req, res) => {
           ${details.status?.lineStatuses?.map((status: any) => `
             <div style="margin-bottom:10px;">
               <p><strong>Status:</strong>
-                <span class="${status.statusSeverity <= 10 ? 'status-good' : status.statusSeverity <= 15 ? 'status-warning' : 'status-bad'}">
+                <span class="${severityClass(status.statusSeverity)}">
                   ${escapeHtml(status.statusSeverityDescription || 'Unknown')}
                 </span>
               </p>
@@ -491,12 +633,16 @@ const ARRIVAL_STOP_PRESETS: { id: string; label: string }[] = [
 
 app.get('/arrivals', (req, res) => {
   const selectedId = String(req.query.stopPointId || '940GZZLUOXC');
+  const isBusStop = /^490/i.test(selectedId);
 
   res.send(renderLayout('Live Arrivals', `
     <a href="/" class="back-link">← Back to home</a>
     <div class="header">
       <h1><span class="live-dot" aria-hidden="true"></span>Live Arrivals</h1>
-      <p>Instant-pull board powered by <code>client.realtime.pollArrivals</code> (30s interval).</p>
+      <p>Instant-pull board powered by <code>client.realtime.pollArrivals</code> (30s interval).
+        ${isBusStop
+          ? 'Bus mode: generic route chips (no tube colour helpers).'
+          : 'Tube mode: brand accent when <code>lineId</code> is a known line.'}</p>
     </div>
 
     <form method="GET" action="/arrivals" class="form-group">
@@ -520,19 +666,36 @@ app.get('/arrivals', (req, res) => {
   { stopPointId: '${escapeHtml(selectedId)}', intervalMs: 30000, sortBy: 'timeToStation' },
   (arrivals, meta) => console.log(arrivals, meta.fetchedAt),
 );</code></pre></div>
+      <p style="margin-top:12px;">Copy-paste bus mapping: <code>examples/bus-arrivals-ui.ts</code></p>
     </div>
 
     <script>
       const stopPointId = ${JSON.stringify(selectedId)};
+      const isBusStop = ${JSON.stringify(isBusStop)};
+      const lineColors = ${JSON.stringify(
+        Object.fromEntries(
+          ['bakerloo','central','circle','district','hammersmith-city','jubilee','metropolitan','northern','piccadilly','victoria','waterloo-city','elizabeth','dlr','london-overground','tram']
+            .map((id) => [id, getLineColor(id).hex]),
+        ),
+      )};
       const board = document.getElementById('board');
       const meta = document.getElementById('meta');
       const source = new EventSource('/arrivals/stream?stopPointId=' + encodeURIComponent(stopPointId));
 
       const formatTime = (seconds) => {
-        if (!seconds || seconds <= 0) return 'Due';
-        const mins = Math.round(seconds / 60);
-        return mins + ' min';
+        if (seconds == null || seconds < 60) return 'Due';
+        return Math.round(seconds / 60) + ' min';
       };
+
+      const formatClock = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      };
+
+      const escapeText = (value) => String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
       source.onmessage = (event) => {
         const payload = JSON.parse(event.data);
@@ -541,13 +704,23 @@ app.get('/arrivals', (req, res) => {
         if (!arrivals.length) {
           board.innerHTML = '<p>No arrivals right now.</p>';
         } else {
-          board.innerHTML = arrivals.map((a) =>
-            '<div class="arrival-row">' +
-              '<span class="arrival-line">' + (a.lineName || a.lineId || '—') + '</span>' +
-              '<span class="arrival-dest">' + (a.destinationName || a.towards || '—') + '</span>' +
-              '<span class="arrival-time">' + formatTime(a.timeToStation) + '</span>' +
-            '</div>'
-          ).join('');
+          board.innerHTML = arrivals.map((a) => {
+            const lineName = a.lineName || a.lineId || '—';
+            const lineId = (a.lineId || '').toLowerCase();
+            const hex = !isBusStop && lineColors[lineId];
+            const rowStyle = hex ? ' style="border-left:4px solid ' + hex + ';padding-left:10px"' : '';
+            const chipStyle = hex ? ' style="color:' + hex + ';background:#fff;border:1px solid ' + hex + '"' : '';
+            const clock = formatClock(a.expectedArrival);
+            return (
+              '<div class="arrival-row"' + rowStyle + '>' +
+                '<span class="route-chip"' + chipStyle + '>' + escapeText(lineName) + '</span>' +
+                '<span class="arrival-dest"><span class="to">to</span> ' + escapeText(a.destinationName || a.towards || '—') + '</span>' +
+                '<span class="arrival-time">' + formatTime(a.timeToStation) +
+                  (clock ? '<span class="arrival-clock">' + clock + '</span>' : '') +
+                '</span>' +
+              '</div>'
+            );
+          }).join('');
         }
 
         const fetchedAt = payload.meta?.fetchedAt ? new Date(payload.meta.fetchedAt).toLocaleTimeString() : '—';
