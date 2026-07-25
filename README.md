@@ -7,24 +7,26 @@
 <!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 <!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 
-> A fully-typed TypeScript client for the Transport for London (TfL) API with auto-generated types, real-time data support, and comprehensive coverage of all TfL endpoints. Built with modern TypeScript practices and zero dependencies.
+> A typed TypeScript client for the Transport for London API (v2.3.1): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
 
-- **TypeScript-first:** Full type safety and autocompletion for all endpoints and IDs.
-- **Batch & parallel requests:** The client bundles requests for common use cases, and run them in parallel if possible.
-- **Universal compatibility:** Zero dependencies, works in Node.js, browsers, and edge runtimes. (help us test! Feedback welcome)
-- **Auto-updating:** API endpoints and metadata are automatically generated from TfL's OpenAPI specification. This includes all REST endpoints plus metadata that would otherwise require separate API calls. We fetch this data at build time, making it available as constants in your code. The client stays current even when TfL adds new lines or services.
-- **Better parameter naming:** Uses specific parameter names like `lineIds`, `stopPointIds` instead of generic `ids` for better clarity and reduced confusion.
-- **Comprehensive error handling:** Comprehensive error handling with typed error classes and automatic retry logic. All errors are instances of `TflError` or its subclasses, making it easy to handle different types of errors appropriately.
+### What you get
+
+- **Friendly wrappers plus a raw escape hatch.** Use `client.line`, `client.stopPoint`, and the other modules for common work. Reach for `client.raw.*` when you need an endpoint the wrappers do not cover yet.
+- **Build-time metadata vs live data.** Line names, mode lists, and severity labels ship as constants (no network call). Status, arrivals, and journeys hit the TfL API at runtime. Check things like `client.line.LINE_NAMES` before you fetch.
+- **Zero runtime dependencies.** The same client runs in Node.js, the browser, and on the edge.
+- **UI helpers included.** Official hex colours (`getLineInlineStyles`, `getLineCssProps`), severity sorting, and accessibility labels. Types are generated from TfL's OpenAPI snapshot.
+
+Live demo: [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts)
 
 ## For AI Agents
 
-tfl-ts separates **build-time static metadata** (line names, mode lists, severity labels — no API call) from **runtime live data** (status, arrivals, journeys — hits TfL API). Check static constants like `client.line.LINE_NAMES` before making network requests.
+Prefer static constants before live requests. That keeps agents from burning API calls on names and IDs that are already in the package.
 
 | Resource | Purpose |
 |----------|---------|
 | [CLAUDE.md](CLAUDE.md) | Repo-level agent quick-start |
 | [docs/agent.md](docs/agent.md) | Full module reference, caching, Next.js patterns |
-| [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill — usage patterns, gotchas, examples |
+| [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill: usage patterns, gotchas, examples |
 | [examples/](examples/) | Copy-paste: Next.js, Node CLI, caching |
 
 **MCP server (coming soon):** when published, add to your MCP config:
@@ -46,19 +48,19 @@ tfl-ts separates **build-time static metadata** (line names, mode lists, severit
 
 ## Architecture (v2)
 
-tfl-ts v2 uses a **layered architecture** so generator and TfL schema changes never break friendly wrappers:
+tfl-ts v2 is layered so generator and TfL schema changes do not break the friendly wrappers:
 
 ```
 OpenAPI snapshot (committed)
   → types.ts        (swagger-typescript-api, types only)
   → raw.ts          (owned generator, uniform object-param API)
-  → client.raw.*    (public escape hatch — 100% endpoint coverage)
+  → client.raw.*    (public escape hatch: 100% endpoint coverage)
   → wrappers        (human-friendly modules: line, stopPoint, …)
 ```
 
-- **`pnpm run build`** compiles TypeScript only — no network, no regeneration.
+- **`pnpm run build`** compiles TypeScript only: no network, no regeneration.
 - **`client.raw.<tag>.<method>()`** always exposes every REST endpoint, even before a wrapper exists.
-- **`client.realtime`** provides instant-pull polling over REST arrivals (`pollArrivals`, `pollLineArrivals`, `pollVehicleArrivals`). SignalR/URA push is deferred — see [REALTIME.md](docs/REALTIME.md).
+- **`client.realtime`** provides instant-pull polling over REST arrivals (`pollArrivals`, `pollLineArrivals`, `pollVehicleArrivals`). SignalR/URA push is deferred; see [REALTIME.md](docs/REALTIME.md).
 - **CLI:** `tfl raw`, `tfl list`, `tfl smoke` (see [Migration Guide](docs/MIGRATION-v2.md)).
 
 ```typescript
@@ -71,7 +73,7 @@ await client.raw.line.statusByIds({ ids: ['central'] });
 
 ### Realtime (instant pull)
 
-Poll live arrivals without SignalR or extra credentials — uses the same `app_key` as REST:
+Poll live arrivals without SignalR or extra credentials. It uses the same `app_key` as REST:
 
 ```typescript
 const stop = client.realtime.pollArrivals(
@@ -424,7 +426,7 @@ console.log(Object.keys(overlay));
 
 ### Line Colors and Branding
 
-Get official TfL line hex colors — framework-agnostic, use with inline styles or your own CSS:
+Get official TfL line hex colours. Framework-agnostic: use with inline styles or your own CSS:
 
 ```typescript
 import {
@@ -434,7 +436,7 @@ import {
   getLineDarkReadableStyles,
 } from 'tfl-ts';
 
-// Get line color (hex only — no Tailwind or other framework classes)
+// Get line color (hex only; no Tailwind or other framework classes)
 const colors = getLineColor('central');
 console.log(colors);
 // Output: { hex: '#E32017', poorDarkContrast: false }
@@ -443,7 +445,7 @@ console.log(colors);
 const elizabeth = getLineColor('elizabeth-line');
 // Output: { hex: '#6950A1', poorDarkContrast: false }
 
-// Northern stays black on dark UI — outline for contrast, do not invert fill to white
+// Northern stays black on dark UI: outline for contrast, do not invert fill to white
 const northern = getLineColor('northern');
 // { hex: '#000000', poorDarkContrast: true, darkContrastHex: '#ffffff' }
 const darkReadable = getLineDarkReadableStyles('northern');
@@ -535,7 +537,7 @@ sortedLines.forEach(line => {
 ```
 
 
-## 🏗️ Contributing
+## Contributing
 
 ### Prerequisites
 - Node.js 18+
@@ -553,9 +555,9 @@ pnpm run build
 
 ### Build Process
 
-- **Build** (`pnpm run build`): TypeScript compile only — fast, deterministic, no API calls
+- **Build** (`pnpm run build`): TypeScript compile only (fast, deterministic, no API calls)
 - **Full generation** (`pnpm run generate`): Regenerate types, raw client, jsdoc, and metadata from the committed OpenAPI snapshot
-- **Sync spec** (`pnpm run sync:spec`): Maintainer-only — fetch live swagger and update snapshot
+- **Sync spec** (`pnpm run sync:spec`): Maintainer-only; fetch live swagger and update snapshot
 - **Drift checks** (`pnpm run check:drift`, `pnpm run check:generated`): CI gates for schema and generator output
 - **Generation timestamps**: `src/generated/generated.meta.json` (one file; code artifacts stay deterministic)
 
@@ -579,7 +581,7 @@ pnpm exec tfl smoke      # Smoke test live API
 ### Development Pattern
 Each API module maps to a generated JSDoc file without importing from it. See [LLM_context.md](LLM_context.md) for detailed development guidelines.
 
-## 📊 Status
+## Status
 
 [![npm version](https://badge.fury.io/js/tfl-ts.svg)](https://badge.fury.io/js/tfl-ts)
 [![GitHub issues](https://img.shields.io/github/issues/ghcpuman902/tfl-ts)](https://github.com/ghcpuman902/tfl-ts/issues)
@@ -588,33 +590,33 @@ Each API module maps to a generated JSDoc file without importing from it. See [L
 
 | Feature | Status | Coverage |
 |---------|--------|----------|
-| Core Infrastructure | ✅ Complete | 100% |
-| API Modules | ✅ 14/14 Complete | 100% |
-| Type Generation | ✅ Complete | 100% |
-| Test Coverage | ✅ Good | 85%+ |
-| Documentation | ✅ Complete | 100% |
-| Edge Runtime | ✅ Complete | 100% |
+| Core Infrastructure | Complete | 100% |
+| API Modules | 14/14 Complete | 100% |
+| Type Generation | Complete | 100% |
+| Test Coverage | Good | 85%+ |
+| Documentation | Complete | 100% |
+| Edge Runtime | Complete | 100% |
 
 | Module | Status | Endpoints |
 |--------|--------|-----------|
-| ✅ `line` | Complete | 15+ |
-| ✅ `stopPoint` | Complete | 12+ |
-| ✅ `journey` | Complete | 8+ |
-| ⚠️ `accidentStats` | Deprecated | 1 |
-| ⚠️ `airQuality` | Deprecated | 1 |
-| ✅ `bikePoint` | Complete | 6+ |
-| ✅ `cabwise` | Complete | 3+ |
-| ✅ `road` | Complete | 8+ |
-| ✅ `mode` | Complete | 2/2 |
-| ✅ `search` | Complete | 5 (2 search + 3 meta) |
-| ✅ `vehicle` | Complete | 1 |
-| ✅ `occupancy` | Complete | 5 |
-| ✅ `place` | Complete | 9 (7 + 2 meta) |
-| ✅ `travelTimes` | Complete | 2 |
+| `line` | Complete | 15+ |
+| `stopPoint` | Complete | 12+ |
+| `journey` | Complete | 8+ |
+| `accidentStats` | Deprecated | 1 |
+| `airQuality` | Deprecated | 1 |
+| `bikePoint` | Complete | 6+ |
+| `cabwise` | Complete | 3+ |
+| `road` | Complete | 8+ |
+| `mode` | Complete | 2/2 |
+| `search` | Complete | 5 (2 search + 3 meta) |
+| `vehicle` | Complete | 1 |
+| `occupancy` | Complete | 5 |
+| `place` | Complete | 9 (7 + 2 meta) |
+| `travelTimes` | Complete | 2 |
 
 **Progress: 14/14 modules complete (100%)**
 
-## 📚 API Reference
+## API Reference
 
 ### Core Classes
 - `TflClient` - Main client class with `raw` and `realtime` namespaces
@@ -632,7 +634,7 @@ Each API module maps to a generated JSDoc file without importing from it. See [L
 - `journey.get()` - Plan a journey
 - `mode.getArrivals()` - Get mode-specific arrivals
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
@@ -640,42 +642,43 @@ Each API module maps to a generated JSDoc file without importing from it. See [L
 | Type generation failed | Verify network access and API permissions |
 | Playground not loading | Run `pnpm run build` first |
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Transport for London](https://tfl.gov.uk/) for the public API
 - [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api) for type generation
 - London developer community for feedback and support
 
-## 📞 Support
+## Support
 
-- 📧 [manglekuo@gmail.com](mailto:manglekuo@gmail.com)
-- 💬 [GitHub Discussions](https://github.com/ghcpuman902/tfl-ts/discussions)
-- 🐛 [GitHub Issues](https://github.com/ghcpuman902/tfl-ts/issues)
+- Email: [manglekuo@gmail.com](mailto:manglekuo@gmail.com)
+- [GitHub Discussions](https://github.com/ghcpuman902/tfl-ts/discussions)
+- [GitHub Issues](https://github.com/ghcpuman902/tfl-ts/issues)
 
-## 🗂️ Repository
+## Repository
 
 | Package | Version | License | Size |
 |---------|---------|---------|------|
-| `tfl-ts` | 2.0.1 | MIT | ~150KB |
+| `tfl-ts` | 2.3.1 | MIT | ~150KB |
 
 | Links | URL |
 |-------|-----|
-| 📦 npm | [tfl-ts](https://www.npmjs.com/package/tfl-ts) |
-| 🐙 GitHub | [ghcpuman902/tfl-ts](https://github.com/ghcpuman902/tfl-ts) |
-| 🐛 Issues | [Report bugs](https://github.com/ghcpuman902/tfl-ts/issues) |
-| 💬 Discussions | [Community](https://github.com/ghcpuman902/tfl-ts/discussions) |
+| npm | [tfl-ts](https://www.npmjs.com/package/tfl-ts) |
+| GitHub | [ghcpuman902/tfl-ts](https://github.com/ghcpuman902/tfl-ts) |
+| Issues | [Report bugs](https://github.com/ghcpuman902/tfl-ts/issues) |
+| Discussions | [Community](https://github.com/ghcpuman902/tfl-ts/discussions) |
+| Live demo | [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts) |
 
-**Open source** - Track progress via commits, see roadmap in [LLM_context.md](LLM_context.md)
+Open source. Track progress via commits; see the roadmap in [LLM_context.md](LLM_context.md).
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by the London developer community**
+Built for the London developer community
 
 [![GitHub stars](https://img.shields.io/github/stars/ghcpuman902/tfl-ts?style=social)](https://github.com/ghcpuman902/tfl-ts)
 [![GitHub forks](https://img.shields.io/github/forks/ghcpuman902/tfl-ts?style=social)](https://github.com/ghcpuman902/tfl-ts)
