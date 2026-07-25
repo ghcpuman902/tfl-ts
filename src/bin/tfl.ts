@@ -2,6 +2,7 @@
 import { parseArgs } from 'util';
 import TflClient from '../index';
 import { ENDPOINTS } from '../generated/endpoints';
+import { startTflMcpServer } from '../mcp/server';
 
 const printHelp = (): void => {
   console.log(`tfl-ts CLI
@@ -10,11 +11,13 @@ Usage:
   tfl raw <tag>.<method> [--key value ...]
   tfl list [--tag <tag>]
   tfl smoke
+  tfl mcp
 
 Examples:
   tfl raw line.get --ids central
   tfl raw stopPoint.arrivals --id 940GZZLUOXC
   tfl list --tag line
+  tfl mcp
 `);
 };
 
@@ -112,6 +115,11 @@ const main = async (): Promise<void> => {
 
   if (command === 'smoke') {
     await runSmoke();
+    return;
+  }
+
+  if (command === 'mcp') {
+    startTflMcpServer();
     return;
   }
 

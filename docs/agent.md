@@ -260,23 +260,28 @@ const client = new TflClient({
 
 ### Server Component (recommended for status boards)
 
+Minimal list (full branded board: [examples/nextjs-app-router.ts](../examples/nextjs-app-router.ts)):
+
 ```typescript
 // app/status/page.tsx
-import TflClient, { sortLinesBySeverityAndOrder } from 'tfl-ts';
+import TflClient, { sortLinesBySeverityAndOrder, isNormalService } from 'tfl-ts';
 
 export const revalidate = 60; // ISR: refresh every 60s
 
 const getTubeStatus = async () => {
   const client = new TflClient();
-  const statuses = await client.line.getStatus({ modes: ['tube'] });
+  const statuses = await client.line.getStatus({
+    modes: ['tube', 'elizabeth-line', 'dlr', 'tram', 'overground'],
+  });
   return sortLinesBySeverityAndOrder(statuses);
 };
 
 export default async function StatusPage() {
   const lines = await getTubeStatus();
+  const disrupted = lines.filter((line) => !isNormalService(line.lineStatuses ?? []));
   return (
     <ul>
-      {lines.map((line) => (
+      {disrupted.map((line) => (
         <li key={line.id}>
           {line.name}: {line.lineStatuses?.[0]?.statusSeverityDescription}
         </li>
@@ -381,8 +386,22 @@ const cssProps = getLineCssProps(line.id ?? '');
 ```
 
 > `darkContrastHex` / `--line-color-contrast` are **outline accents**, not fill replacements. Soft glow loses brand; hard rings (`--line-dark-*-shadow`) keep Northern black.
-// Or use getLineInlineStyles / getLineCssProps for common patterns
-```
+
+Or use `getLineInlineStyles` / `getLineCssProps` for common patterns.
+
+## Library → UI examples
+
+Read these on GitHub (or under `node_modules/tfl-ts/examples/` after install). They teach the **data → UI contract**; React/Tailwind optional. tfl-ts has zero runtime UI dependencies.
+
+| Resource | Purpose |
+|----------|---------|
+| [examples/README.md](../examples/README.md) | Index: tube vs bus mapping rules |
+| [examples/nextjs-app-router.ts](../examples/nextjs-app-router.ts) | Tube/rail status board (partition + colour bars) |
+| [examples/bus-arrivals-ui.ts](../examples/bus-arrivals-ui.ts) | Bus discovery + arrivals row model (route chips, not tube colours) |
+| Live showcase | [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts) |
+| Clone-local HTML | `pnpm run playground` → `/status`, `/arrivals` (devDeps only) |
+
+**Bus ≠ tube:** do not call `getLineColor` / `getLineCssProps` for bus route numbers.
 
 ## Raw client escape hatch
 
@@ -412,9 +431,33 @@ All live methods call `https://api.tfl.gov.uk/` with `app_id` and `app_key` quer
 - Throws typed `TflError` subclasses on failure
 - Has zero runtime npm dependencies
 
+## Local MCP server
+
+If the host agent supports MCP, prefer the built-in local server over inventing direct TfL HTTP calls. Run `npx -y tfl-ts@latest mcp` with the user's own credentials.
+
+Tools return compact JSON: a plain-text `summary` plus structured fields (`lines`, `arrivals`, `matches`, `journeys`). Live tools also include `cacheHit` and `fetchedAt`. Use `issuesOnly` on status and `lineIds` on arrivals when you only need a slice of the board.
+
+```json
+{
+  "mcpServers": {
+    "tfl-ts": {
+      "command": "npx",
+      "args": ["-y", "tfl-ts@latest", "mcp"],
+      "env": {
+        "TFL_APP_ID": "your-app-id",
+        "TFL_APP_KEY": "your-app-key"
+      }
+    }
+  }
+}
+```
+
+Full setup, TTLs, and security notes: [mcp.md](./mcp.md). Release notes: [CHANGELOG.md](../CHANGELOG.md).
+
 ## Further reading
 
-- [examples/](../examples/) — copy-paste patterns
+- [examples/README.md](../examples/README.md) — library → UI index (tube + bus)
+- [mcp.md](./mcp.md) — local MCP setup and rate-limit behavior
 - [ERROR.md](../ERROR.md) — full error handling guide
 - [MIGRATION-v2.md](./MIGRATION-v2.md) — v1 → v2 migration
 - [REALTIME.md](./REALTIME.md) — polling vs push

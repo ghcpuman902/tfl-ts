@@ -8,3 +8,13 @@ node_modules
 dist
 
 *.local.*
+
+# Personal Cursor writing/commit prefs (symlinks + always-apply rules)
+.cursor/rules/
+.cursor/skills/deslop
+.cursor/skills/unslop
+.cursor/skills/pr-commit-writing
+.cursor/skills/write-clear-essays-and-explainers
+
+# Machine-local MCP path config (loads credentials from .env via script/run-mcp-local.mjs)
+.cursor/mcp.json

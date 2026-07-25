@@ -7,7 +7,7 @@
 <!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 <!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 
-> A typed TypeScript client for the Transport for London API (v2.3.1): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
+> A typed TypeScript client for the Transport for London API (v2.3.2): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
 
 ### What you get
 
@@ -27,16 +27,19 @@ Prefer static constants before live requests. That keeps agents from burning API
 | [CLAUDE.md](CLAUDE.md) | Repo-level agent quick-start |
 | [docs/agent.md](docs/agent.md) | Full module reference, caching, Next.js patterns |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill: usage patterns, gotchas, examples |
-| [examples/](examples/) | Copy-paste: Next.js, Node CLI, caching |
+| [examples/README.md](examples/README.md) | Library → UI mapping (tube + bus); React/Tailwind optional |
+| [CHANGELOG.md](CHANGELOG.md) | Unreleased notes (MCP, agent docs) |
 
-**MCP server (coming soon):** when published, add to your MCP config:
+### Local MCP server
+
+Run `tfl mcp` locally with your own TfL credentials. The server is read-only. Live tools are cached and rate-limited; static tools never call TfL. Responses are compact JSON with a plain-text `summary` field (plus structured fields agents can reuse), not raw TfL dumps.
 
 ```json
 {
   "mcpServers": {
     "tfl-ts": {
       "command": "npx",
-      "args": ["-y", "tfl-ts-mcp@latest"],
+      "args": ["-y", "tfl-ts@latest", "mcp"],
       "env": {
         "TFL_APP_ID": "your-app-id",
         "TFL_APP_KEY": "your-app-key"
@@ -45,6 +48,8 @@ Prefer static constants before live requests. That keeps agents from burning API
   }
 }
 ```
+
+Tools: `get_supported_modes`, `resolve_line_id`, `resolve_stop_id`, `get_line_status` (supports `issuesOnly`), `get_arrivals` (supports `lineIds`), and `plan_journey`. See [docs/mcp.md](docs/mcp.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Architecture (v2)
 
@@ -61,7 +66,7 @@ OpenAPI snapshot (committed)
 - **`pnpm run build`** compiles TypeScript only: no network, no regeneration.
 - **`client.raw.<tag>.<method>()`** always exposes every REST endpoint, even before a wrapper exists.
 - **`client.realtime`** provides instant-pull polling over REST arrivals (`pollArrivals`, `pollLineArrivals`, `pollVehicleArrivals`). SignalR/URA push is deferred; see [REALTIME.md](docs/REALTIME.md).
-- **CLI:** `tfl raw`, `tfl list`, `tfl smoke` (see [Migration Guide](docs/MIGRATION-v2.md)).
+- **CLI:** `tfl raw`, `tfl list`, `tfl smoke`, `tfl mcp` (see [Migration Guide](docs/MIGRATION-v2.md)).
 
 ```typescript
 // Friendly wrapper (recommended)
@@ -662,7 +667,7 @@ MIT License - see [LICENSE](LICENSE)
 
 | Package | Version | License | Size |
 |---------|---------|---------|------|
-| `tfl-ts` | 2.3.1 | MIT | ~150KB |
+| `tfl-ts` | 2.3.2 | MIT | ~150KB |
 
 | Links | URL |
 |-------|-----|

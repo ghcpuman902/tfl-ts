@@ -19,6 +19,9 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 |------|----------|---------|
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Package consumers | Usage patterns, gotchas, copy-paste examples |
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
+| [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Unreleased notes for MCP and agent docs |
+| [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [LLM_context.md](LLM_context.md) | Contributors | Wrapper implementation rules for this repo |
 | [.cursor/skills/tfl-ts-maintainer/SKILL.md](.cursor/skills/tfl-ts-maintainer/SKILL.md) | Maintainers | Generators, `check:generated`, publish workflow |
 
@@ -71,8 +74,13 @@ List all raw endpoints: `pnpm exec tfl list`
 - **Rate limits** apply — cache status data (~30–60s), avoid polling arrivals faster than every 10–15s per stop.
 - **`accidentStats` and `airQuality`** modules are deprecated.
 
-## Examples
+## Library → UI examples
 
-Runnable demos: `playground/demo/`  
-Agent-oriented examples: `examples/`  
-Live showcase: [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts)
+For status boards and bus arrivals UIs, start with [examples/README.md](examples/README.md) (markdown + copy-paste TypeScript on GitHub). Tube uses official line colours; bus uses route-number chips — do not mix. React/Tailwind optional.
+
+- Tube board snippet: [examples/nextjs-app-router.ts](examples/nextjs-app-router.ts)
+- Bus arrivals mapping: [examples/bus-arrivals-ui.ts](examples/bus-arrivals-ui.ts)
+- Live showcase (external React): [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts)
+- Clone-local HTML board (devDeps only): `pnpm run playground` → `/status`, `/arrivals`
+
+Runnable console demos: `playground/demo/`

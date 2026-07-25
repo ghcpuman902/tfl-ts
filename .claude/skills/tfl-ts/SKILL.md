@@ -71,15 +71,26 @@ Works in Node.js 18+, browsers, and edge runtimes. Zero runtime dependencies.
 
 ## Example 1: Tube line status board
 
+Full branded board (partition disruptions / good service, colour bars, night badge):
+[examples/nextjs-app-router.ts](../../../examples/nextjs-app-router.ts)
+
 ```typescript
-import TflClient, { sortLinesBySeverityAndOrder, getSeverityCategory, getLineColor } from 'tfl-ts';
+import TflClient, {
+  sortLinesBySeverityAndOrder,
+  getSeverityCategory,
+  getLineColor,
+  isNormalService,
+} from 'tfl-ts';
 
 const client = new TflClient();
 
-const statuses = await client.line.getStatus({ modes: ['tube', 'elizabeth-line', 'dlr'] });
+const statuses = await client.line.getStatus({
+  modes: ['tube', 'elizabeth-line', 'dlr', 'tram', 'overground'],
+});
 const sorted = sortLinesBySeverityAndOrder(statuses);
+const disrupted = sorted.filter((line) => !isNormalService(line.lineStatuses ?? []));
 
-for (const line of sorted) {
+for (const line of disrupted) {
   const worst = line.lineStatuses?.[0];
   const category = getSeverityCategory(worst?.statusSeverity ?? 10);
   const colors = getLineColor(line.id ?? ''); // hex only — use with inline styles
@@ -100,6 +111,8 @@ const colors = getLineColor(line.id ?? ''); // normalizes elizabeth-line → eli
 <div style={{ backgroundColor: colors.hex, height: 4 }} />
 <article style={{ ...getLineCssProps(line.id ?? ''), borderLeft: `4px solid ${colors.hex}` }} />
 ```
+
+**Bus ≠ tube:** do not use these colour helpers for bus route numbers — see [examples/bus-arrivals-ui.ts](../../../examples/bus-arrivals-ui.ts).
 
 ## Example 2: Search stop → get arrivals
 
@@ -129,7 +142,10 @@ for (const a of sorted.slice(0, 5)) {
 }
 ```
 
-## Example 2b: Nearby stops by GPS
+## Example 2b: Nearby bus stops by GPS
+
+Full bus UI mapping (boardable `490…` IDs, route chips, countdown):
+[examples/bus-arrivals-ui.ts](../../../examples/bus-arrivals-ui.ts)
 
 ```typescript
 import TflClient from 'tfl-ts';
@@ -258,8 +274,12 @@ The client retries transient errors automatically (configurable via `maxRetries`
 
 ## Additional resources
 
+- Library → UI index: [examples/README.md](../../../examples/README.md)
 - Full agent reference: [docs/agent.md](../../../docs/agent.md)
-- Runnable examples: [examples/](../../../examples/)
+- Local MCP server: [docs/mcp.md](../../../docs/mcp.md)
+- Tube board snippet: [examples/nextjs-app-router.ts](../../../examples/nextjs-app-router.ts)
+- Bus arrivals mapping: [examples/bus-arrivals-ui.ts](../../../examples/bus-arrivals-ui.ts)
 - Error handling: [ERROR.md](../../../ERROR.md)
 - v2 migration: [docs/MIGRATION-v2.md](../../../docs/MIGRATION-v2.md)
 - Realtime polling: [docs/REALTIME.md](../../../docs/REALTIME.md)
+- Clone-local HTML playground: `pnpm run playground` (devDeps only)
