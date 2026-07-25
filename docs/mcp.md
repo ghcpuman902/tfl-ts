@@ -95,5 +95,5 @@ TFL_APP_ID=your-app-id TFL_APP_KEY=your-app-key npx -y tfl-ts@latest mcp
 
 Manual execution waits for JSON-RPC messages on stdin, so no normal console output is expected.
 
-See also [CHANGELOG.md](../CHANGELOG.md) (Unreleased) and [docs/agent.md](./agent.md).
+See also [CHANGELOG.md](../CHANGELOG.md) (2.3.2) and [docs/agent.md](./agent.md).
 

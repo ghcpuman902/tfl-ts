@@ -28,7 +28,7 @@ Prefer static constants before live requests. That keeps agents from burning API
 | [docs/agent.md](docs/agent.md) | Full module reference, caching, Next.js patterns |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill: usage patterns, gotchas, examples |
 | [examples/README.md](examples/README.md) | Library → UI mapping (tube + bus); React/Tailwind optional |
-| [CHANGELOG.md](CHANGELOG.md) | Unreleased notes (MCP, agent docs) |
+| [CHANGELOG.md](CHANGELOG.md) | Release notes (includes 2.3.2 MCP and agent docs) |
 
 ### Local MCP server
 
