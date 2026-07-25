@@ -16,6 +16,18 @@ Object-param call sites remain valid; this is additive.
 
 Ambiguous `from` / `to` / `via` values make TfL respond with HTTP 300 and a disambiguation body. That path now goes through `TflHttpError` and returns options on `JourneyResult.disambiguation` instead of treating 300 as a failed fetch of a raw `Response`. Covered by unit tests; the journey playground demo prints the option list more consistently.
 
+### `line.get()` requires `lineIds` or `modes`
+
+Calling `line.get()` with no filters hit `/Line/` with an empty id list and came back as a confusing 404. TfL has no unfiltered “all lines” list endpoint. The method now throws `TflValidationError` and tells you to pass `modes` / `lineIds`, or use `LINE_NAMES` / `LINE_INFO` for the static catalogue.
+
+### AccidentStats marked as retiring
+
+TfL’s Unified API tidy-up retires `/AccidentStats/{year}` on 31 July 2026; the feed only ever covered 2005–2019. Module docs and the playground demo say so plainly, probe 2019 as best-effort, and treat upstream failure as expected rather than a broken wrapper.
+
+### Playground demos tolerate flaky TfL endpoints
+
+Live demos for occupancy, place, travelTimes, and line no longer dump stack traces and exit 1 when TfL returns 500/400 on optional calls. They print a short warning and continue so a full demo sweep stays readable.
+
 ## 2.3.2 — 2026-07-25
 
 ### Local MCP server

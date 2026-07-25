@@ -58,31 +58,23 @@ export interface AccidentStatsInfo {
 }
 
 /**
- * ⚠️ **DEPRECATED API - NOT RECOMMENDED FOR USE**
- * 
- * Access accident statistics for London roads.
- * 
- * This API appears to be poorly maintained on TfL's side and may not return
- * current or reliable data. Recent testing shows that most years return
- * "Invalid year parameter" errors, suggesting the API is no longer actively
- * supported.
- * 
- * **RECOMMENDED ALTERNATIVES:**
- * - London Datastore: https://data.london.gov.uk/dataset/?tags=GIS&tag=accidents
- * - TfL Road Safety Data: https://tfl.gov.uk/corporate/publications-and-reports/road-safety
- * 
- * This is a simple API that provides accident statistics data by year.
- * No metadata constants are provided as this API only deals with accident data.
- * 
+ * ⚠️ **DEPRECATED / RETIRING — NOT FOR NEW WORK**
+ *
+ * Wraps TfL `GET /AccidentStats/{year}`.
+ *
+ * Per TfL’s Unified API tidy-up (June 2026), this endpoint is scheduled for
+ * removal on **31 July 2026**. It only ever exposed data for **2005–2019**.
+ * Modern years return 400; do not build products on it.
+ *
+ * @see https://techforum.tfl.gov.uk/t/unified-api-tidy-up/6296
+ *
+ * **Alternatives:**
+ * - TfL road safety publications: https://tfl.gov.uk/corporate/publications-and-reports/road-safety
+ * - London Datastore / DfT STATS19 accident datasets
+ *
  * @example
- * // Get accident statistics for a specific year
- * const accidents = await client.accidentStats.get({ year: 2023 });
- * 
- * // Process accident data
- * accidents.forEach(accident => {
- *   console.log(`Accident on ${accident.date} at ${accident.location}`);
- *   console.log(`Severity: ${accident.severity}, Borough: ${accident.borough}`);
- * });
+ * // Historical years only (2005–2019) — may still fail as the feed is wound down
+ * const accidents = await client.accidentStats.get({ year: 2019 });
  */
 export class AccidentStats {
 
@@ -103,19 +95,12 @@ export class AccidentStats {
    * @param options - Query options for accident statistics
    * @returns Promise resolving to an array of accident details
    * @example
-   * // Get all accidents from 2023
-   * const accidents = await client.accidentStats.get({ year: 2023 });
+   * // Historical years only (2005–2019). Post-2019 and many live calls fail.
+   * const accidents = await client.accidentStats.get({ year: 2019 });
    * 
-   * // Get accidents with type fields preserved
-   * const accidents = await client.accidentStats.get({ 
-   *   year: 2023,
-   *   keepTflTypes: true
-   * });
-   * 
-   * // Process accident data
-   * accidents.forEach(accident => {
-   *   console.log(`Accident on ${accident.date} at ${accident.location}`);
-   *   console.log(`Severity: ${accident.severity}, Borough: ${accident.borough}`);
+   * const withTypes = await client.accidentStats.get({
+   *   year: 2019,
+   *   keepTflTypes: true,
    * });
    */
   async get(options: AccidentStatsQuery): Promise<TflAccidentDetail[]> {

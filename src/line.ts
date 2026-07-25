@@ -12,6 +12,7 @@ import {
 } from './generated/types';
 import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
+import { TflValidationError } from './errors';
 import type {
   LineIdInput,
   ModeInput,
@@ -387,16 +388,15 @@ export class Line {
    * @param options - Query options for filtering lines
    * @returns Promise resolving to an array of line information
    * @example
-   * // Get all lines
-   * const allLines = await client.line.get();
-   * 
-   * // Get tube lines
+   * // Get tube lines (TfL has no unfiltered "all lines" list endpoint)
    * const tubeLines = await client.line.get({ modes: ['tube'] });
    * 
    * // Get specific lines
    * const specificLines = await client.line.get({ 
    *   lineIds: ['central', 'victoria', 'jubilee'] 
    * });
+   * 
+   * // Static catalogue without HTTP: client.line.LINE_NAMES / LINE_INFO
    * 
    * // Validate user input before making API calls
    * const userInput = ['central', 'invalid-line'];
@@ -424,8 +424,9 @@ export class Line {
       return response as LineInfo[];
     }
 
-    const response = await this.raw.line.get({ ids: [], keepTflTypes });
-    return response as LineInfo[];
+    throw new TflValidationError(
+      'line.get() requires lineIds or modes. Example: get({ modes: ["tube"] }). For the full static catalogue, use LINE_NAMES / LINE_INFO.',
+    );
   }
 
   /**

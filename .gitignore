@@ -8,6 +8,7 @@ node_modules
 dist
 
 *.local.*
+.DS_Store
 
 # Personal Cursor writing/commit prefs (symlinks + always-apply rules)
 .cursor/rules/
@@ -18,3 +19,5 @@ dist
 
 # Machine-local MCP path config (loads credentials from .env via script/run-mcp-local.mjs)
 .cursor/mcp.json
+
+*/.DS_Store

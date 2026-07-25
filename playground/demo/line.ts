@@ -50,12 +50,15 @@ const main = async () => {
         console.log('🚇 Line Data:');
         console.log('============');
 
-        // ======== Stage 1: Get all lines ========
+        // ======== Stage 1: Get lines across major modes ========
+        // TfL has no "all lines" endpoint — fetch by mode instead of empty /Line/
         try {
-            console.log('\n📊 All Lines:');
+            console.log('\n📊 Lines by major modes:');
             console.log('-'.repeat(40));
 
-            const allLines = await client.line.get();
+            const allLines = await client.line.get({
+                modes: ['tube', 'dlr', 'elizabeth-line', 'overground', 'tram', 'river-bus', 'cable-car'],
+            });
             console.log(`   Total lines: ${allLines.length}`);
 
             // Group lines by mode
