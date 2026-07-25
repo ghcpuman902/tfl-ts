@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.3.3 — 2026-07-25
+
 ### IDE autocomplete for wrapper inputs
 
 JSDoc `@example` blocks never drove Tab completion, and public options typed as plain `string` / `string[]` gave IntelliSense nothing to suggest — so `modes: ['|']` felt broken even when `ModeName` already existed in the package.

@@ -7,7 +7,7 @@
 <!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 <!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 
-> A typed TypeScript client for the Transport for London API (v2.3.2): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
+> A typed TypeScript client for the Transport for London API (v2.3.3): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
 
 ### What you get
 
@@ -28,7 +28,7 @@ Prefer static constants before live requests. That keeps agents from burning API
 | [docs/agent.md](docs/agent.md) | Full module reference, caching, Next.js patterns |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill: usage patterns, gotchas, examples |
 | [examples/README.md](examples/README.md) | Library → UI mapping (tube + bus); React/Tailwind optional |
-| [CHANGELOG.md](CHANGELOG.md) | Release notes (includes 2.3.2 MCP and agent docs) |
+| [CHANGELOG.md](CHANGELOG.md) | Release notes (includes 2.3.3 autocomplete and journey 300) |
 
 ### Local MCP server
 
@@ -667,7 +667,7 @@ MIT License - see [LICENSE](LICENSE)
 
 | Package | Version | License | Size |
 |---------|---------|---------|------|
-| `tfl-ts` | 2.3.2 | MIT | ~150KB |
+| `tfl-ts` | 2.3.3 | MIT | ~150KB |
 
 | Links | URL |
 |-------|-----|
