@@ -30,6 +30,10 @@ TfL’s Unified API tidy-up retires `/AccidentStats/{year}` on 31 July 2026; the
 
 Live demos for occupancy, place, travelTimes, and line no longer dump stack traces and exit 1 when TfL returns 500/400 on optional calls. They print a short warning and continue so a full demo sweep stays readable.
 
+### Cleaner publish / test output
+
+Realtime poller tests now use the default 30s interval (and matching fake-timer advances) instead of 1s, so they no longer trip the “below recommended TTL” warning. Package scripts chain with `pnpm run` rather than `npm run`, which stops pnpm’s store/registry settings being passed into npm as unknown config during `prepublishOnly`.
+
 ## 2.3.2 — 2026-07-25
 
 ### Local MCP server

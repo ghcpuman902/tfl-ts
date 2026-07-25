@@ -28,7 +28,7 @@
   "scripts": {
     "build": "tsc",
     "build:dist": "tsc",
-    "build:full": "npm run generate && tsc",
+    "build:full": "pnpm run generate && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "playground": "ts-node playground/index.ts",
@@ -38,17 +38,17 @@
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.ts\"",
     "sync:spec": "ts-node script/syncSpec.ts",
-    "generate": "npm run generate:types && npm run generate:raw && npm run generate:meta && npm run generate:jsdoc",
+    "generate": "pnpm run generate:types && pnpm run generate:raw && pnpm run generate:meta && pnpm run generate:jsdoc",
     "generate:types": "ts-node script/generateTypes.ts",
     "generate:raw": "ts-node script/generateRawClient.ts",
     "generate:meta": "ts-node script/generateMeta.ts",
     "generate:jsdoc": "ts-node script/generateJsdoc.ts",
     "check:drift": "ts-node script/checkDrift.ts",
     "check:generated": "ts-node script/checkGenerated.ts",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run check:generated && npm run build:dist",
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm run test && pnpm run check:generated && pnpm run build:dist",
     "clean": "rm -rf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "pnpm run clean"
   },
   "keywords": [
     "tfl",

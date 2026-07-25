@@ -7,6 +7,11 @@ import { TflHttpError } from '../errors';
 import type { RawClient } from '../generated/raw';
 import type { TflApiPresentationEntitiesPrediction } from '../generated/types';
 
+/** Match realtime DEFAULT_INTERVAL_MS (at/above MIN_RECOMMENDED_INTERVAL_MS). */
+const INTERVAL_MS = 30_000;
+/** realtime INITIAL_BACKOFF_MS after 429 / 5xx */
+const INITIAL_BACKOFF_MS = 5_000;
+
 const flushAsync = async (): Promise<void> => {
   for (let i = 0; i < 5; i += 1) {
     await Promise.resolve();
@@ -52,7 +57,7 @@ describe('pollArrivals', () => {
     const metas: { tick: number }[] = [];
     const stop = pollArrivals(
       raw,
-      { stopPointId: '940GZZLUOXC', intervalMs: 1000, lineIds: ['central'] },
+      { stopPointId: '940GZZLUOXC', intervalMs: INTERVAL_MS, lineIds: ['central'] },
       (result, meta) => {
         updates.push(result);
         metas.push({ tick: meta.tick });
@@ -63,12 +68,12 @@ describe('pollArrivals', () => {
     expect(updates[0]).toEqual([central]);
     expect(metas[0]?.tick).toBe(0);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(INTERVAL_MS);
     await flushAsync();
     expect(raw.stopPoint.arrivals).toHaveBeenCalledTimes(2);
 
     stop();
-    jest.advanceTimersByTime(5000);
+    jest.advanceTimersByTime(INTERVAL_MS * 2);
     await flushAsync();
     expect(raw.stopPoint.arrivals).toHaveBeenCalledTimes(2);
   });
@@ -149,7 +154,7 @@ describe('pollArrivals', () => {
 
     pollArrivals(
       raw,
-      { stopPointId: '940GZZLUOXC', intervalMs: 1000 },
+      { stopPointId: '940GZZLUOXC', intervalMs: INTERVAL_MS },
       (result) => {
         updates.push(result);
       },
@@ -161,7 +166,7 @@ describe('pollArrivals', () => {
     await flushAsync();
     expect(errors).toHaveLength(1);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(INTERVAL_MS);
     await flushAsync();
     expect(updates).toHaveLength(1);
   });
@@ -179,17 +184,17 @@ describe('pollArrivals', () => {
 
     pollArrivals(
       raw,
-      { stopPointId: '940GZZLUOXC', intervalMs: 1000 },
+      { stopPointId: '940GZZLUOXC', intervalMs: INTERVAL_MS },
       () => {},
       () => {},
     );
 
     await flushAsync();
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(INITIAL_BACKOFF_MS - 1);
     await flushAsync();
     expect(raw.stopPoint.arrivals).toHaveBeenCalledTimes(1);
 
-    jest.advanceTimersByTime(5000);
+    jest.advanceTimersByTime(1);
     await flushAsync();
     expect(raw.stopPoint.arrivals).toHaveBeenCalledTimes(2);
   });
@@ -203,14 +208,14 @@ describe('pollArrivals', () => {
 
     pollArrivals(
       raw,
-      { stopPointId: '940GZZLUOXC', intervalMs: 1000, immediate: false },
+      { stopPointId: '940GZZLUOXC', intervalMs: INTERVAL_MS, immediate: false },
       () => {},
     );
 
     await flushAsync();
     expect(raw.stopPoint.arrivals).not.toHaveBeenCalled();
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(INTERVAL_MS);
     await flushAsync();
     expect(raw.stopPoint.arrivals).toHaveBeenCalledTimes(1);
   });
