@@ -18,8 +18,8 @@
 
 Polished status and arrivals UI lives in a separate repo so this package stays framework-agnostic:
 
-[![Live TfL status board (light)](docs/assets/status-board-light.png)](https://tfl-components.vercel.app/)
-[![Live TfL status board (dark)](docs/assets/status-board-dark.png)](https://tfl-components.vercel.app/)
+[![Live TfL status board (light)](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/status-board-light.png)](https://tfl-components.vercel.app/)
+[![Live TfL status board (dark)](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/status-board-dark.png)](https://tfl-components.vercel.app/)
 
 Demo: [tfl-components.vercel.app](https://tfl-components.vercel.app) · Source: [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
 
@@ -240,12 +240,12 @@ Every REST endpoint remains reachable via `client.raw.*` and `pnpm exec tfl list
 ### Autocomplete
 Autocomplete for line IDs, modes, etc.
 
-![Autocomplete example](docs/assets/autocomplete-example.gif)
+![Autocomplete example](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/autocomplete-example.gif)
 
 ### VS Code showing JSDoc comments
 Using the client to get a timetable for a station after search:
 
-![Timetable search example](docs/assets/timetable-search-example.gif)
+![Timetable search example](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/timetable-search-example.gif)
 
 ### Get real-time tube status
 
