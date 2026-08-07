@@ -365,27 +365,28 @@ Use these for styling status boards — they operate on data already fetched fro
 const colors = getLineColor(line.id ?? ''); // normalizes elizabeth-line → elizabeth
 const cssProps = getLineCssProps(line.id ?? '');
 
-// Color bar — keep brand hex; on dark UI use hard outline vars (Northern stays black)
+// Color bar — brand hex via --line-color; dark surfaces use --line-dark-fill + outline vars
 <div
   style={{ ...cssProps, backgroundColor: 'var(--line-color)', height: 4 }}
-  className="dark:[box-shadow:var(--line-dark-box-shadow)]"
+  className="dark:bg-[var(--line-dark-fill)] dark:[box-shadow:var(--line-dark-box-shadow)]"
 />
 
 // Card accent
 <div style={{ borderLeft: `4px solid ${colors.hex}` }} />
 
-// Line title — do not swap Northern to white; outline for contrast instead
+// Line title — default outline (stroke + text-shadow fallback); or darkContrastMode: 'white'
 <span
   style={{ color: colors.hex, ...cssProps }}
-  className="dark:[text-shadow:var(--line-dark-text-shadow)]"
+  className="tfl-dark-line-text"
 >
   {line.name}
 </span>
 
-// Or: getLineDarkReadableStyles('northern') → { color, textShadow, boxShadow, ... }
+// Or: getLineDarkReadableStyles('northern') → outline styles
+// getLineDarkReadableStyles('northern', { darkContrastMode: 'white' }) → white fill/text
 ```
 
-> `darkContrastHex` / `--line-color-contrast` are **outline accents**, not fill replacements. Soft glow loses brand; hard rings (`--line-dark-*-shadow`) keep Northern black.
+> Default dark contrast is **outline** (Northern stays black with white stroke/rings). Pass `{ darkContrastMode: 'white' }` to opt into white fill/text on dark surfaces.
 
 Or use `getLineInlineStyles` / `getLineCssProps` for common patterns.
 
@@ -398,7 +399,7 @@ Read these on GitHub (or under `node_modules/tfl-ts/examples/` after install). T
 | [examples/README.md](../examples/README.md) | Index: tube vs bus mapping rules |
 | [examples/nextjs-app-router.ts](../examples/nextjs-app-router.ts) | Tube/rail status board (partition + colour bars) |
 | [examples/bus-arrivals-ui.ts](../examples/bus-arrivals-ui.ts) | Bus discovery + arrivals row model (route chips, not tube colours) |
-| Live showcase | [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts) |
+| Live React boards | [tfl-components.vercel.app](https://tfl-components.vercel.app) |
 | Clone-local HTML | `pnpm run playground` → `/status`, `/arrivals` (devDeps only) |
 
 **Bus ≠ tube:** do not call `getLineColor` / `getLineCssProps` for bus route numbers.

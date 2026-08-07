@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 2.4.0 — 2026-08-07
+
+### Northern dark-contrast modes
+
+`getLineCssProps` and `getLineDarkReadableStyles` accept `{ darkContrastMode: 'outline' | 'white' }` (default `outline`).
+
+- **outline:** keep brand black; expose `--line-dark-text-stroke` / `--line-dark-paint-order` for outside text stroke, plus existing hard text/box shadow rings as fallback.
+- **white:** opt into white fill/text on dark surfaces (`--line-dark-fill` / `--line-dark-text`), clear stroke and shadows; chip labels use `--line-dark-on-fill`.
+
+`--line-color` remains the official brand hex in both modes. Additive CSS vars for lines without poor dark contrast are harmless no-ops.
 
 ## 2.3.3 — 2026-07-25
 

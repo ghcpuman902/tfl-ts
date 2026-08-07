@@ -12,7 +12,8 @@
  *   4. brand titles/bars with getLineInlineStyles + getLineCssProps
  *   5. night badge via hasNightService; severity copy from statusSeverityDescription
  *
- * Live reference UI: https://manglekuo.com/showcase/tfl-ts
+ * Live reference UI: https://tfl-components.vercel.app/status
+ * Registry install: pnpm dlx shadcn@latest add https://tfl-components.vercel.app/r/tube-status-board.json
  * Clone-local HTML board: pnpm run playground → /status
  *
  * Prerequisites in YOUR app:

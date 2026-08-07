@@ -13,7 +13,8 @@
  *   5. UI row: [route chip] [destination + meta] [Due | N min + clock]
  *   6. Do NOT use getLineColor / getLineCssProps for bus route numbers
  *
- * Live reference UI: https://manglekuo.com/showcase/tfl-ts
+ * Live reference UI: https://tfl-components.vercel.app/arrivals
+ * Registry install: pnpm dlx shadcn@latest add https://tfl-components.vercel.app/r/bus-arrivals-board.json
  * Clone-local HTML board: pnpm run playground → /arrivals (bus preset)
  *
  * Prerequisites in YOUR app:

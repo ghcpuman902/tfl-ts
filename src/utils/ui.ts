@@ -27,25 +27,42 @@ export type SeverityLevel = number; // Use number to match generated API types
 export type SeverityDescription = typeof Severity[number]['description'];
 
 /**
+ * How poor-dark-contrast lines (e.g. Northern) stay readable on dark surfaces.
+ *
+ * - `outline` (default): keep brand black; white outside stroke / hard shadow rings.
+ * - `white`: use white fill/text on dark surfaces (opt-in; loses brand black).
+ */
+export type LineDarkContrastMode = 'outline' | 'white';
+
+/** Options for dark-surface contrast helpers. */
+export type LineDarkContrastOptions = {
+  /** Default `outline`. Only affects lines with `poorDarkContrast`. */
+  darkContrastMode?: LineDarkContrastMode;
+};
+
+/**
  * Line color information with accessibility considerations.
  * Use `hex` with inline styles or CSS — do not rely on framework-specific class names.
  */
 export interface LineColorInfo {
-  /** Official TfL hex color code — keep this as fill/text even on dark surfaces */
+  /** Official TfL hex color code — brand token; always keep as `--line-color` */
   hex: string;
   /**
    * Whether this brand hex is hard to see on dark backgrounds (e.g. Northern black).
-   * When true, prefer a hard outline using `darkContrastHex` — do **not** replace
-   * the fill/text with white (that discards brand identity).
+   * When true, use `getLineDarkReadableStyles` / dark CSS vars. Default mode is
+   * a hard outline; pass `darkContrastMode: 'white'` to opt into white fill/text.
    */
   poorDarkContrast: boolean;
   /**
-   * Outline/halo accent for dark surfaces when `poorDarkContrast` is true.
-   * Use for stroke, hard text-shadow rings, or box-shadow rings — not as a fill swap.
-   * Prefer `getLineDarkReadableStyles` or `--line-dark-*-shadow` from `getLineCssProps`.
+   * Accent for dark surfaces when `poorDarkContrast` is true (usually white).
+   * Used for stroke / hard rings in `outline` mode, or as fill/text in `white` mode.
+   * Prefer `getLineDarkReadableStyles` or dark vars from `getLineCssProps`.
    */
   darkContrastHex?: string;
 }
+
+/** Default outside stroke width for dark-mode text outline (px). */
+export const LINE_DARK_TEXT_STROKE_WIDTH_PX = 0.5;
 
 /**
  * Hard 8-direction text outline (border-like stroke). Prefer over soft glow blur.
@@ -453,74 +470,105 @@ export const getLineInlineStyles = (lineId: string): {
   };
 };
 
+export type LineDarkReadableStyles = {
+  /** Text colour on dark surfaces (brand black in outline mode; white in white mode). */
+  color: string;
+  /** Fill for chips / bars on dark surfaces. */
+  backgroundColor: string;
+  /** Label colour when sitting on the fill (chip text). */
+  onFillColor: string;
+  /** Hard 8-direction shadow fallback when text-stroke is unsupported. */
+  textShadow: string;
+  /** Hard ring for chips / bars in outline mode; `none` in white mode. */
+  boxShadow: string;
+  /** Stroke / ring accent colour (usually white); transparent in white mode. */
+  outlineColor: string;
+  /** `-webkit-text-stroke` value for outside outline; `none` in white mode. */
+  textStroke: string;
+  /** `paint-order` so stroke sits outside the fill; `normal` in white mode. */
+  paintOrder: string;
+};
+
+const resolveDarkContrastMode = (
+  options?: LineDarkContrastOptions,
+): LineDarkContrastMode => options?.darkContrastMode ?? 'outline';
+
 /**
  * Styles that keep brand line colors readable on dark surfaces.
  *
- * Prefer this over swapping fill to `darkContrastHex`. Official TfL colors
- * (especially Northern `#000000`) should stay as fill/text; use a hard white
- * outline for contrast instead of inverting or soft-glowing.
+ * Default `outline` keeps Northern `#000000` with a white outside stroke (prefer
+ * `-webkit-text-stroke` + `paint-order: stroke fill`; `textShadow` is the
+ * fallback). Pass `{ darkContrastMode: 'white' }` to use white fill/text instead.
  *
  * Returns `null` when no dark-surface adjustment is needed.
  *
  * @example
  * const dark = getLineDarkReadableStyles('northern');
- * // {
- * //   color: '#000000',
- * //   backgroundColor: '#000000',
- * //   textShadow: '-1px -1px 0 #ffffff, ...',
- * //   boxShadow: '0 0 0 0.75px #ffffff',
- * //   outlineColor: '#ffffff',
- * // }
+ * // outline: black fill/text, white stroke + hard shadow rings
  *
- * // With CSS vars from getLineCssProps (theme-safe):
- * // className="dark:[text-shadow:var(--line-dark-text-shadow)]"
- * // className="dark:[box-shadow:var(--line-dark-box-shadow)]"
+ * const white = getLineDarkReadableStyles('northern', { darkContrastMode: 'white' });
+ * // white fill/text, no stroke/shadow
  */
 export const getLineDarkReadableStyles = (
   lineId: string,
-): {
-  color: string;
-  backgroundColor: string;
-  textShadow: string;
-  boxShadow: string;
-  outlineColor: string;
-} | null => {
+  options?: LineDarkContrastOptions,
+): LineDarkReadableStyles | null => {
   const color = getLineColor(lineId);
   if (!color.poorDarkContrast || !color.darkContrastHex) {
     return null;
   }
 
-  const outline = color.darkContrastHex;
+  const mode = resolveDarkContrastMode(options);
+  const accent = color.darkContrastHex;
+
+  if (mode === 'white') {
+    return {
+      color: accent,
+      backgroundColor: accent,
+      onFillColor: color.hex,
+      textShadow: 'none',
+      boxShadow: 'none',
+      outlineColor: 'transparent',
+      textStroke: 'none',
+      paintOrder: 'normal',
+    };
+  }
+
   return {
     color: color.hex,
     backgroundColor: color.hex,
-    textShadow: hardOutlineTextShadow(outline),
-    boxShadow: hardOutlineBoxShadow(outline),
-    outlineColor: outline,
+    onFillColor: accent,
+    textShadow: hardOutlineTextShadow(accent),
+    boxShadow: hardOutlineBoxShadow(accent),
+    outlineColor: accent,
+    textStroke: `${LINE_DARK_TEXT_STROKE_WIDTH_PX}px ${accent}`,
+    paintOrder: 'stroke fill',
   };
 };
 
 /**
  * Get CSS custom properties for line colors.
  *
- * `--line-color-contrast` is an outline accent, not a fill replacement.
- * On dark surfaces use `--line-dark-text-shadow` / `--line-dark-box-shadow`
- * (hard rings) while keeping `--line-color` as the brand fill.
+ * `--line-color` is always the official brand hex. On dark surfaces use
+ * `--line-dark-fill` / `--line-dark-text` / `--line-dark-on-fill` plus stroke
+ * and shadow vars. Default mode is outline; pass `{ darkContrastMode: 'white' }`
+ * for white fill/text on dark UI.
  *
  * @param lineId - The line ID
+ * @param options - Optional dark-contrast mode
  * @returns CSS custom properties object
  *
  * @example
  * const cssProps = getLineCssProps('northern');
- * // {
- * //   '--line-color': '#000000',
- * //   '--line-color-rgb': '0, 0, 0',
- * //   '--line-color-contrast': '#ffffff',
- * //   '--line-dark-text-shadow': '-1px -1px 0 #ffffff, ...',
- * //   '--line-dark-box-shadow': '0 0 0 0.75px #ffffff',
- * // }
+ * // brand --line-color + outline dark vars
+ *
+ * getLineCssProps('northern', { darkContrastMode: 'white' });
+ * // --line-dark-fill / --line-dark-text → #ffffff; stroke/shadows none
  */
-export const getLineCssProps = (lineId: string): Record<string, string> => {
+export const getLineCssProps = (
+  lineId: string,
+  options?: LineDarkContrastOptions,
+): Record<string, string> => {
   const color = getLineColor(lineId);
   const hex = color.hex;
 
@@ -528,18 +576,32 @@ export const getLineCssProps = (lineId: string): Record<string, string> => {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
 
-  const outline = color.darkContrastHex ?? '#ffffff';
-  const needsDarkOutline = Boolean(color.poorDarkContrast && color.darkContrastHex);
+  const accent = color.darkContrastHex ?? '#ffffff';
+  const needsDarkContrast = Boolean(color.poorDarkContrast && color.darkContrastHex);
+  const mode = resolveDarkContrastMode(options);
+  const useWhite = needsDarkContrast && mode === 'white';
+  const useOutline = needsDarkContrast && !useWhite;
+
+  const darkFill = useWhite ? accent : hex;
+  const darkText = useWhite ? accent : hex;
+  const darkOnFill = useWhite ? hex : accent;
 
   return {
     '--line-color': hex,
     '--line-color-rgb': `${r}, ${g}, ${b}`,
-    '--line-color-contrast': color.poorDarkContrast ? outline : '#000000',
-    '--line-dark-text-shadow': needsDarkOutline
-      ? hardOutlineTextShadow(outline)
+    '--line-color-contrast': color.poorDarkContrast ? accent : '#000000',
+    '--line-dark-fill': needsDarkContrast ? darkFill : hex,
+    '--line-dark-text': needsDarkContrast ? darkText : hex,
+    '--line-dark-on-fill': needsDarkContrast ? darkOnFill : '#ffffff',
+    '--line-dark-text-stroke': useOutline
+      ? `${LINE_DARK_TEXT_STROKE_WIDTH_PX}px ${accent}`
       : 'none',
-    '--line-dark-box-shadow': needsDarkOutline
-      ? hardOutlineBoxShadow(outline)
+    '--line-dark-paint-order': useOutline ? 'stroke fill' : 'normal',
+    '--line-dark-text-shadow': useOutline
+      ? hardOutlineTextShadow(accent)
+      : 'none',
+    '--line-dark-box-shadow': useOutline
+      ? hardOutlineBoxShadow(accent)
       : 'none',
   };
 };

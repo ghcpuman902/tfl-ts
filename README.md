@@ -4,10 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-<!-- [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
-<!-- [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/manglekuo/tfl-ts/actions) -->
 
-> A typed TypeScript client for the Transport for London API (v2.3.3): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
+> A typed TypeScript client for the Transport for London API (v2.4.0): friendly wrappers for everyday work, full raw endpoint coverage, and UI helpers for official line colours.
 
 ### What you get
 
@@ -16,8 +14,23 @@
 - **Zero runtime dependencies.** The same client runs in Node.js, the browser, and on the edge.
 - **UI helpers included.** Official hex colours (`getLineInlineStyles`, `getLineCssProps`), severity sorting, and accessibility labels. Types are generated from TfL's OpenAPI snapshot.
 
-Live demo: [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts)
+### Live React boards
 
+Polished status and arrivals UI lives in a separate repo so this package stays framework-agnostic:
+
+[![Live TfL status board (light)](docs/assets/status-board-light.png)](https://tfl-components.vercel.app/)
+[![Live TfL status board (dark)](docs/assets/status-board-dark.png)](https://tfl-components.vercel.app/)
+
+Demo: [tfl-components.vercel.app](https://tfl-components.vercel.app) · Source: [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
+
+Copy a board into your Next.js app (installs `tfl-ts` underneath; uses your `TFL_APP_ID` / `TFL_APP_KEY`):
+
+```bash
+pnpm dlx shadcn@latest add https://tfl-components.vercel.app/r/tube-status-board.json
+pnpm dlx shadcn@latest add https://tfl-components.vercel.app/r/tfl-roundel.json
+```
+
+The roundel component ships a filled/rounded placeholder by default. Set `NEXT_PUBLIC_ALLOW_TFL_ROUNDEL=true` in your app to render the official mark (you accept trademark responsibility).
 ## For AI Agents
 
 Prefer static constants before live requests. That keeps agents from burning API calls on names and IDs that are already in the package.
@@ -28,7 +41,8 @@ Prefer static constants before live requests. That keeps agents from burning API
 | [docs/agent.md](docs/agent.md) | Full module reference, caching, Next.js patterns |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Claude Skill: usage patterns, gotchas, examples |
 | [examples/README.md](examples/README.md) | Library → UI mapping (tube + bus); React/Tailwind optional |
-| [CHANGELOG.md](CHANGELOG.md) | Release notes (includes 2.3.3 autocomplete and journey 300) |
+| [CHANGELOG.md](CHANGELOG.md) | Release notes (includes 2.4.0 Northern dark-contrast modes) |
+| [tfl-components](https://github.com/ghcpuman902/tfl-components) | React boards + shadcn registry demo |
 
 ### Local MCP server
 
@@ -225,15 +239,17 @@ Every REST endpoint remains reachable via `client.raw.*` and `pnpm exec tfl list
 
 ### Autocomplete
 Autocomplete for line IDs, modes, etc.
-![Autocomplete Example](<Autocomplete Example.gif>)
 
-### VS code showing jsdoc comments
-Using the client to get timetable of a specific station following a search
-![Using the client to get timetable of a specific station following a search](<Using API client to get timetable of a specific station following a search.gif>)
+![Autocomplete example](docs/assets/autocomplete-example.gif)
+
+### VS Code showing JSDoc comments
+Using the client to get a timetable for a station after search:
+
+![Timetable search example](docs/assets/timetable-search-example.gif)
 
 ### Get real-time tube status
 
-See a live example with UI here: [https://manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts)
+See a live example with UI here: [https://tfl-components.vercel.app/status](https://tfl-components.vercel.app/status)
 
 ```typescript
 const tubeStatus = await client.line.getStatus({ modes: ['tube'] });
@@ -306,28 +322,8 @@ console.log(client.line.LINE_NAMES);
   }
 
   // console output:
-  [ 'central', '100', 'elizabeth' ]
-  /*
-  Error: Invalid line IDs: elizabeth-line, invalid-line
-    at main (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:12:11)
-    at Object.<anonymous> (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (node:internal/modules/cjs/loader:1692:14)
-    at Module.m._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/playground/demo.ts:16:1)
-    at Module._compile (/Users/manglekuo/dev/nextjs/tfl-ts/ts-node@10.9.2_@types+node@20.17.19_typescript@5.7.3/node_modules/ts-node/src/index.ts:1618:23)
-    at node:internal/modules/cjs/loader:1824:10
-    at Object.require.extensions.<computed> [as .ts] (/Users/manglekuo/dev/nextjs/tfl-ts/node_modules/.pnpm/ts-node@10.9.2_@types+node@20.17.19_typescript@5.7.3/node_modules/ts-node/src/index.ts:1621:12)
-    at Module.load (node:internal/modules/cjs/loader:1427:32)
-    at Module._load (node:internal/modules/cjs/loader:1250:10)
-    at TracingChannel.traceSync (node:diagnostics_channel:322:10)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
-  */
+  // [ 'central', '100', 'elizabeth' ]
+  // Error: Invalid line IDs: elizabeth-line, invalid-line
 ```
 
 ### Get bus arrivals for a stop
@@ -450,11 +446,14 @@ console.log(colors);
 const elizabeth = getLineColor('elizabeth-line');
 // Output: { hex: '#6950A1', poorDarkContrast: false }
 
-// Northern stays black on dark UI: outline for contrast, do not invert fill to white
+// Northern: brand hex stays black; default dark mode uses outline (stroke + hard rings).
+// Pass { darkContrastMode: 'white' } for white fill/text on dark surfaces.
 const northern = getLineColor('northern');
 // { hex: '#000000', poorDarkContrast: true, darkContrastHex: '#ffffff' }
 const darkReadable = getLineDarkReadableStyles('northern');
-// { color: '#000000', textShadow: '...hard ring...', boxShadow: '0 0 0 0.75px #ffffff', ... }
+// outline: black fill/text, white stroke + hard shadow rings
+const darkWhite = getLineDarkReadableStyles('northern', { darkContrastMode: 'white' });
+// white fill/text, no stroke/shadow
 
 // Inline styles for React, Vue, plain HTML, etc.
 const styles = getLineInlineStyles('central');
@@ -479,7 +478,7 @@ console.log(cssProps);
 // }
 ```
 
-> **Dark contrast:** `darkContrastHex` / `--line-color-contrast` are outline accents, not fill replacements. Soft glow shadows lose brand identity; use the hard ring helpers (`getLineDarkReadableStyles` or `--line-dark-*-shadow`).
+> **Dark contrast:** Default is `outline` — keep brand black and use hard rings / outside text stroke (`--line-dark-text-stroke` + `--line-dark-*-shadow`). Soft glow loses brand identity. Opt into white fill/text with `{ darkContrastMode: 'white' }` on `getLineCssProps` / `getLineDarkReadableStyles`.
 
 ### Severity Styling and Classification
 
@@ -586,41 +585,6 @@ pnpm exec tfl smoke      # Smoke test live API
 ### Development Pattern
 Each API module maps to a generated JSDoc file without importing from it. See [LLM_context.md](LLM_context.md) for detailed development guidelines.
 
-## Status
-
-[![npm version](https://badge.fury.io/js/tfl-ts.svg)](https://badge.fury.io/js/tfl-ts)
-[![GitHub issues](https://img.shields.io/github/issues/ghcpuman902/tfl-ts)](https://github.com/ghcpuman902/tfl-ts/issues)
-[![GitHub license](https://img.shields.io/github/license/ghcpuman902/tfl-ts)](https://github.com/ghcpuman902/tfl-ts/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-
-| Feature | Status | Coverage |
-|---------|--------|----------|
-| Core Infrastructure | Complete | 100% |
-| API Modules | 14/14 Complete | 100% |
-| Type Generation | Complete | 100% |
-| Test Coverage | Good | 85%+ |
-| Documentation | Complete | 100% |
-| Edge Runtime | Complete | 100% |
-
-| Module | Status | Endpoints |
-|--------|--------|-----------|
-| `line` | Complete | 15+ |
-| `stopPoint` | Complete | 12+ |
-| `journey` | Complete | 8+ |
-| `accidentStats` | Deprecated | 1 |
-| `airQuality` | Deprecated | 1 |
-| `bikePoint` | Complete | 6+ |
-| `cabwise` | Complete | 3+ |
-| `road` | Complete | 8+ |
-| `mode` | Complete | 2/2 |
-| `search` | Complete | 5 (2 search + 3 meta) |
-| `vehicle` | Complete | 1 |
-| `occupancy` | Complete | 5 |
-| `place` | Complete | 9 (7 + 2 meta) |
-| `travelTimes` | Complete | 2 |
-
-**Progress: 14/14 modules complete (100%)**
-
 ## API Reference
 
 ### Core Classes
@@ -667,7 +631,7 @@ MIT License - see [LICENSE](LICENSE)
 
 | Package | Version | License | Size |
 |---------|---------|---------|------|
-| `tfl-ts` | 2.3.3 | MIT | ~150KB |
+| `tfl-ts` | 2.4.0 | MIT | ~150KB |
 
 | Links | URL |
 |-------|-----|
@@ -675,7 +639,7 @@ MIT License - see [LICENSE](LICENSE)
 | GitHub | [ghcpuman902/tfl-ts](https://github.com/ghcpuman902/tfl-ts) |
 | Issues | [Report bugs](https://github.com/ghcpuman902/tfl-ts/issues) |
 | Discussions | [Community](https://github.com/ghcpuman902/tfl-ts/discussions) |
-| Live demo | [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts) |
+| Live demo | [tfl-components.vercel.app](https://tfl-components.vercel.app) |
 
 Open source. Track progress via commits; see the roadmap in [LLM_context.md](LLM_context.md).
 

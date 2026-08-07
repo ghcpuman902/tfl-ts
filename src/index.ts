@@ -286,8 +286,14 @@ export {
   getLineAriaLabel,
   getLineDisplayName,
   LINE_COLORS,
+  LINE_DARK_TEXT_STROKE_WIDTH_PX,
   SEVERITY_MAPPING,
   LINE_ORDER,
+} from './utils/ui';
+export type {
+  LineDarkContrastMode,
+  LineDarkContrastOptions,
+  LineDarkReadableStyles,
 } from './utils/ui';
 export {
   getPropertyValue,

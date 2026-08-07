@@ -2,9 +2,15 @@
 
 Copy-paste patterns for mapping **tfl-ts** data to a useful London transport UI. These files are **reference** (markdown + annotated TypeScript). They are not compiled by this package and do **not** add React, Next.js, or Tailwind as dependencies.
 
-Live polished React demo (external): [manglekuo.com/showcase/tfl-ts](https://manglekuo.com/showcase/tfl-ts)
+Live React boards: [tfl-components.vercel.app](https://tfl-components.vercel.app) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
 
-To try a local HTML board after cloning this repo (devDependencies only):
+Install into a Next.js app (copies source; installs `tfl-ts` from npm):
+
+```bash
+pnpm dlx shadcn@latest add https://tfl-components.vercel.app/r/tube-status-board.json
+```
+
+Local HTML board after cloning this repo (devDependencies only):
 
 ```bash
 pnpm install
