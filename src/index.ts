@@ -241,6 +241,25 @@ export type {
   LineIdInput,
   NamedLineId,
 } from './utils/autocomplete';
+export { mapDetailedLines } from './utils/detailedStatus';
+export type {
+  AffectedRoute,
+  AffectedRouteStop,
+  AffectedStop,
+  DetailedDisruption,
+  DetailedLine,
+  DetailedLineStatus,
+  StatusValidityPeriod,
+} from './utils/detailedStatus';
+export type { DetailedLineStatusQuery, LineStatusQuery } from './line';
+export {
+  LINE_STATION_SEQUENCES,
+  STATION_SEQUENCES_GENERATED_AT,
+} from './generated/meta/StationSequence';
+export type {
+  StaticLineId,
+  StaticLineStationSequence,
+} from './generated/meta/StationSequence';
 export {
   TflError,
   TflHttpError,

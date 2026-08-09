@@ -13,6 +13,8 @@ import {
 import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
 import { TflValidationError } from './errors';
+import { mapDetailedLines } from './utils/detailedStatus';
+import type { DetailedLine } from './utils/detailedStatus';
 import type {
   LineIdInput,
   ModeInput,
@@ -25,6 +27,7 @@ import type {
 
 // Import raw data from generated meta files
 import { Lines } from './generated/meta/Line';
+import { LINE_STATION_SEQUENCES } from './generated/meta/StationSequence';
 import { 
   Modes, 
   ServiceTypes, 
@@ -168,6 +171,12 @@ interface LineStatusQuery extends BaseLineQuery {
   /** Filter by severity level string */
   severityLevel?: string;
 }
+
+/** Query options for friendly detailed line status responses. */
+type DetailedLineStatusQuery = Omit<
+  LineStatusQuery,
+  'detail' | 'keepTflTypes' | 'severity'
+>;
 
 /**
  * Query options for line search requests
@@ -342,6 +351,9 @@ export class Line {
 
   /** Map of line IDs to their full information (static, no HTTP request needed) */
   public readonly LINE_INFO = LINE_INFO;
+
+  /** Static station names, ordered routes, and branches for rail lines. */
+  public readonly STATION_SEQUENCES = LINE_STATION_SEQUENCES;
 
   /** Map of mode names to their metadata (static, no HTTP request needed) */
   public readonly MODE_METADATA = modeMetadata;
@@ -598,6 +610,35 @@ export class Line {
   }
 
   /**
+   * Get detailed line statuses using short, stable property and type names.
+   *
+   * This requests TfL's detailed disruption data and maps the generated API
+   * response into `DetailedLine`, `DetailedLineStatus`, and related types.
+   * Use `getStatus()` or `raw.line.*` when the exact TfL response is required.
+   *
+   * @example
+   * const lines = await client.line.getDetailedStatus({
+   *   lineIds: ['bakerloo'],
+   *   dateRange: {
+   *     startDate: '2026-08-08',
+   *     endDate: '2026-08-10',
+   *   },
+   * });
+   *
+   * const closure = lines[0]?.statuses[0]?.disruption;
+   * console.log(closure?.closureType, closure?.affectedStops);
+   */
+  async getDetailedStatus(options: DetailedLineStatusQuery = {}): Promise<DetailedLine[]> {
+    const lines = await this.getStatus({
+      ...options,
+      detail: true,
+      keepTflTypes: false,
+    });
+
+    return mapDetailedLines(lines);
+  }
+
+  /**
    * Get line disruption information
    * @param options - Query options for disruption filtering
    * @returns Promise resolving to an array of disruption information
@@ -831,6 +872,7 @@ export {
   BaseLineQuery, 
   LineRouteQuery, 
   LineStatusQuery, 
+  DetailedLineStatusQuery,
   LineSearchQuery,
   LineRouteSequenceQuery,
   LineStopPointsQuery,

@@ -28,6 +28,7 @@ These are available synchronously on the client instance after construction:
 |----------|--------|---------|
 | `LINE_NAMES` | `line` | Map of line ID → display name |
 | `LINE_INFO` | `line` | Full line metadata per ID |
+| `STATION_SEQUENCES` | `line` | Station IDs, names, ordered routes, and branch relationships |
 | `MODE_NAMES` | `line`, `stopPoint`, `journey`, `mode` | Valid transport mode strings |
 | `MODE_METADATA` | `line` | `isTflService`, `isFarePaying`, etc. |
 | `SEVERITY_DESCRIPTIONS` | `line` | All severity label strings |
@@ -38,7 +39,7 @@ These are available synchronously on the client instance after construction:
 | `STOP_POINT_TYPES` | `stopPoint` | Stop type enums |
 | `LINE_IDS` | package export | Mode-grouped line name → ID maps |
 
-**Use static metadata for:** input validation, dropdowns, display labels, severity styling, mode filtering — anything that does not need current operational state.
+**Use static metadata for:** input validation, dropdowns, display labels, station diagrams, severity styling, mode filtering — anything that does not need current operational state. Import `LINE_STATION_SEQUENCES` directly when credentials are unavailable; the same data is exposed as `client.line.STATION_SEQUENCES` for an existing client.
 
 ### Live (runtime TfL REST API)
 
@@ -46,7 +47,9 @@ Any method that returns a `Promise` hits the network. Key live endpoints:
 
 | Method | Module | Typical use | Suggested cache TTL |
 |--------|--------|-------------|---------------------|
-| `getStatus()` | `line` | Disruptions, good service | 30–60s |
+| `getStatus()` | `line` | Exact TfL line status response | 30–60s |
+| `getDetailedStatus()` | `line` | Friendly periods, closures, affected routes and stops | 30–60s |
+| `getRouteSequence()` | `line` | Current TfL route and branch response | 1h+ |
 | `getArrivals()` | `line`, `stopPoint`, `mode` | Countdown boards | 10–15s |
 | `search()` | `stopPoint`, `line`, `search`, `place` | Resolve IDs from names | 1h–24h |
 | `get()` | `stopPoint`, `line` | Stop/line details | 1h+ |
@@ -64,11 +67,17 @@ Any method that returns a `Promise` hits the network. Key live endpoints:
 // Static
 client.line.LINE_NAMES['central'];        // "Central"
 'id' in client.line.LINE_NAMES;           // validate
+client.line.STATION_SEQUENCES.central;     // bundled topology
 
 // Live
 await client.line.getStatus({ modes: ['tube'] });
 await client.line.getStatus({ lineIds: ['central', 'victoria'] });
+await client.line.getDetailedStatus({
+  lineIds: ['bakerloo'],
+  dateRange: { startDate: '2026-08-08', endDate: '2026-08-10' },
+});
 await client.line.getArrivals({ lineIds: ['central'], stopPointId: '940GZZLUOXC' });
+await client.line.getRouteSequence({ lineId: 'central', direction: 'outbound' });
 await client.line.search({ query: 'victoria' });
 await client.line.get({ modes: ['tube'] });
 ```

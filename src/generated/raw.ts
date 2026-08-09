@@ -1132,8 +1132,6 @@ export class RawClient {
     status: async (args: LineStatusArgs): Promise<TflApiPresentationEntitiesLine[]> => {
     const query: Record<string, string | number | boolean | string[] | undefined> = {};
     if (args.detail !== undefined) query["detail"] = args.detail;
-    if (args.startDate !== undefined) query["startDate"] = args.startDate;
-    if (args.endDate !== undefined) query["endDate"] = args.endDate;
     if (args["dateRange.startDate"] !== undefined) query["dateRange.startDate"] = args["dateRange.startDate"];
     if (args["dateRange.endDate"] !== undefined) query["dateRange.endDate"] = args["dateRange.endDate"];
     return this.http.request<TflApiPresentationEntitiesLine[]>({
@@ -1400,8 +1398,6 @@ export class RawClient {
      */
     getAt: async (args: PlaceGetAtArgs): Promise<SystemObject> => {
     const query: Record<string, string | number | boolean | string[] | undefined> = {};
-    if (args.lat !== undefined) query["lat"] = args.lat;
-    if (args.lon !== undefined) query["lon"] = args.lon;
     if (args["location.lat"] !== undefined) query["location.lat"] = args["location.lat"];
     if (args["location.lon"] !== undefined) query["location.lon"] = args["location.lon"];
     return this.http.request<SystemObject>({
@@ -1468,8 +1464,6 @@ export class RawClient {
      */
     getOverlay: async (args: PlaceGetOverlayArgs): Promise<SystemObject> => {
     const query: Record<string, string | number | boolean | string[] | undefined> = {};
-    if (args.lat !== undefined) query["lat"] = args.lat;
-    if (args.lon !== undefined) query["lon"] = args.lon;
     if (args["location.lat"] !== undefined) query["location.lat"] = args["location.lat"];
     if (args["location.lon"] !== undefined) query["location.lon"] = args["location.lon"];
     return this.http.request<SystemObject>({
@@ -1488,7 +1482,6 @@ export class RawClient {
      */
     getStreetsByPostCode: async (args: PlaceGetStreetsByPostCodeArgs): Promise<SystemObject> => {
     const query: Record<string, string | number | boolean | string[] | undefined> = {};
-    if (args.postcode !== undefined) query["postcode"] = args.postcode;
     if (args["postcodeInput.postcode"] !== undefined) query["postcodeInput.postcode"] = args["postcodeInput.postcode"];
     return this.http.request<SystemObject>({
       method: 'GET',

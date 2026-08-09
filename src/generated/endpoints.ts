@@ -510,8 +510,6 @@ export const ENDPOINTS: readonly EndpointDefinition[] = [
     ],
     "queryParams": [
       "detail",
-      "startDate",
-      "endDate",
       "dateRange.startDate",
       "dateRange.endDate"
     ],
@@ -836,8 +834,6 @@ export const ENDPOINTS: readonly EndpointDefinition[] = [
       "type"
     ],
     "queryParams": [
-      "lat",
-      "lon",
       "location.lat",
       "location.lon"
     ],
@@ -925,8 +921,6 @@ export const ENDPOINTS: readonly EndpointDefinition[] = [
       "height"
     ],
     "queryParams": [
-      "lat",
-      "lon",
       "location.lat",
       "location.lon"
     ],
@@ -956,7 +950,6 @@ export const ENDPOINTS: readonly EndpointDefinition[] = [
     },
     "pathParams": [],
     "queryParams": [
-      "postcode",
       "postcodeInput.postcode"
     ],
     "requiredParams": [

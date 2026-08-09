@@ -179,14 +179,23 @@ const buildEndpoints = (doc: SwaggerDoc): EndpointDef[] => {
 
       const parameters = operation.parameters ?? [];
       const pathParams = parameters.filter((p) => p.in === 'path').map((p) => p.name);
-      const queryParams = parameters.filter((p) => p.in === 'query').map((p) => p.name);
-      const requiredParams = parameters.filter((p) => p.required).map((p) => p.name);
       const placeholders = [...pathValue.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]);
       const pathParamMap = placeholders.reduce<Record<string, string>>((acc, placeholder) => {
         acc[placeholder] = resolveParamName(placeholder, parameters);
         return acc;
       }, {});
-
+      // Names already bound into the path (including OpenAPI quirks where
+      // StartDate/EndDate are path placeholders resolved to query-declared
+      // startDate/endDate). Duplicating them as query makes TfL return 404.
+      const usedInPath = new Set<string>([
+        ...pathParams,
+        ...Object.values(pathParamMap),
+      ]);
+      const queryParams = parameters
+        .filter((p) => p.in === 'query')
+        .map((p) => p.name)
+        .filter((name) => !usedInPath.has(name));
+      const requiredParams = parameters.filter((p) => p.required).map((p) => p.name);
       endpoints.push({
         operationId: operation.operationId ?? methodName,
         methodName,

@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.5.0 — 2026-08-09
+
+### Static station sequences
+
+`LINE_STATION_SEQUENCES` and `client.line.STATION_SEQUENCES` provide station IDs, station names, ordered routes, directions, service types, and branch relationships. The committed topology covers Tube, Elizabeth line, DLR, London Overground, and Tram. Importing `LINE_STATION_SEQUENCES` needs neither TfL credentials nor a live internet connection. The data contains no service status, disruption, validity, or arrival information.
+
+`line.getRouteSequence()` remains the explicitly live API. Consumers can update `tfl-ts` when they want a newer permanent network topology, or call the live method when they need TfL's current response.
+
+The new `generate:station-sequences` command builds the constants from TfL route sequences in memory and validates every included line before replacing the committed file. Empty or malformed responses fail generation and leave the previous snapshot intact. `check:station-sequences` validates the committed snapshot locally without contacting TfL and now runs before publish.
+
+### Fix dated `line.getStatus` 404
+
+TfL's `/Line/{ids}/Status/{startDate}/to/{endDate}` endpoint returns **404** when the same `startDate`/`endDate` values are also sent as query parameters. The generated raw client no longer duplicates path dates into the query string (and the generator skips query params that share names with path params). `client.line.getStatus({ lineIds, dateRange, detail: true })` works again.
+
+### Friendly detailed line status
+
+`line.getDetailedStatus()` requests `detail=true` and returns a compact model with short, stable names. Consumers can use `DetailedLine`, `DetailedLineStatus`, `DetailedDisruption`, `AffectedRoute`, and `AffectedStop` without importing TfL's generated `TflApiPresentationEntities*` types.
+
+The mapper renames common fields such as `statusSeverity` to `severity`, `validityPeriods[].fromDate` to `from`, `closureText` to `closureType`, and route `originationName` to `originName`. Missing TfL arrays become empty arrays, which removes repetitive guards in application code.
+
+`getStatus()` and `client.raw.line.*` still return the exact generated TfL response. `mapDetailedLines()` is exported for callers that already have a detailed raw response.
+
+### README rewrite
+
+The package README leads with install and three short recipes (status, arrivals, journey), then gotchas, module index, and the new APIs. Architecture, agents, and MCP sit below the fold. Contributing commands are separated from the consumer path.
+
 ## 2.4.0 — 2026-08-07
 
 ### Northern dark-contrast modes

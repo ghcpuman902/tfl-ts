@@ -25,12 +25,13 @@ Static metadata (no network)          Live API (network required)
 ─────────────────────────────         ────────────────────────────
 client.line.LINE_NAMES                client.line.getStatus()
 client.line.LINE_INFO                 client.line.getArrivals()
+LINE_STATION_SEQUENCES                client.line.getRouteSequence()
 client.stopPoint.MODE_NAMES           client.stopPoint.getArrivals()
 client.journey.MODE_NAMES             client.journey.plan()
 severity / mode constants             client.stopPoint.search()
 ```
 
-**Always check static metadata first.** If you only need line names, mode lists, or ID validation, do not call the API.
+**Always check static metadata first.** If you only need line names, station order and branches, mode lists, or ID validation, do not call the API. Import `LINE_STATION_SEQUENCES` directly when no configured client is available.
 
 ## Setup
 
@@ -62,9 +63,12 @@ Works in Node.js 18+, browsers, and edge runtimes. Zero runtime dependencies.
 |------|-----|----------|
 | Validate line ID | `id in client.line.LINE_NAMES` | No |
 | Line display name | `client.line.LINE_NAMES['central']` | No |
+| Station names, order, and branches | `LINE_STATION_SEQUENCES.central` | No |
 | List transport modes | `client.stopPoint.MODE_NAMES` | No |
 | Severity labels | `client.line.SEVERITY_DESCRIPTIONS` | No |
-| Current line status | `client.line.getStatus()` | Yes |
+| Current line status, exact TfL shape | `client.line.getStatus()` | Yes |
+| Detailed closures with friendly types | `client.line.getDetailedStatus()` | Yes |
+| Current route sequence from TfL | `client.line.getRouteSequence()` | Yes |
 | Live arrivals | `client.stopPoint.getArrivals()` | Yes |
 | Journey options | `client.journey.plan()` | Yes |
 | Resolve stop by name | `client.stopPoint.search()` | Yes |
@@ -97,6 +101,24 @@ for (const line of disrupted) {
   console.log(`${line.name} (${colors.hex}): ${worst?.statusSeverityDescription} [${category}]`);
 }
 ```
+
+For planned closures, affected stops, ordered route sections, and validity periods, use the friendly detailed response:
+
+```typescript
+const lines = await client.line.getDetailedStatus({
+  lineIds: ['bakerloo'],
+  dateRange: {
+    startDate: '2026-08-08',
+    endDate: '2026-08-10',
+  },
+});
+
+const disruption = lines[0]?.statuses[0]?.disruption;
+console.log(disruption?.closureType);
+console.log(disruption?.affectedRoutes[0]?.stops);
+```
+
+Use `getStatus({ detail: true })` only when the exact generated TfL field names are required.
 
 ### Line colors (framework-agnostic)
 
