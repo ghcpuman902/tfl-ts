@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.0 — 2026-08-10
+
+### Fix BikePoint e-bike / classic bike counts
+
+Live `/BikePoint` payloads expose classic and electric availability as `NbStandardBikes` and `NbEBikes`. Status extraction previously looked up the unprefixed `StandardBikes` / `EBikes` keys, so `standardBikes` and `eBikes` were almost always `0` even when `bikes` was correct (for example Pennington Street showing 13 bikes total but `0` / `0` in the split).
+
+`extractStatus` and `findElectricBikes` now prefer the live `Nb*` keys and still accept the unprefixed names as a fallback. `PROPERTY_KEYS` documents the live keys.
+
 ## 2.5.0 — 2026-08-09
 
 ### Static station sequences

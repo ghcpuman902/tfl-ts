@@ -291,7 +291,9 @@ export class BikePoint {
   public readonly PROPERTY_KEYS = [
     'NbBikes',
     'NbDocks',
-    'NbEmptyDocks'
+    'NbEmptyDocks',
+    'NbStandardBikes',
+    'NbEBikes',
   ] as const;
 
   constructor(private raw: RawClient) {}

@@ -1,16 +1,16 @@
 /**
  * Bike Point Utilities
- * 
+ *
  * This module provides utility functions for working with bike point data,
  * including status extraction, filtering, and property access.
- * 
+ *
  * @example
  * import { getPropertyValue, findElectricBikes } from 'tfl-ts/utils/bikePoint';
- * 
+ *
  * // Get property values from bike point data
  * const bikes = getPropertyValue(bikePoint, 'NbBikes');
  * console.log(`Bikes available: ${bikes || 0}`);
- * 
+ *
  * // Filter bike points with electric bikes
  * const eBikePoints = findElectricBikes(allBikePoints);
  * console.log(`Found ${eBikePoints.length} bike points with electric bikes`);
@@ -19,11 +19,62 @@
 import { BikePointInfo, BikePointStatus } from '../bikePoint';
 
 /**
+ * Get a property value from bike point additional properties
+ *
+ * This utility function searches through the additional properties
+ * of a bike point to find a specific property by its key.
+ *
+ * @param bikePoint - Bike point information
+ * @param key - Property key to search for
+ * @returns Property value or undefined if not found
+ * @example
+ * // Get number of bikes
+ * const bikes = getPropertyValue(bikePoint, 'NbBikes');
+ * console.log(`Bikes available: ${bikes || 0}`);
+ *
+ * // Get terminal name
+ * const terminal = getPropertyValue(bikePoint, 'TerminalName');
+ * if (terminal) {
+ *   console.log(`Terminal: ${terminal}`);
+ * }
+ */
+export const getPropertyValue = (bikePoint: BikePointInfo, key: string): string | undefined => {
+  if (!bikePoint.additionalProperties) {
+    return undefined;
+  }
+
+  const property = bikePoint.additionalProperties.find(prop => prop.key === key);
+  return property?.value;
+};
+
+const parseCount = (value: string | undefined): number => {
+  if (value === undefined || value === '') return 0;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/**
+ * Read the first matching additionalProperty key.
+ * Live BikePoint payloads use `NbEBikes` / `NbStandardBikes`; older docs and
+ * fixtures sometimes used the unprefixed names — prefer the live keys.
+ */
+const getFirstPropertyValue = (
+  bikePoint: BikePointInfo,
+  ...keys: string[]
+): string | undefined => {
+  for (const key of keys) {
+    const value = getPropertyValue(bikePoint, key);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+};
+
+/**
  * Extract bike point status information from raw bike point data
- * 
+ *
  * This internal utility function parses the additional properties of a bike point
  * to extract meaningful status information like available bikes, spaces, etc.
- * 
+ *
  * @internal This function is used internally by the BikePoint class and should not be used directly.
  * @param bikePoint - Raw bike point information from the API
  * @param keepTflTypes - Whether to preserve original additional properties
@@ -45,15 +96,19 @@ const extractStatus = (bikePoint: BikePointInfo, keepTflTypes: boolean = false):
   const installDate = getPropertyValue(bikePoint, 'InstallDate');
   const removalDate = getPropertyValue(bikePoint, 'RemovalDate');
   const isTemporary = getPropertyValue(bikePoint, 'Temporary');
-  const standardBikes = getPropertyValue(bikePoint, 'StandardBikes');
-  const eBikes = getPropertyValue(bikePoint, 'EBikes');
+  const standardBikes = getFirstPropertyValue(
+    bikePoint,
+    'NbStandardBikes',
+    'StandardBikes',
+  );
+  const eBikes = getFirstPropertyValue(bikePoint, 'NbEBikes', 'EBikes');
 
   // Parse numeric values
-  const bikesCount = bikes ? Number(bikes) : 0;
-  const docksCount = docks ? Number(docks) : 0;
-  const spacesCount = spaces ? Number(spaces) : 0;
-  const standardBikesCount = standardBikes ? Number(standardBikes) : 0;
-  const eBikesCount = eBikes ? Number(eBikes) : 0;
+  const bikesCount = parseCount(bikes);
+  const docksCount = parseCount(docks);
+  const spacesCount = parseCount(spaces);
+  const standardBikesCount = parseCount(standardBikes);
+  const eBikesCount = parseCount(eBikes);
 
   // Calculate broken docks
   const brokenDocks = Math.max(0, docksCount - (bikesCount + spacesCount));
@@ -79,53 +134,24 @@ const extractStatus = (bikePoint: BikePointInfo, keepTflTypes: boolean = false):
   };
 };
 
-/**
- * Get a property value from bike point additional properties
- * 
- * This utility function searches through the additional properties
- * of a bike point to find a specific property by its key.
- * 
- * @param bikePoint - Bike point information
- * @param key - Property key to search for
- * @returns Property value or undefined if not found
- * @example
- * // Get number of bikes
- * const bikes = getPropertyValue(bikePoint, 'NbBikes');
- * console.log(`Bikes available: ${bikes || 0}`);
- * 
- * // Get terminal name
- * const terminal = getPropertyValue(bikePoint, 'TerminalName');
- * if (terminal) {
- *   console.log(`Terminal: ${terminal}`);
- * }
- */
-export const getPropertyValue = (bikePoint: BikePointInfo, key: string): string | undefined => {
-  if (!bikePoint.additionalProperties) {
-    return undefined;
-  }
-
-  const property = bikePoint.additionalProperties.find(prop => prop.key === key);
-  return property?.value;
-};
-
 // Export internal function for use by BikePoint class
 export { extractStatus };
 
 /**
  * Find bike points with electric bikes available
- * 
+ *
  * This utility function filters bike points to find those with electric bikes
  * available for hire.
- * 
+ *
  * @param bikePoints - Array of bike point information
  * @returns Array of bike points with electric bikes
  * @example
  * // Find bike points with electric bikes
  * const allBikePoints = await client.bikePoint.get();
  * const eBikePoints = findElectricBikes(allBikePoints);
- * 
+ *
  * console.log(`Found ${eBikePoints.length} bike points with electric bikes`);
- * 
+ *
  * eBikePoints.forEach(bikePoint => {
  *   const status = extractStatus(bikePoint);
  *   console.log(`${status.name}: ${status.eBikes} electric bikes`);
@@ -133,17 +159,17 @@ export { extractStatus };
  */
 export const findElectricBikes = (bikePoints: BikePointInfo[]): BikePointInfo[] => {
   return bikePoints.filter(bikePoint => {
-    const eBikes = getPropertyValue(bikePoint, 'EBikes');
-    return eBikes && Number(eBikes) > 0;
+    const eBikes = getFirstPropertyValue(bikePoint, 'NbEBikes', 'EBikes');
+    return eBikes !== undefined && Number(eBikes) > 0;
   });
 };
 
 /**
  * Sort bike points by distance from a location
- * 
+ *
  * This utility function sorts bike points by their distance from a given
  * location, with closest points first.
- * 
+ *
  * @param bikePoints - Array of bike point information
  * @param lat - Latitude of the reference point
  * @param lon - Longitude of the reference point
@@ -152,7 +178,7 @@ export const findElectricBikes = (bikePoints: BikePointInfo[]): BikePointInfo[] 
  * // Sort bike points by distance from a location
  * const allBikePoints = await client.bikePoint.get();
  * const sortedByDistance = sortByDistance(allBikePoints, 51.508418, -0.067048);
- * 
+ *
  * console.log('Closest bike points:');
  * sortedByDistance.slice(0, 5).forEach((bikePoint, index) => {
  *   const status = extractStatus(bikePoint);
@@ -160,8 +186,8 @@ export const findElectricBikes = (bikePoints: BikePointInfo[]): BikePointInfo[] 
  * });
  */
 export const sortByDistance = (
-  bikePoints: BikePointInfo[], 
-  _lat: number, 
+  bikePoints: BikePointInfo[],
+  _lat: number,
   _lon: number
 ): BikePointInfo[] => {
   return [...bikePoints].sort((a, b) => {
@@ -173,17 +199,17 @@ export const sortByDistance = (
 
 /**
  * Find the closest bike point with available bikes
- * 
+ *
  * This utility function finds the nearest bike point that has bikes available
  * for hire.
- * 
+ *
  * @param bikePoints - Array of bike point information
  * @returns Closest bike point with bikes, or undefined if none found
  * @example
  * // Find closest bike point with bikes
  * const allBikePoints = await client.bikePoint.get();
  * const closestWithBikes = findClosestWithBikes(allBikePoints);
- * 
+ *
  * if (closestWithBikes) {
  *   const status = extractStatus(closestWithBikes);
  *   console.log(`Closest bike point with bikes: ${status.name} (${closestWithBikes.distance?.toFixed(0)}m)`);
@@ -198,4 +224,4 @@ export const findClosestWithBikes = (bikePoints: BikePointInfo[]): BikePointInfo
   });
   const sortedByDistance = sortByDistance(availableBikes, 0, 0); // Distance already calculated
   return sortedByDistance[0];
-}; 
+};
