@@ -10,7 +10,7 @@ const EXCLUDED_FROM_DRIFT_CHECK = new Set([
 
 const checkGenerated = (): void => {
   console.log('Regenerating from committed OpenAPI snapshot...');
-  execSync('pnpm run generate:types && pnpm run generate:raw && pnpm run generate:jsdoc', {
+  execSync('pnpm run generate -- --only=types,raw,jsdoc', {
     cwd: ROOT,
     stdio: 'inherit',
     env: { ...process.env, TFL_SKIP_GENERATED_META: '1' },

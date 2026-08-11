@@ -80,9 +80,9 @@ Generation is explicit and reviewed against a committed OpenAPI snapshot:
 
 ```bash
 pnpm run sync:spec      # fetch live swagger (maintainer only)
-pnpm run generate       # regenerate types + raw + jsdoc + meta
-pnpm run check:drift    # compare snapshot vs live REST paths
-pnpm run check:generated # verify committed artifacts match generators
+pnpm run generate       # regenerate types + raw + meta + station-sequences + jsdoc
+pnpm run check -- --only=drift # compare snapshot vs live REST paths
+pnpm run check          # verify committed artifacts match generators
 pnpm run build          # compile only
 ```
 

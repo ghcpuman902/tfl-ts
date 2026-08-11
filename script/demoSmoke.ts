@@ -51,7 +51,7 @@ const verifyDemoCatalog = (): void => {
 };
 
 const verifyEntryPoints = (): void => {
-  const entryPoints = ['playground/demo.ts', 'playground/index.ts'];
+  const entryPoints = ['playground/demo.ts'];
   entryPoints.forEach((entryPoint) => {
     const fullPath = path.join(ROOT, entryPoint);
     if (!existsSync(fullPath)) {

@@ -242,7 +242,7 @@ const render = (sequences: StaticLineSequence[]): string => {
   return (
     `// Generated from TfL route-sequence data. Do not edit by hand.\n` +
     `// Static topology only: station identity, order, and branches; no operational state.\n` +
-    `// Regenerate with: pnpm run generate:station-sequences\n\n` +
+    `// Regenerate with: pnpm run generate -- --only=station-sequences\n\n` +
     `export const STATION_SEQUENCES_GENERATED_AT = ${JSON.stringify(new Date().toISOString())};\n\n` +
     `export const LINE_STATION_SEQUENCES = ${JSON.stringify(byLineId, null, 2)} as const;\n\n` +
     `export type StaticLineId = keyof typeof LINE_STATION_SEQUENCES;\n` +
