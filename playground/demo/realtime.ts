@@ -1,5 +1,5 @@
 // run by:
-// pnpm run demo:realtime
+// pnpm run demo -- realtime
 
 import dotenv from 'dotenv';
 import TflClient from '../../src/index';

@@ -1,37 +1,30 @@
 # Library → UI examples
 
-Copy-paste patterns for mapping **tfl-ts** data to a useful London transport UI. These files are **reference** (markdown + annotated TypeScript). They are not compiled by this package and do **not** add React, Next.js, or Tailwind as dependencies.
+How to map **tfl-ts** data into a useful London transport UI. The TypeScript files here are small, stack-agnostic references. They are not compiled by this package and do not pull in React, Next.js, or Tailwind.
 
-Live React boards: [tfl-components.vercel.app](https://tfl-components.vercel.app) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
+**See it working:** [API explorer](https://tfl.manglekuo.com/docs/explorer) — call the same endpoints this package wraps, with live responses.
 
-Install into a Next.js app (copies source; installs `tfl-ts` from npm):
+Live React boards: [tfl.manglekuo.com](https://tfl.manglekuo.com/) · source in [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
 
-```bash
-pnpm dlx shadcn@latest add https://tfl-components.vercel.app/r/tube-status-board.json
-```
-
-Local HTML board after cloning this repo (devDependencies only):
+Install a board into a Next.js app (copies source; installs `tfl-ts` from npm):
 
 ```bash
-pnpm install
-pnpm run playground   # http://localhost:3000 — /status and /arrivals
+pnpm dlx shadcn@latest add https://tfl.manglekuo.com/r/tube-status-board.json
 ```
 
 ## Tube vs bus (do not mix styling)
 
 | Mode | Identity | Helpers | Layout idea |
 |------|----------|---------|-------------|
-| **Tube / rail** (tube, Elizabeth, DLR, tram, Overground) | Official brand hex | `getLineInlineStyles`, `getLineCssProps`, severity helpers | Sort → partition disruptions vs good service → color title + horizontal bar |
-| **Bus** | Route number chip | **Do not** use tube color helpers | Discover stops → filter boardable `490…` IDs → arrivals row: `[chip] [destination] [countdown]` |
+| **Tube / rail** (tube, Elizabeth, DLR, tram, Overground) | Official brand hex | `getLineInlineStyles`, `getLineCssProps`, severity helpers | Sort → partition disruptions vs good service → colour title + horizontal bar |
+| **Bus** | Route number chip | **Do not** use tube colour helpers | Discover stops → filter boardable `490…` IDs → arrivals row: `[chip] [destination] [countdown]` |
 
-Agents: open the files below on GitHub (or in `node_modules/tfl-ts/examples/` after install). Adapt the data→UI contract to any stack — React/Tailwind optional.
+For a full React implementation, read [tfl-components](https://github.com/ghcpuman902/tfl-components) or poke the [explorer](https://tfl.manglekuo.com/docs/explorer). The mapping rules below work on any stack; React and Tailwind are optional.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| [nextjs-app-router.ts](./nextjs-app-router.ts) | Tube/rail status board paste-into-your-app snippet (showcase-aligned) |
-| [bus-arrivals-ui.ts](./bus-arrivals-ui.ts) | Bus stop discovery + arrivals board mapping (showcase-aligned) |
 | [node-cli.ts](./node-cli.ts) | Runnable Node CLI: search stop → arrivals (console) |
 | [caching.ts](./caching.ts) | Suggested TTLs for Next.js / server caches |
 

@@ -73,8 +73,8 @@ stop();
 
 ### Demos
 
-- **CLI:** `pnpm run demo:realtime`
-- **Web:** `pnpm run playground` → open `/arrivals` (SSE board via `pollArrivals`)
+- **CLI:** `pnpm run demo -- realtime`
+- **Web:** [tfl-components explorer](https://tfl.manglekuo.com/docs/explorer)
 
 ---
 

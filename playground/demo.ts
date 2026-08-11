@@ -177,8 +177,8 @@ const main = async (): Promise<void> => {
   await demonstrateErrorHandling();
 
   printSection('Next steps');
-  printCommandHint('pnpm run playground');
-  printCommandHint('pnpm run demo:smoke');
+  printCommandHint('https://tfl.manglekuo.com/docs/explorer');
+  printCommandHint('pnpm run demo -- smoke');
   printCommandHint('pnpm dlx ts-node playground/demo/raw.ts');
 };
 

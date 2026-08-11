@@ -2,7 +2,7 @@
 // pnpm dlx ts-node playground/demo/ui.ts
 //
 // For library → UI mapping (tube board + bus arrivals), see examples/README.md
-// Clone-local HTML: pnpm run playground → /status and /arrivals
+// Live explorer boards: https://tfl.manglekuo.com/docs/explorer
 
 import dotenv from 'dotenv';
 import TflClient, {

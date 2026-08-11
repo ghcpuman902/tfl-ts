@@ -1,6 +1,6 @@
 # tfl-ts — Agent Reference
 
-This document is the detailed reference for AI coding agents integrating the **tfl-ts** npm package. For quick patterns, see [.claude/skills/tfl-ts/SKILL.md](../.claude/skills/tfl-ts/SKILL.md). For repo maintenance, see [LLM_context.md](../LLM_context.md).
+This document is the detailed reference for AI coding agents integrating the **tfl-ts** npm package. For install, first-success examples, and screenshots, see [README.md](../README.md). For quick patterns, see [.claude/skills/tfl-ts/SKILL.md](../.claude/skills/tfl-ts/SKILL.md). For repo maintenance, see [LLM_context.md](../LLM_context.md).
 
 ## Package overview
 
@@ -269,7 +269,7 @@ const client = new TflClient({
 
 ### Server Component (recommended for status boards)
 
-Minimal list (full branded board: [examples/nextjs-app-router.ts](../examples/nextjs-app-router.ts)):
+Minimal list (full branded board: [tfl-components explorer](https://tfl.manglekuo.com/docs/explorer)):
 
 ```typescript
 // app/status/page.tsx
@@ -406,10 +406,8 @@ Read these on GitHub (or under `node_modules/tfl-ts/examples/` after install). T
 | Resource | Purpose |
 |----------|---------|
 | [examples/README.md](../examples/README.md) | Index: tube vs bus mapping rules |
-| [examples/nextjs-app-router.ts](../examples/nextjs-app-router.ts) | Tube/rail status board (partition + colour bars) |
-| [examples/bus-arrivals-ui.ts](../examples/bus-arrivals-ui.ts) | Bus discovery + arrivals row model (route chips, not tube colours) |
-| Live React boards | [tfl-components.vercel.app](https://tfl-components.vercel.app) |
-| Clone-local HTML | `pnpm run playground` → `/status`, `/arrivals` (devDeps only) |
+| Live React boards | [tfl.manglekuo.com](https://tfl.manglekuo.com/) |
+| Explorer | [tfl.manglekuo.com/docs/explorer](https://tfl.manglekuo.com/docs/explorer) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components) |
 
 **Bus ≠ tube:** do not call `getLineColor` / `getLineCssProps` for bus route numbers.
 
