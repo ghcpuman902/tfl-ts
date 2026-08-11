@@ -20,4 +20,7 @@ dist
 # Machine-local MCP path config (loads credentials from .env via script/run-mcp-local.mjs)
 .cursor/mcp.json
 
+# Internal working notes for agents (not shipped, not committed)
+docs/internal/
+
 */.DS_Store
