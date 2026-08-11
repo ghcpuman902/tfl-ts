@@ -20,7 +20,7 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Package consumers | Usage patterns, gotchas, copy-paste examples |
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.5.0 station sequences + detailed status; 2.6.0 BikePoint count fix) |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.5.0 sequences + detailed status; 2.6.0 BikePoint counts; 2.6.1 docs/tooling) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [LLM_context.md](LLM_context.md) | Contributors | Wrapper implementation rules for this repo |
 | [.cursor/skills/tfl-ts-maintainer/SKILL.md](.cursor/skills/tfl-ts-maintainer/SKILL.md) | Maintainers | Generators, `check`, publish workflow |

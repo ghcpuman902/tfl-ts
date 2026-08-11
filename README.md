@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml)
 
-> Typed TfL client (v2.6.0): friendly wrappers, 84 raw REST endpoints, and offline station sequences for 20 rail lines.
+> Typed TfL client (v2.6.1): friendly wrappers, 84 raw REST endpoints, and offline station sequences for 20 rail lines.
 
 [![Live TfL status board (light)](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/status-board-light.png)](https://tfl.manglekuo.com/)
 [![Live TfL status board (dark)](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/status-board-dark.png)](https://tfl.manglekuo.com/)

@@ -1,6 +1,6 @@
 {
   "name": "tfl-ts",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Typed TypeScript client for the Transport for London API: friendly wrappers, full raw coverage, static station sequences, and UI helpers for official line colours.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

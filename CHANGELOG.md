@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.6.1 — 2026-08-11
+
+### Packaging, docs, and maintain tooling
+
+- Ship `ERROR.md` in the npm tarball so linked error docs resolve for package consumers.
+- Collapse maintain scripts into `generate`, `check`, and `demo` with `--only` / target args; `prepublishOnly` and CI use `pnpm run check`.
+- Remove paste-in UI board examples and the local Express playground board; point readers at [tfl-components](https://github.com/ghcpuman902/tfl-components) and the [API explorer](https://tfl.manglekuo.com/docs/explorer).
+- Rewrite the README for first-success (v2.6.1 tagline, screenshots above the fold, Node / Next.js / MCP lanes).
+- Add GitHub Actions CI on `main` (`build`, `test`, `check`).
+
+No runtime API changes.
+
 ## 2.6.0 — 2026-08-10
 
 ### Fix BikePoint e-bike / classic bike counts
