@@ -6,7 +6,7 @@
  *
  * Prerequisites:
  *   pnpm add tfl-ts
- *   Set TFL_APP_ID and TFL_APP_KEY in .env.local
+ *   Set TFL_APP_KEY in .env.local
  */
 
 import { unstable_cache } from 'next/cache';

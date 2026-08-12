@@ -77,8 +77,7 @@ import TflClient, { TflError, TflHttpError, TflErrorHandler } from 'tfl-ts';
 
 // Configure client with custom retry settings
 const client = new TflClient({
-  appId: 'your-app-id',
-  appKey: 'your-app-key',
+  appKey: 'your-primary-key',
   timeout: 30000,        // 30 second timeout
   maxRetries: 3,         // Retry up to 3 times
   retryDelay: 1000       // Start with 1 second delay
@@ -276,11 +275,8 @@ try {
     console.error('Missing field:', error.configField);
     
     // Provide helpful setup instructions
-    if (error.configField === 'credentials') {
-      console.log('Please set up your TfL API credentials:');
-      console.log('1. Register at https://api-portal.tfl.gov.uk/');
-      console.log('2. Add credentials to your .env file');
-      console.log('3. Or pass them directly to the constructor');
+    if (error.configField === 'appKey') {
+      console.log('Set TFL_APP_KEY to your Primary key from https://api-portal.tfl.gov.uk/');
     }
   }
 }
@@ -518,8 +514,7 @@ import TflClient, { TflError, TflErrorHandler } from 'tfl-ts';
 
 // Configure client with custom retry settings
 const client = new TflClient({
-  appId: 'your-app-id',
-  appKey: 'your-app-key',
+  appKey: 'your-primary-key',
   timeout: 30000,        // 30 second timeout
   maxRetries: 3,         // Retry up to 3 times
   retryDelay: 1000       // Start with 1 second delay
@@ -1054,9 +1049,8 @@ try {
 } catch (error) {
   if (error instanceof TflHttpError && error.isAuthError()) {
     console.error('Authentication failed. Please check:');
-    console.error('1. Your TFL_APP_ID environment variable');
-    console.error('2. Your TFL_APP_KEY environment variable');
-    console.error('3. Your API credentials at https://api-portal.tfl.gov.uk/');
+    console.error('1. Your TFL_APP_KEY environment variable (Primary key)');
+    console.error('2. Your API credentials at https://api-portal.tfl.gov.uk/');
   }
 }
 ```

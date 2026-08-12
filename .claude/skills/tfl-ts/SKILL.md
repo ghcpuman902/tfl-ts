@@ -40,17 +40,15 @@ pnpm add tfl-ts
 ```
 
 ```env
-TFL_APP_ID=your-app-id
-TFL_APP_KEY=your-app-key
+TFL_APP_KEY=your-primary-key
 ```
 
-Credentials: [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/)
+Credentials: [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/) (Products → "500 Requests per min" → Profile → Show). On the portal you'll see two keys (Primary and Secondary); either works.
 
 ```typescript
 import TflClient from 'tfl-ts';
 
 const client = new TflClient({
-  appId: process.env.TFL_APP_ID,
   appKey: process.env.TFL_APP_KEY,
 });
 ```
@@ -253,7 +251,7 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Stop ID format | `'Oxford Circus'` as ID | Search first → `'940GZZLUOXC'` |
 | Polling too fast | `setInterval(..., 1000)` on arrivals | 10–15s minimum per stop |
 | Hardcoding metadata | `['tube', 'bus', 'dlr']` inline | `client.stopPoint.MODE_NAMES` |
-| Missing credentials | `new TflClient()` without env | Set `TFL_APP_ID` + `TFL_APP_KEY` |
+| Missing credentials | `new TflClient()` without env | Set `TFL_APP_KEY` |
 | Deprecated modules | `accidentStats`, `airQuality` | Avoid — marked deprecated |
 
 ## Raw escape hatch

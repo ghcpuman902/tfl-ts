@@ -2,8 +2,8 @@
  * Node.js CLI example — search stop → get arrivals
  *
  * Run:
- *   TFL_APP_ID=... TFL_APP_KEY=... npx ts-node examples/node-cli.ts
- *   TFL_APP_ID=... TFL_APP_KEY=... npx ts-node examples/node-cli.ts "Bank" tube
+ *   TFL_APP_KEY=... npx ts-node examples/node-cli.ts
+ *   TFL_APP_KEY=... npx ts-node examples/node-cli.ts "Bank" tube
  */
 
 import TflClient from 'tfl-ts';

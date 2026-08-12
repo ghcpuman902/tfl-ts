@@ -1,8 +1,8 @@
 import TflClient from '../index';
 import { ENDPOINTS, ENDPOINT_COUNT } from '../generated/endpoints';
 
-process.env.TFL_APP_ID = 'test-app-id';
 process.env.TFL_APP_KEY = 'test-app-key';
+delete process.env.TFL_APP_ID;
 
 describe('TflClient', () => {
   let client: TflClient;
@@ -68,8 +68,8 @@ describe('TflClient', () => {
 
   test('should have configuration', () => {
     const config = client.getConfig();
-    expect(config.appId).toBe('test-app-id');
     expect(config.appKey).toBe('test-app-key');
+    expect(config.appId).toBeUndefined();
     expect(config.timeout).toBe(30000);
     expect(config.maxRetries).toBe(3);
     expect(config.retryDelay).toBe(1000);

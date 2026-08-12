@@ -33,7 +33,7 @@ src/index.ts                          # TflClient { raw, realtime, line, … }
 | `pnpm run generate -- --only=types` | types.ts via swagger-typescript-api `--no-client` |
 | `pnpm run generate -- --only=raw` | raw.ts + endpoints.ts (owned generator) |
 | `pnpm run generate -- --only=jsdoc` | jsdoc reference files |
-| `pnpm run generate -- --only=meta` | Live TfL metadata (requires `TFL_APP_ID` / `TFL_APP_KEY`) |
+| `pnpm run generate -- --only=meta` | Live TfL metadata (requires `TFL_APP_KEY`) |
 | `pnpm run generate -- --only=station-sequences` | Bundled station topology snapshot |
 | `pnpm run sync:spec` | Fetch live swagger → update snapshot + spec.meta.json |
 | `pnpm run check -- --only=drift` | Compare committed snapshot vs live REST paths |
@@ -127,7 +127,7 @@ Bump `version` in `package.json` before publishing. Major bumps need `docs/MIGRA
 | `check` fails after every run | Timestamps in generated `.ts` files | Use `generated.meta.json` only; keep code headers deterministic |
 | `build` breaks all wrappers | Generation ran during build | Keep `build` = clean + `tsc`; run `generate` explicitly |
 | Raw method not found | Wrong operation name | `pnpm exec tfl list --tag <tag>` |
-| `generate -- --only=meta` fails | Missing credentials | `.env` with `TFL_APP_ID` / `TFL_APP_KEY` |
+| `generate -- --only=meta` fails | Missing credentials | `.env` with `TFL_APP_KEY` |
 
 ## Additional resources
 

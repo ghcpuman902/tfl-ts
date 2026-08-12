@@ -81,14 +81,19 @@ async function generateTypeScriptDefinitions() {
   const appId = process.env.TFL_APP_ID;
   const appKey = process.env.TFL_APP_KEY;
 
-  if (!appId || !appKey) {
+  if (!appKey) {
     throw new Error(
-      "Missing TFL API credentials. Please create a .env file with:\n" +
-      "TFL_APP_ID=your-app-id\n" +
-      "TFL_APP_KEY=your-app-key\n" +
-      "You can get these credentials by registering at https://api-portal.tfl.gov.uk/"
+      "Missing TFL_APP_KEY. Subscribe to \"500 Requests per min\" at https://api-portal.tfl.gov.uk/, then Profile → Show Primary key.\n" +
+      "Set TFL_APP_KEY in .env"
     );
   }
+
+  const withKey = (path: string): string => {
+    const url = new URL(path, 'https://api.tfl.gov.uk');
+    url.searchParams.set('app_key', appKey);
+    if (appId) url.searchParams.set('app_id', appId);
+    return url.toString();
+  };
 
   try {
     console.log('Fetching data from TfL API using META_DATA endpoints...');
@@ -116,9 +121,7 @@ async function generateTypeScriptDefinitions() {
         console.log(`  Fetching ${endpointName} from ${endpoint.path}...`);
         
         try {
-          // Build the full URL with credentials
-          const baseUrl = 'https://api.tfl.gov.uk';
-          const url = `${baseUrl}${endpoint.path}?app_id=${appId}&app_key=${appKey}`;
+          const url = withKey(endpoint.path);
           
           const rawData = await fetchTflData(url);
           
@@ -152,12 +155,12 @@ async function generateTypeScriptDefinitions() {
     console.log('\nFetching additional Lines data...');
     try {
       // Get all available modes first
-      const modesUrl = `https://api.tfl.gov.uk/Line/Meta/Modes?app_id=${appId}&app_key=${appKey}`;
+      const modesUrl = withKey('/Line/Meta/Modes');
       const modesData = await fetchTflData(modesUrl);
       const modeNames = modesData.map((mode: any) => mode.modeName).join(',');
       
       // Fetch lines for ALL modes, not just hardcoded ones
-      const linesUrl = `https://api.tfl.gov.uk/Line/Mode/${modeNames}?app_id=${appId}&app_key=${appKey}`;
+      const linesUrl = withKey(`/Line/Mode/${modeNames}`);
       const rawLines = await fetchTflData(linesUrl);
       const cleanedLines = cleanData(rawLines);
       

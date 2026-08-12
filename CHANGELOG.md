@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.2 — 2026-08-12
+
+### Primary key is the only required credential
+
+The TfL portal gives you a Primary key and a Secondary key. Either one is `app_key`. `TflClient` requires `appKey` / `TFL_APP_KEY`. Passing `appId` still forwards it on the request.
+
 ## 2.6.1 — 2026-08-11
 
 ### Packaging, docs, and maintain tooling

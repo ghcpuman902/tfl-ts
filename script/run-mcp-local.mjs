@@ -53,8 +53,8 @@ if (!existsSync(cliPath)) {
   process.exit(1);
 }
 
-if (!process.env.TFL_APP_ID || !process.env.TFL_APP_KEY) {
-  console.error('Missing TFL_APP_ID / TFL_APP_KEY. Add them to .env or the MCP env block.');
+if (!process.env.TFL_APP_KEY) {
+  console.error('Missing TFL_APP_KEY. Add it to .env or the MCP env block.');
   process.exit(1);
 }
 

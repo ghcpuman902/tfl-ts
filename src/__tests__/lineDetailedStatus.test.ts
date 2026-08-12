@@ -1,7 +1,7 @@
 import TflClient, { mapDetailedLines } from '../index';
 
-process.env.TFL_APP_ID = 'test-app-id';
 process.env.TFL_APP_KEY = 'test-app-key';
+delete process.env.TFL_APP_ID;
 
 const rawLine = {
   id: 'bakerloo',

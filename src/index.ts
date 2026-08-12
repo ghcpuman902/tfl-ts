@@ -125,9 +125,35 @@ export interface TflClientConfig {
   retryDelay?: number;
 }
 
+type ResolvedClientConfig = {
+  appId?: string;
+  appKey: string;
+  timeout: number;
+  maxRetries: number;
+  retryDelay: number;
+};
+
+const MISSING_APP_KEY_MESSAGE =
+  'Missing TFL_APP_KEY.\n' +
+  'Subscribe to "500 Requests per min" at https://api-portal.tfl.gov.uk/, then open Profile and press Show next to your Primary key.\n' +
+  'Set TFL_APP_KEY, or pass { appKey } to TflClient.';
+
+const APP_ID_NOTICE =
+  'tfl-ts: appId is unused by TfL (since Jan 2021). appKey / TFL_APP_KEY (Primary key) is enough.';
+
+let appIdNoticeShown = false;
+
+const warnIfAppIdProvided = (appId?: string): void => {
+  if (!appId || appIdNoticeShown) {
+    return;
+  }
+  appIdNoticeShown = true;
+  console.warn(APP_ID_NOTICE);
+};
+
 class TflClient {
   private readonly http: TflHttpClient;
-  private readonly config: Required<TflClientConfig>;
+  private readonly config: ResolvedClientConfig;
 
   /**
    * Direct access to every TfL REST endpoint using generated operation names.
@@ -159,25 +185,18 @@ class TflClient {
     const appId = config?.appId || process.env.TFL_APP_ID;
     const appKey = config?.appKey || process.env.TFL_APP_KEY;
 
-    if (!appId || !appKey) {
-      throw new TflConfigError(
-        'Missing TFL API credentials. Please either:\n' +
-          '1. Create a .env file in the root directory with:\n' +
-          '   TFL_APP_ID=your-app-id\n' +
-          '   TFL_APP_KEY=your-app-key\n' +
-          '2. Or pass the credentials directly:\n' +
-          "   new TflClient({ appId: 'your-app-id', appKey: 'your-app-key' })\n" +
-          'You can get these credentials by registering at https://api-portal.tfl.gov.uk/',
-        'credentials',
-      );
+    if (!appKey) {
+      throw new TflConfigError(MISSING_APP_KEY_MESSAGE, 'appKey');
     }
 
+    warnIfAppIdProvided(appId);
+
     this.config = {
-      appId,
       appKey,
       timeout: config?.timeout ?? 30000,
       maxRetries: config?.maxRetries ?? 3,
       retryDelay: config?.retryDelay ?? 1000,
+      ...(appId ? { appId } : {}),
     };
 
     this.http = new TflHttpClient(this.config);

@@ -7,7 +7,7 @@ This document is the detailed reference for AI coding agents integrating the **t
 ```typescript
 import TflClient from 'tfl-ts';
 
-const client = new TflClient(); // requires TFL_APP_ID + TFL_APP_KEY
+const client = new TflClient(); // requires TFL_APP_KEY
 ```
 
 **Architecture (v2):**
@@ -231,7 +231,7 @@ import TflClient, {
 
 | Error | When | Agent action |
 |-------|------|--------------|
-| `TflConfigError` | Missing `TFL_APP_ID` / `TFL_APP_KEY` | Set env vars or pass config |
+| `TflConfigError` | Missing `TFL_APP_KEY` | Set env var or pass `{ appKey }` |
 | `TflHttpError` (401/403) | Bad credentials | Check TfL portal keys |
 | `TflHttpError` (429) | Rate limit | Back off, increase cache TTL |
 | `TflHttpError` (5xx) | TfL server error | Retry (client does this automatically) |
@@ -300,7 +300,7 @@ export default async function StatusPage() {
 }
 ```
 
-**Credentials:** set `TFL_APP_ID` and `TFL_APP_KEY` in Vercel environment variables (server-side only). Never expose keys to the client.
+**Credentials:** set `TFL_APP_KEY` in Vercel environment variables (server-side only). Never expose keys to the client.
 
 ### Route Handler with cache
 
@@ -432,7 +432,7 @@ Push/stream (SignalR, URA) is deferred. Use `client.realtime.pollArrivals()` for
 
 ## Network calls summary
 
-All live methods call `https://api.tfl.gov.uk/` with `app_id` and `app_key` query parameters. The client:
+All live methods call `https://api.tfl.gov.uk/` with the `app_key` query parameter. The client:
 
 - Adds auth automatically
 - Retries transient failures (up to `maxRetries`)
@@ -452,8 +452,7 @@ Tools return compact JSON: a plain-text `summary` plus structured fields (`lines
       "command": "npx",
       "args": ["-y", "tfl-ts@latest", "mcp"],
       "env": {
-        "TFL_APP_ID": "your-app-id",
-        "TFL_APP_KEY": "your-app-key"
+        "TFL_APP_KEY": "your-primary-key"
       }
     }
   }

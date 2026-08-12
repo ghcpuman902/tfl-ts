@@ -8,13 +8,22 @@ import {
 import { stripTypeFields } from '../utils/stripTypes';
 
 export interface TflHttpConfig {
-  appId: string;
+  appId?: string;
   appKey: string;
   baseUrl?: string;
   timeout?: number;
   maxRetries?: number;
   retryDelay?: number;
 }
+
+type ResolvedHttpConfig = {
+  appId?: string;
+  appKey: string;
+  baseUrl: string;
+  timeout: number;
+  maxRetries: number;
+  retryDelay: number;
+};
 
 export interface TflRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -32,7 +41,7 @@ const serializeQueryValue = (value: string | number | boolean | string[]): strin
 };
 
 export class TflHttpClient {
-  private readonly config: Required<TflHttpConfig>;
+  private readonly config: ResolvedHttpConfig;
 
   constructor(config: TflHttpConfig) {
     this.config = {
@@ -73,8 +82,10 @@ export class TflHttpClient {
 
   private async executeRequest<T>(options: TflRequestOptions): Promise<T> {
     const url = new URL(options.path, this.config.baseUrl);
-    url.searchParams.set('app_id', this.config.appId);
     url.searchParams.set('app_key', this.config.appKey);
+    if (this.config.appId) {
+      url.searchParams.set('app_id', this.config.appId);
+    }
 
     if (options.query) {
       for (const [key, value] of Object.entries(options.query)) {

@@ -6,45 +6,38 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml)
 
-> Typed TfL client (v2.6.1): friendly wrappers, 84 raw REST endpoints, and offline station sequences for 20 rail lines.
-
-[![Live TfL status board (light)](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/status-board-light.png)](https://tfl.manglekuo.com/)
-[![Live TfL status board (dark)](https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/docs/assets/status-board-dark.png)](https://tfl.manglekuo.com/)
-
-[tfl.manglekuo.com](https://tfl.manglekuo.com/) · [tfl-components](https://github.com/ghcpuman902/tfl-components)
-
-Older wrappers (`tfl-api-wrapper`, `tfl-unified-api`) covered a subset with per-module constructors. TfL mixes static reference data with live feeds; this package separates them. Wrappers for common jobs, `client.raw` for every REST operation, and build-time line names, station sequences, and official colours so you do not refetch static facts.
+> Typed TfL client (v2.6.2): friendly wrappers, 84 raw REST endpoints, and offline station sequences for 20 rail lines.
 
 ## Install and first call
 
-1. Register free credentials at the [TfL API Portal](https://api-portal.tfl.gov.uk/).
-2. Install and set env vars:
+Get a Primary key from the [TfL API Portal](https://api-portal.tfl.gov.uk/). Subscribe to "500 Requests per min", then Profile → Show.
 
 ```bash
 pnpm add tfl-ts
+export TFL_APP_KEY=your-primary-key
+pnpm exec tfl raw line.statusByIds --ids victoria
 ```
 
-```env
-TFL_APP_ID=your-app-id
-TFL_APP_KEY=your-app-key
+```json
+[
+  {
+    "id": "victoria",
+    "name": "Victoria",
+    "lineStatuses": [{ "statusSeverityDescription": "Good Service" }]
+  }
+]
 ```
 
-3. Fetch tube status:
+Line names, station order, and colours ship in the package. Status, arrivals, and journeys hit TfL at runtime.
 
-```typescript
-import TflClient from 'tfl-ts';
-
-const client = new TflClient(); // reads TFL_APP_ID / TFL_APP_KEY from process.env
-const status = await client.line.getStatus({ modes: ['tube'] });
-```
+On the portal you'll see two keys (Primary and Secondary); either works. `app_id` has been unused since Jan 2021.
 
 <details>
 <summary>Pass credentials in the constructor instead</summary>
 
 ```typescript
 const client = new TflClient({
-  appId: 'your-app-id',
-  appKey: 'your-app-key',
+  appKey: 'your-primary-key',
 });
 ```
 
@@ -55,6 +48,10 @@ const client = new TflClient({
 ### Node
 
 ```typescript
+import TflClient from 'tfl-ts';
+
+const client = new TflClient(); // reads TFL_APP_KEY from process.env
+
 const status = await client.line.getStatus({ modes: ['tube'] });
 
 const arrivals = await client.stopPoint.getArrivals({
@@ -74,7 +71,7 @@ const { matches } = await client.stopPoint.search({
 
 ### Next.js
 
-Server Component with ISR (~60s). Full board: [tfl-components](https://github.com/ghcpuman902/tfl-components) · [API explorer](https://tfl.manglekuo.com/docs/explorer). Tube boards use official line colours; bus boards use route-number chips. Do not mix. See [examples/README.md](examples/README.md).
+Server Component with ISR (~60s). Boards and explorer: [tfl-components](https://github.com/ghcpuman902/tfl-components) · [tfl.manglekuo.com/docs/explorer](https://tfl.manglekuo.com/docs/explorer). Tube boards use official line colours; bus boards use route-number chips. Do not mix. See [examples/README.md](examples/README.md).
 
 ```typescript
 import TflClient, { sortLinesBySeverityAndOrder } from 'tfl-ts';
@@ -104,8 +101,7 @@ Read-only MCP (`npx tfl-ts mcp`), cached and rate-limited. Static tools never ca
       "command": "npx",
       "args": ["-y", "tfl-ts@latest", "mcp"],
       "env": {
-        "TFL_APP_ID": "your-app-id",
-        "TFL_APP_KEY": "your-app-key"
+        "TFL_APP_KEY": "your-primary-key"
       }
     }
   }

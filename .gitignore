@@ -2,6 +2,7 @@
 .env.local
 .env.test
 .env.*
+!.env.example
 
 node_modules
 

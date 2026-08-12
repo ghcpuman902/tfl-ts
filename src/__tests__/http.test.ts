@@ -9,15 +9,17 @@ describe('TflHttpClient', () => {
     global.fetch = mockFetch as unknown as typeof fetch;
   });
 
-  const createClient = (overrides: Partial<{ maxRetries: number; retryDelay: number }> = {}) =>
+  const createClient = (
+    overrides: Partial<{ appId: string; appKey: string; maxRetries: number; retryDelay: number }> = {},
+  ) =>
     new TflHttpClient({
-      appId: 'test-id',
-      appKey: 'test-key',
+      appKey: overrides.appKey ?? 'test-key',
       maxRetries: overrides.maxRetries ?? 0,
       retryDelay: overrides.retryDelay ?? 1,
+      ...(overrides.appId !== undefined ? { appId: overrides.appId } : {}),
     });
 
-  test('should append auth query params and strip $type fields by default', async () => {
+  test('should append app_key and omit app_id when only appKey is set', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ $type: 'TflApi.Presentation.Entities.Line, Tfl.Api.Presentation.Entities', id: 'central' }),
@@ -30,9 +32,23 @@ describe('TflHttpClient', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
     const calledUrl = String(mockFetch.mock.calls[0][0]);
+    expect(calledUrl).toContain('app_key=test-key');
+    expect(calledUrl).not.toContain('app_id=');
+    expect(calledUrl).toContain('/Line/central');
+  });
+
+  test('should send app_id and app_key when both are set', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 'central' }),
+    });
+
+    const client = createClient({ appId: 'test-id' });
+    await client.request({ path: '/Line/central' });
+
+    const calledUrl = String(mockFetch.mock.calls[0][0]);
     expect(calledUrl).toContain('app_id=test-id');
     expect(calledUrl).toContain('app_key=test-key');
-    expect(calledUrl).toContain('/Line/central');
   });
 
   test('should preserve $type fields when keepTflTypes is true', async () => {

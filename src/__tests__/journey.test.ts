@@ -7,8 +7,8 @@ describe('Journey.plan disambiguation', () => {
   beforeEach(() => {
     mockFetch.mockReset();
     global.fetch = mockFetch as unknown as typeof fetch;
-    process.env.TFL_APP_ID = 'test-app-id';
     process.env.TFL_APP_KEY = 'test-app-key';
+    delete process.env.TFL_APP_ID;
   });
 
   test('returns disambiguation options for HTTP 300 instead of throwing', async () => {

@@ -4,7 +4,7 @@ tfl-ts includes a small, read-only MCP server for coding agents. It runs on the 
 
 ## Configure
 
-Register free credentials at [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/), then add this server to your MCP client:
+Register at [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/), subscribe to "500 Requests per min", then add this server to your MCP client:
 
 ```json
 {
@@ -13,8 +13,7 @@ Register free credentials at [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.
       "command": "npx",
       "args": ["-y", "tfl-ts@latest", "mcp"],
       "env": {
-        "TFL_APP_ID": "your-app-id",
-        "TFL_APP_KEY": "your-app-key"
+        "TFL_APP_KEY": "your-primary-key"
       }
     }
   }
@@ -70,8 +69,7 @@ Override the minimum interval if your TfL agreement requires a lower request rat
 ```json
 {
   "env": {
-    "TFL_APP_ID": "your-app-id",
-    "TFL_APP_KEY": "your-app-key",
+    "TFL_APP_KEY": "your-primary-key",
     "TFL_MCP_MIN_INTERVAL_MS": "1000"
   }
 }
@@ -90,7 +88,7 @@ Override the minimum interval if your TfL agreement requires a lower request rat
 ## Run manually
 
 ```bash
-TFL_APP_ID=your-app-id TFL_APP_KEY=your-app-key npx -y tfl-ts@latest mcp
+TFL_APP_KEY=your-primary-key npx -y tfl-ts@latest mcp
 ```
 
 Manual execution waits for JSON-RPC messages on stdin, so no normal console output is expected.
