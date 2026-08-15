@@ -203,7 +203,7 @@ class TflClient {
     this.raw = new RawClient(this.http);
     this.realtime = new Realtime(this.raw);
 
-    this.line = new Line(this.raw);
+    this.line = new Line(this.raw, this.http);
     this.stopPoint = new StopPoint(this.raw);
     this.journey = new Journey(this.raw);
     this.mode = new Mode(this.raw);
@@ -284,6 +284,18 @@ export type {
   NormalizedArrivalDestination,
   NormalizedArrivalPlatform,
 } from './utils/arrivals';
+export {
+  getSharedTrackSegments,
+  resolveSharedTrackIdentity,
+  withSharedTrackIdentity,
+} from './utils/sharedTrackIdentity';
+export type {
+  PredictionWithSharedTrackIdentity,
+  SharedTrackConfidence,
+  SharedTrackIdentity,
+  SharedTrackSegments,
+  SharedTrackVehicleIdentity,
+} from './utils/sharedTrackIdentity';
 export { resolveArrivalsStopId, resolveArrivalsStopIds } from './utils/stopHierarchy';
 export type { DetailedLineStatusQuery, LineStatusQuery } from './line';
 export {
@@ -340,7 +352,11 @@ export {
   getAccessibleSeverityLabel,
   sortLinesBySeverityAndOrder,
   getLineStatusSummary,
+  getStatusKind,
+  getWorstCurrentStatus,
+  getCurrentLineStatuses,
   isNormalService,
+  isScheduledClosure,
   hasNightService,
   getLineAriaLabel,
   getLineDisplayName,
@@ -348,11 +364,15 @@ export {
   LINE_DARK_TEXT_STROKE_WIDTH_PX,
   SEVERITY_MAPPING,
   LINE_ORDER,
+  STATUS_KIND_ORDER,
 } from './utils/ui';
 export type {
   LineDarkContrastMode,
   LineDarkContrastOptions,
   LineDarkReadableStyles,
+  StatusKind,
+  LineStatusLike,
+  CurrentStatusOptions,
 } from './utils/ui';
 export {
   getPropertyValue,

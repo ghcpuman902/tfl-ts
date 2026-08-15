@@ -83,6 +83,7 @@ import TflClient, {
   sortLinesBySeverityAndOrder,
   getSeverityCategory,
   getLineColor,
+  getWorstCurrentStatus,
   isNormalService,
 } from 'tfl-ts';
 
@@ -95,7 +96,7 @@ const sorted = sortLinesBySeverityAndOrder(statuses);
 const disrupted = sorted.filter((line) => !isNormalService(line.lineStatuses ?? []));
 
 for (const line of disrupted) {
-  const worst = line.lineStatuses?.[0];
+  const worst = getWorstCurrentStatus(line.lineStatuses);
   const category = getSeverityCategory(worst?.statusSeverity ?? 10);
   const colors = getLineColor(line.id ?? ''); // hex only — use with inline styles
   console.log(`${line.name} (${colors.hex}): ${worst?.statusSeverityDescription} [${category}]`);
@@ -271,6 +272,10 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Deprecated modules | `accidentStats`, `airQuality` | Avoid — marked deprecated |
 | Blank `towards` on Elizabeth/Overground | Reading `a.towards` directly | `getNormalizedArrivals()` — falls through to `destinationName` |
 | Polling a National Rail operator's id | Expecting live Southeastern/SWR predictions | TfL's Arrivals API only covers tube, DLR, tram, Overground, Elizabeth line — returns `[]` |
+| First `lineStatuses` row | `line.lineStatuses[0]` as "the" status | `getWorstCurrentStatus(line.lineStatuses)` — TfL does not order rows, and a standing hours notice can sit at index 0 |
+| `isNow` as a clock | Hiding rows with `isNow: false` | `isNow` tracks `disruption.category === 'RealTime'`. Planned work can be in force today with `isNow: false` |
+| Severity 20 as an incident | Sorting Service Closed above Severe Delays | 20 is scheduled closure (weekend W&C, end of traffic day). `sortLinesBySeverityAndOrder` ranks `closed` after incidents |
+| Circle / H&C / Met `lineId` flips on shared track | Trusting `lineId` at Liverpool Street / King's Cross | `withSharedTrackIdentity(stopRows, lineIds, networkArrivals)` — exclusive-segment → `canonicalLineId`; 2+ raw lines with no exclusive hit → `ambiguous` + `rawLineIds`; do not invent a line |
 
 ## Raw escape hatch
 

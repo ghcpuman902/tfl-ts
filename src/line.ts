@@ -11,6 +11,7 @@ import {
   TflApiPresentationEntitiesPrediction as TflPrediction
 } from './generated/types';
 import { RawClient } from './generated/raw';
+import type { TflHttpClient } from './core/http';
 import { BatchRequest } from './utils/batchRequest';
 import { TflValidationError } from './errors';
 import { mapDetailedLines } from './utils/detailedStatus';
@@ -275,8 +276,12 @@ interface LineTimetableQuery {
 interface LineArrivalsQuery {
   /** Array of line IDs */
   lineIds: LineIdInput[];
-  /** Stop point ID */
-  stopPointId: string;
+  /**
+   * Stop point ID. Omit for network-wide arrivals on those lines
+   * (`GET /Line/{ids}/Arrivals`). The OpenAPI snapshot only lists the
+   * stop-scoped path; the unscoped path is live on the Unified API.
+   */
+  stopPointId?: string;
   /** Direction of travel */
   direction?: 'inbound' | 'outbound' | 'all';
   /** Destination station ID */
@@ -391,7 +396,10 @@ export class Line {
   /** All severity levels and descriptions (static, no HTTP request needed) */
   public readonly ALL_SEVERITY: readonly typeof Severity[number][] = Severity;
 
-  constructor(private raw: RawClient) {
+  constructor(
+    private raw: RawClient,
+    private http?: TflHttpClient
+  ) {
     this.batchRequest = new BatchRequest(raw);
   }
 
@@ -781,15 +789,39 @@ export class Line {
    *   stopPointId: '940GZZLUVIC',
    *   direction: 'inbound'
    * });
+   *
+   * // Network-wide arrivals for shared-track identity
+   * const network = await client.line.getArrivals({
+   *   lineIds: ['circle', 'hammersmith-city', 'metropolitan']
+   * });
    */
   async getArrivals(options: LineArrivalsQuery): Promise<TflPrediction[]> {
     const { lineIds, stopPointId, direction, destinationStationId, keepTflTypes } = options;
-    
-    return this.raw.line.arrivals({
-      ids: lineIds,
-      stopPointId,
-      direction,
-      destinationStationId,
+
+    if (stopPointId) {
+      return this.raw.line.arrivals({
+        ids: lineIds,
+        stopPointId,
+        direction,
+        destinationStationId,
+        keepTflTypes,
+      });
+    }
+
+    if (!this.http) {
+      throw new TflValidationError(
+        'line.getArrivals() without stopPointId needs a TflClient (network-wide /Line/{ids}/Arrivals).'
+      );
+    }
+
+    const query: Record<string, string | number | boolean | string[] | undefined> = {};
+    if (direction !== undefined) query.direction = direction;
+    if (destinationStationId !== undefined) query.destinationStationId = destinationStationId;
+
+    return this.http.request<TflPrediction[]>({
+      method: 'GET',
+      path: `/Line/${lineIds.join(',')}/Arrivals`,
+      query,
       keepTflTypes,
     });
   }

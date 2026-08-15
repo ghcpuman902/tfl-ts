@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.8.0 — 2026-08-15
+
+### Shared-track arrival identity
+
+TfL's Arrivals API assigns `lineId` per station, not per physical train. On Circle / Hammersmith & City / Metropolitan shared track (Baker Street ↔ Aldgate), the same `vehicleId` is `circle` at Victoria and `hammersmith-city` at Liverpool Street in one poll. `tripId` is null for tube.
+
+`getSharedTrackSegments(lineIds)` classifies stations from `LINE_STATION_SEQUENCES` as exclusive to one of those lines or shared, and returns `linesByStation` (which of the given lines serve each stop). `resolveSharedTrackIdentity` / `withSharedTrackIdentity` tag a prediction with additive `sharedTrackIdentity` when the vehicle also appears at an exclusive-segment station (`canonicalLineId`) or is seen on two or more of the given lines with no exclusive evidence (`ambiguous` + `rawLineIds`, for a multi-line chip). Raw `lineId` / `lineName` stay as TfL sent them. Single-line rows with no exclusive hit stay untagged. Rows whose `lineId` is outside the given set are never tagged. TfL reuses `vehicleId` across lines, so a Central train can share an id with a Circle train.
+
+`line.getArrivals({ lineIds })` now accepts an omitted `stopPointId` and calls network-wide `GET /Line/{ids}/Arrivals` (live Unified API; not in the OpenAPI snapshot).
+
+### Line status ranking uses the current row, not every row
+
+TfL attaches more than one `lineStatuses` row to a line. On a Saturday, Waterloo & City is `Service Closed` (20, `RealTime`, `isNow: true`) plus a standing `Planned Closure` (4, `Information`, `isNow: false`) that describes weekday hours. `sortLinesBySeverityAndOrder` used `Math.min` across every row, so the stale 4 beat Jubilee's live `Severe Delays` (6). `getLineStatusSummary` and the MCP `get_line_status` tool reported "Planned Closure" for a line that is fully shut.
+
+The helpers now pick the operative rows first: `RealTime`, then `PlannedWork` / `Information` whose validity window overlaps `now`, then standing rows with no window. Rank is by `getStatusKind` (`incident` → `plannedWork` → `closed` → `info` → `good`), then TfL's number inside a kind, then `LINE_ORDER`. Severity 20 is scheduled closure, not an unplanned Closed (1). `isNow` is not a clock. It tracks `category === 'RealTime'`, which is why a London Trams part closure can be in force today with `isNow: false`.
+
+`getWorstCurrentStatus` / `getCurrentLineStatuses` / `getStatusKind` / `isScheduledClosure` are the new reads. `sortLinesBySeverityAndOrder` no longer mutates its input, and a missing `statusSeverity` is no longer treated as Special Service (0). `hasNightService` is deprecated: 20 means closed, not "has a night service". `getSeverityCategory(18)` is `good` (`No Issues`); it used to match the substring "issues" and come back `minor`.
+
+Boards that want a separate "not running" section should partition after these helpers. That layout is product policy, not something tfl-ts encodes per line or per hour.
+
 ## 2.7.0 — 2026-08-15
 
 ### Station hubs and arrival field normalisation

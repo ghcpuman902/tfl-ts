@@ -2,7 +2,11 @@ import { createInterface } from 'readline';
 import TflClient from '../index';
 import { Lines } from '../generated/meta/Line';
 import { Modes } from '../generated/meta/Meta';
-import { getLineStatusSummary } from '../utils/ui';
+import {
+  getLineStatusSummary,
+  getWorstCurrentStatus,
+  type LineStatusLike,
+} from '../utils/ui';
 
 type JsonRpcId = string | number | null;
 
@@ -296,13 +300,15 @@ const compactLineStatus = (line: unknown): {
     return null;
   }
 
-  const statuses = Array.isArray(line.lineStatuses) ? line.lineStatuses : [];
-  const summary = getLineStatusSummary(
-    statuses.map((status) => (isRecord(status) ? status : {})),
-  );
-  const reasonStatus = statuses.find(
-    (status) => isRecord(status) && typeof status.reason === 'string' && status.reason.length > 0,
-  );
+  const statuses: LineStatusLike[] = Array.isArray(line.lineStatuses)
+    ? line.lineStatuses.map((status) => (isRecord(status) ? (status as LineStatusLike) : {}))
+    : [];
+  const summary = getLineStatusSummary(statuses);
+  const worst = getWorstCurrentStatus(statuses);
+  const reason =
+    worst && typeof worst.reason === 'string' && worst.reason.length > 0
+      ? worst.reason.trim()
+      : undefined;
 
   return {
     id: typeof line.id === 'string' ? line.id : '',
@@ -311,10 +317,7 @@ const compactLineStatus = (line: unknown): {
     status: summary.worstDescription,
     severity: summary.worstSeverity,
     hasIssues: summary.hasIssues,
-    reason:
-      isRecord(reasonStatus) && typeof reasonStatus.reason === 'string'
-        ? reasonStatus.reason.trim()
-        : undefined,
+    reason,
   };
 };
 

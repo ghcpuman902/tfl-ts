@@ -121,6 +121,10 @@ Tools: `get_supported_modes`, `resolve_line_id`, `resolve_stop_id`, `get_line_st
 - National Rail arrivals aren't live through TfL: `STATION_HUBS` tracks Southeastern, South Western Railway, and similar operators for topology, but `getArrivals()` returns an empty array for them, not an error.
 - Tube boards use official line colours; bus boards use route-number chips. Do not mix patterns.
 - Roundel trademark: placeholder unless the consumer opts in.
+- A line can carry several `lineStatuses`. Do not read `[0]`. Use `getWorstCurrentStatus(line.lineStatuses)` for the operative row.
+- `validityPeriods[].isNow` follows `disruption.category === 'RealTime'`. It is not a clock check. Planned engineering can be in force today with `isNow: false`.
+- Severity 20 is scheduled closure (Waterloo & City weekends, end of traffic day), not an unplanned Closed (1). `sortLinesBySeverityAndOrder` ranks it after incidents.
+- Circle / H&C / Met `lineId` flips along shared track. Use `withSharedTrackIdentity`. Do not rewrite raw `lineId`.
 
 ## Before and after
 
@@ -179,6 +183,8 @@ arrivals[0]?.platform.label;
 
 `getArrivals()` and `client.raw.*` are unchanged.
 
+On Circle / Hammersmith & City / Metropolitan shared track, TfL assigns `lineId` per station, not per train. The same `vehicleId` can be `circle` at Victoria and `hammersmith-city` at Liverpool Street. `withSharedTrackIdentity(stopRows, lineIds, networkArrivals)` adds `sharedTrackIdentity` (`canonicalLineId` from an exclusive-segment hit, or `ambiguous` + `rawLineIds`). It does not rewrite raw `lineId`. `line.getArrivals({ lineIds })` with no `stopPointId` is the network-wide poll that evidence needs.
+
 ## Colours, severity, and detailed types
 
 ```typescript
@@ -196,6 +202,8 @@ import {
   getLineDarkReadableStyles,
   sortLinesBySeverityAndOrder,
   getLineStatusSummary,
+  getWorstCurrentStatus,
+  getStatusKind,
 } from 'tfl-ts';
 
 const { hex } = getLineColor('central'); // #E32017
@@ -204,6 +212,8 @@ const cssProps = getLineCssProps('northern');
 
 const tube = await client.line.getStatus({ modes: ['tube'] });
 const sorted = sortLinesBySeverityAndOrder(tube);
+const worst = getWorstCurrentStatus(sorted[0]?.lineStatuses);
+getStatusKind(worst ?? 10);
 ```
 
 Northern defaults to `outline` dark contrast. Pass `{ darkContrastMode: 'white' }` for white fill/text. See [CHANGELOG.md](CHANGELOG.md) (2.4.0). Raw escape hatch: `client.raw.line.statusByIds({ ids: ['central'] })`.

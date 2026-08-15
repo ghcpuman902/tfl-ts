@@ -285,7 +285,11 @@ Minimal list (full branded board: [tfl-components explorer](https://tfl.mangleku
 
 ```typescript
 // app/status/page.tsx
-import TflClient, { sortLinesBySeverityAndOrder, isNormalService } from 'tfl-ts';
+import TflClient, {
+  sortLinesBySeverityAndOrder,
+  isNormalService,
+  getWorstCurrentStatus,
+} from 'tfl-ts';
 
 export const revalidate = 60; // ISR: refresh every 60s
 
@@ -304,7 +308,7 @@ export default async function StatusPage() {
     <ul>
       {disrupted.map((line) => (
         <li key={line.id}>
-          {line.name}: {line.lineStatuses?.[0]?.statusSeverityDescription}
+          {line.name}: {getWorstCurrentStatus(line.lineStatuses)?.statusSeverityDescription}
         </li>
       ))}
     </ul>
@@ -374,11 +378,18 @@ import {
   getAccessibleSeverityLabel,
   sortLinesBySeverityAndOrder,
   getLineStatusSummary,
+  getWorstCurrentStatus,
+  getStatusKind,
   isNormalService,
+  isScheduledClosure,
 } from 'tfl-ts';
 ```
 
 Use these for styling status boards — they operate on data already fetched from the API.
+
+A line can carry several `lineStatuses`. `getWorstCurrentStatus` picks the operative row (RealTime first, then PlannedWork / Information whose validity window overlaps now). `getStatusKind` returns `incident` | `plannedWork` | `closed` | `info` | `good`. `sortLinesBySeverityAndOrder` ranks in that order, then by TfL's number inside a kind, then `LINE_ORDER`. It does not mutate the input array.
+
+`validityPeriods[].isNow` is not "affecting passengers now". It tracks `disruption.category === 'RealTime'`. London Trams can show a Part Closure in today's window with `isNow: false`. Severity 20 is scheduled closure, not an unplanned Closed (1). Pass `now: fetchedAt` into the helpers from a prerendered board so they do not call `Date.now()` in the shell. Sectioning "not running" away from disruptions is a board decision, not a library one.
 
 **Line colors:** `getLineColor()` returns hex values only (no Tailwind classes). Apply with inline styles or CSS variables — Tailwind cannot see classes inside `node_modules`.
 

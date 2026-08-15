@@ -12,6 +12,7 @@
  * 
  * // Get severity category for conditional styling
  * const category = getSeverityCategory(6); // 'severe'
+ * const kind = getStatusKind(20); // 'closed' — scheduled, not an incident
  * 
  * // Get accessible label for screen readers
  * const label = getAccessibleSeverityLabel(10, 'Good Service'); // 'Good Service - No issues reported'
@@ -20,6 +21,28 @@
 // Import generated metadata for accurate data
 import { Lines } from '../generated/meta/Line';
 import { Severity } from '../generated/meta/Meta';
+import {
+  compareLineStatuses,
+  getCurrentLineStatuses,
+  getLineStatusSummary as summariseLineStatuses,
+  getStatusDescription,
+  getStatusKind,
+  getStatusSeverity,
+  hasNightService as statusHasNightService,
+  isNormalService as statusIsNormalService,
+  type CurrentStatusOptions,
+  type LineStatusLike,
+  type StatusKind,
+} from './lineStatus';
+
+export {
+  getCurrentLineStatuses,
+  getStatusKind,
+  getWorstCurrentStatus,
+  isScheduledClosure,
+  STATUS_KIND_ORDER,
+} from './lineStatus';
+export type { CurrentStatusOptions, LineStatusLike, StatusKind } from './lineStatus';
 
 // Types
 export type LineId = typeof Lines[number]['id'];
@@ -229,6 +252,18 @@ export const LINE_ORDER: readonly string[] = [
  * the actual descriptions from the TfL API, making it easier to
  * apply consistent styling across different transport modes.
  */
+const severityCategoryFromKind = (
+  kind: StatusKind,
+  severityLevel?: number,
+): SeverityCategory => {
+  if (kind === 'good') return 'good';
+  if (kind === 'info' || kind === 'closed') return 'special';
+  if (kind === 'plannedWork') return 'severe';
+  if (severityLevel === 1 || severityLevel === 2 || severityLevel === 3) return 'critical';
+  if (severityLevel === 6) return 'severe';
+  return 'minor';
+};
+
 export const buildSeverityMapping = (): SeverityMapping => {
   const mapping: SeverityMapping = {
     critical: [],
@@ -238,22 +273,13 @@ export const buildSeverityMapping = (): SeverityMapping => {
     good: []
   };
 
-  Severity.forEach(item => {
-    const level = item.severityLevel;
-    const description = item.description.toLowerCase();
-
-    if (description.includes('closed') || description.includes('suspended') || description.includes('not running')) {
-      mapping.critical.push(level);
-    } else if (description.includes('severe') || description.includes('part closure') || description.includes('exit only')) {
-      mapping.severe.push(level);
-    } else if (description.includes('minor') || description.includes('reduced') || description.includes('bus service') || description.includes('diverted') || description.includes('issues')) {
-      mapping.minor.push(level);
-    } else if (description.includes('special') || description.includes('no step free') || description.includes('information')) {
-      mapping.special.push(level);
-    } else if (description.includes('good') || description.includes('no issues') || description.includes('closed for the night')) {
-      mapping.good.push(level);
-    }
-  });
+  const seen = new Set<number>();
+  for (const item of Severity) {
+    if (item.modeName !== 'tube' || seen.has(item.severityLevel)) continue;
+    seen.add(item.severityLevel);
+    mapping[severityCategoryFromKind(getStatusKind(item.severityLevel), item.severityLevel)]
+      .push(item.severityLevel);
+  }
 
   return mapping;
 };
@@ -296,16 +322,8 @@ export const getLineColor = (lineId: string): LineColorInfo => {
  * const category = getSeverityCategory(6); // 'severe'
  * const category = getSeverityCategory(10); // 'good'
  */
-export const getSeverityCategory = (severityLevel: SeverityLevel): SeverityCategory => {
-  if (SEVERITY_MAPPING.critical.includes(severityLevel)) return 'critical';
-  if (SEVERITY_MAPPING.severe.includes(severityLevel)) return 'severe';
-  if (SEVERITY_MAPPING.minor.includes(severityLevel)) return 'minor';
-  if (SEVERITY_MAPPING.special.includes(severityLevel)) return 'special';
-  if (SEVERITY_MAPPING.good.includes(severityLevel)) return 'good';
-  
-  // Default to minor for unknown severity levels
-  return 'minor';
-};
+export const getSeverityCategory = (severityLevel: SeverityLevel): SeverityCategory =>
+  severityCategoryFromKind(getStatusKind(severityLevel), severityLevel);
 
 /**
  * Get Tailwind CSS classes for severity styling
@@ -355,6 +373,10 @@ export const getSeverityClasses = (severityLevel: SeverityLevel, includeAnimatio
  * // Returns: 'Good Service - No issues reported'
  */
 export const getAccessibleSeverityLabel = (severityLevel: SeverityLevel, description: string): string => {
+  if (getStatusKind(severityLevel) === 'closed') {
+    return `${description} - Not running at this time`;
+  }
+
   const category = getSeverityCategory(severityLevel);
   
   const contextMap = {
@@ -395,29 +417,18 @@ export const getLineOrder = (lineId: string): number => {
  *   // Apply normal service styling
  * }
  */
-export const isNormalService = (statuses: Array<{ statusSeverity?: SeverityLevel }>): boolean => {
-  return statuses.every(status => {
-    const severity = status.statusSeverity;
-    if (severity === undefined) return false;
-    return SEVERITY_MAPPING.good.includes(severity) || SEVERITY_MAPPING.special.includes(severity);
-  });
-};
+export const isNormalService = (
+  statuses: readonly LineStatusLike[] | undefined,
+  options?: CurrentStatusOptions,
+): boolean => statusIsNormalService(statuses, options);
 
 /**
- * Check if line has night closure
- * 
- * @param statuses - Array of line status objects
- * @returns True if any status indicates night closure (severity 20)
- * 
- * @example
- * const hasNightClosure = hasNightService(line.lineStatuses);
- * if (hasNightClosure) {
- *   // Show night closure indicator
- * }
+ * @deprecated Use {@link isScheduledClosure}. Severity 20 means the line is
+ * closed, not that it runs a night service.
  */
-export const hasNightService = (statuses: Array<{ statusSeverity?: SeverityLevel }>): boolean => {
-  return statuses.some(status => status.statusSeverity === 20);
-};
+export const hasNightService = (
+  statuses: readonly LineStatusLike[] | undefined,
+): boolean => statusHasNightService(statuses);
 
 /**
  * Get ARIA label for line status
@@ -431,20 +442,24 @@ export const hasNightService = (statuses: Array<{ statusSeverity?: SeverityLevel
  * // Returns: 'Central line: Good Service - No issues reported'
  */
 export const getLineAriaLabel = (
-  lineName: string, 
-  statuses: Array<{ statusSeverity?: SeverityLevel; statusSeverityDescription?: string }>
+  lineName: string,
+  statuses: readonly LineStatusLike[] | undefined,
+  options?: CurrentStatusOptions,
 ): string => {
-  if (!statuses.length) {
+  const current = getCurrentLineStatuses(statuses, options);
+  if (!current.length) {
     return `${lineName} line: No status information available`;
   }
-  
-  const statusLabels = statuses.map(status => {
-    if (!status.statusSeverity || !status.statusSeverityDescription) {
+
+  const statusLabels = current.map((status) => {
+    const severity = getStatusSeverity(status);
+    const description = getStatusDescription(status);
+    if (severity === undefined || !description) {
       return 'Unknown status';
     }
-    return getAccessibleSeverityLabel(status.statusSeverity, status.statusSeverityDescription);
+    return getAccessibleSeverityLabel(severity, description);
   });
-  
+
   return `${lineName} line: ${statusLabels.join(', ')}`;
 };
 
@@ -607,34 +622,20 @@ export const getLineCssProps = (
 };
 
 /**
- * Sort lines by severity and importance
- * 
- * @param lines - Array of line objects with status information
- * @returns Sorted array of lines
- * 
+ * Sort lines by status kind, then TfL severity, then {@link LINE_ORDER}.
+ * Uses the operative row per line, not `Math.min` across every status.
+ * Returns a new array.
+ *
  * @example
  * const sortedLines = sortLinesBySeverityAndOrder(lineStatuses);
  */
-export const sortLinesBySeverityAndOrder = <T extends { 
-  id?: string; 
-  lineStatuses?: Array<{ statusSeverity?: SeverityLevel }> 
-}>(lines: T[]): T[] => {
-  return lines.sort((a, b) => {
-    const aMinSeverity = Math.min(...(a.lineStatuses?.map(s => s.statusSeverity || 0) || []));
-    const bMinSeverity = Math.min(...(b.lineStatuses?.map(s => s.statusSeverity || 0) || []));
-
-    // If both lines have normal service, sort by predefined order
-    if (isNormalService(a.lineStatuses || []) && isNormalService(b.lineStatuses || [])) {
-      return getLineOrder(a.id || '') - getLineOrder(b.id || '');
-    }
-
-    // If severities are different, sort by severity (lower = more severe)
-    if (aMinSeverity !== bMinSeverity) {
-      return aMinSeverity - bMinSeverity;
-    }
-
-    // If both lines have the same severity level (but not normal),
-    // still sort by predefined order as a fallback
+export const sortLinesBySeverityAndOrder = <T extends {
+  id?: string;
+  lineStatuses?: readonly LineStatusLike[];
+}>(lines: readonly T[], options?: CurrentStatusOptions): T[] => {
+  return [...lines].sort((a, b) => {
+    const statusDelta = compareLineStatuses(a.lineStatuses, b.lineStatuses, options);
+    if (statusDelta !== 0) return statusDelta;
     return getLineOrder(a.id || '') - getLineOrder(b.id || '');
   });
 };
@@ -682,41 +683,9 @@ export const getLineDisplayName = (lineName: string, modeName: string): string =
  * 
  * @example
  * const summary = getLineStatusSummary(line.lineStatuses);
- * // Returns: { worstSeverity: 6, worstDescription: 'Severe Delays', hasIssues: true, issueCount: 1 }
+ * // { worstSeverity: 6, worstDescription: 'Severe Delays', hasIssues: true, issueCount: 1, kind: 'incident' }
  */
-export const getLineStatusSummary = (statuses: Array<{ 
-  statusSeverity?: SeverityLevel; 
-  statusSeverityDescription?: string 
-}>) => {
-  if (!statuses.length) {
-    return {
-      worstSeverity: 10,
-      worstDescription: 'No Status',
-      hasIssues: false,
-      issueCount: 0
-    };
-  }
-  
-  const validStatuses = statuses.filter(s => s.statusSeverity !== undefined);
-  if (!validStatuses.length) {
-    return {
-      worstSeverity: 10,
-      worstDescription: 'Unknown Status',
-      hasIssues: false,
-      issueCount: 0
-    };
-  }
-  
-  const worstStatus = validStatuses.reduce((worst, current) => {
-    return (current.statusSeverity || 10) < (worst.statusSeverity || 10) ? current : worst;
-  });
-  
-  const hasIssues = !isNormalService(validStatuses);
-  
-  return {
-    worstSeverity: worstStatus.statusSeverity || 10,
-    worstDescription: worstStatus.statusSeverityDescription || 'Unknown',
-    hasIssues,
-    issueCount: hasIssues ? validStatuses.length : 0
-  };
-}; 
+export const getLineStatusSummary = (
+  statuses: readonly LineStatusLike[] | undefined,
+  options?: CurrentStatusOptions,
+) => summariseLineStatuses(statuses, options); 

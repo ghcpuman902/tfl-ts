@@ -31,7 +31,7 @@ For a full React implementation, read [tfl-components](https://github.com/ghcpum
 ## Mapping rules (framework-agnostic)
 
 1. **Fetch once, then style.** Call `line.getStatus` / `stopPoint.getArrivals`, then apply helpers to the returned objects.
-2. **Disruptions first.** `sortLinesBySeverityAndOrder` then `isNormalService` to split boards; denser cards for disruptions, compact grid for good service.
+2. **Disruptions first.** `sortLinesBySeverityAndOrder` then `isNormalService` to split boards; denser cards for disruptions, compact grid for good service. Read `getWorstCurrentStatus(line.lineStatuses)`, not `lineStatuses[0]`. Severity 20 is scheduled closure and sorts after incidents. Putting "not running" in its own section is a board choice.
 3. **Brand as CSS variables.** `getLineCssProps(lineId)` → `--line-color`, dark outline vars. Keep Northern black; outline for contrast (do not invert fill to white).
 4. **Bus ≠ tube.** Route chips are generic; stop letter is a small badge; countdown is `Due` / `N min` from `timeToStation`.
 5. **Prefer boardable bus stops.** IDs matching `/^490/` support live arrivals; hubs often do not.
