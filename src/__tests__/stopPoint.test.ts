@@ -57,3 +57,63 @@ describe('StopPoint.getByGeoPoint', () => {
     expect(calledUrl).toContain('NaptanPublicBusCoachTram');
   });
 });
+
+describe('StopPoint.getNormalizedArrivals', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  test('fetches the same way as getArrivals and maps every row', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        {
+          id: 'elz-1',
+          lineId: 'elizabeth',
+          lineName: 'Elizabeth line',
+          modeName: 'elizabeth-line',
+          platformName: 'A',
+          towards: '',
+          destinationName: 'Abbey Wood Rail Station',
+          timeToStation: 180,
+        },
+      ],
+    });
+
+    const client = new TflClient();
+    const arrivals = await client.stopPoint.getNormalizedArrivals({
+      stopPointIds: ['910GLIVST'],
+    });
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(String(mockFetch.mock.calls[0][0])).toContain('910GLIVST');
+
+    expect(arrivals).toHaveLength(1);
+    expect(arrivals[0]).toEqual(
+      expect.objectContaining({
+        id: 'elz-1',
+        destination: { name: 'Abbey Wood Rail Station', source: 'destinationName' },
+        platform: { raw: 'A', label: 'A', isUnknown: false },
+      })
+    );
+  });
+
+  test('sorts the same as getArrivals when sortBy is given', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        { id: 'a', lineId: 'central', timeToStation: 300, towards: 'Epping', destinationName: '' },
+        { id: 'b', lineId: 'central', timeToStation: 60, towards: 'Epping', destinationName: '' },
+      ],
+    });
+
+    const client = new TflClient();
+    const arrivals = await client.stopPoint.getNormalizedArrivals({
+      stopPointIds: ['940GZZLULVT'],
+      sortBy: 'timeToStation',
+    });
+
+    expect(arrivals.map((a) => a.id)).toEqual(['b', 'a']);
+  });
+});

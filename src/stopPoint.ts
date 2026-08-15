@@ -15,6 +15,7 @@ import {
 } from './generated/types';
 import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
+import { normalizeArrivals, type NormalizedArrival } from './utils/arrivals';
 import type {
   LineIdInput,
   ModeInput,
@@ -827,6 +828,21 @@ export class StopPoint {
 
       return (aValue - bValue) * multiplier;
     });
+  }
+
+  /**
+   * Same as {@link getArrivals}, then maps each prediction through {@link normalizeArrivals}.
+   * Use this when you want a cleaned destination and platform without touching the raw fields.
+   * @example
+   * const arrivals = await client.stopPoint.getNormalizedArrivals({
+   *   stopPointIds: ['940GZZLUOXC'],
+   *   sortBy: 'timeToStation',
+   * });
+   * arrivals[0]?.destination.name;
+   * arrivals[0]?.platform.label;
+   */
+  async getNormalizedArrivals(options: StopPointArrivalsQuery): Promise<NormalizedArrival[]> {
+    return normalizeArrivals(await this.getArrivals(options));
   }
 
   /**

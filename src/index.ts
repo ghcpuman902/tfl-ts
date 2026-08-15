@@ -270,6 +270,21 @@ export type {
   DetailedLineStatus,
   StatusValidityPeriod,
 } from './utils/detailedStatus';
+export {
+  normalizeArrival,
+  normalizeArrivals,
+  normalizeArrivalDeparture,
+  parseArrivalPlatform,
+  resolveArrivalDestination,
+} from './utils/arrivals';
+export type {
+  ArrivalCompassBound,
+  NormalizedArrival,
+  NormalizedArrivalDeparture,
+  NormalizedArrivalDestination,
+  NormalizedArrivalPlatform,
+} from './utils/arrivals';
+export { resolveArrivalsStopId, resolveArrivalsStopIds } from './utils/stopHierarchy';
 export type { DetailedLineStatusQuery, LineStatusQuery } from './line';
 export {
   LINE_STATION_SEQUENCES,
@@ -279,6 +294,12 @@ export type {
   StaticLineId,
   StaticLineStationSequence,
 } from './generated/meta/StationSequence';
+export {
+  STATION_HUBS,
+  STATION_HUB_LIST,
+  STATION_HUBS_GENERATED_AT,
+} from './generated/meta/StationHubs';
+export type { StationHubInfo, StationHubMember } from './generated/meta/StationHubs';
 export {
   TflError,
   TflHttpError,

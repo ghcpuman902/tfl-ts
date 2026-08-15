@@ -29,15 +29,16 @@ src/index.ts                          # TflClient { raw, realtime, line, … }
 | Command | Purpose |
 |---------|---------|
 | `pnpm run build` | Compile only (fast, deterministic) |
-| `pnpm run generate` | Full regen: types + raw + meta + station-sequences + jsdoc |
+| `pnpm run generate` | Full regen: types + raw + meta + station-sequences + station-hubs + jsdoc |
 | `pnpm run generate -- --only=types` | types.ts via swagger-typescript-api `--no-client` |
 | `pnpm run generate -- --only=raw` | raw.ts + endpoints.ts (owned generator) |
 | `pnpm run generate -- --only=jsdoc` | jsdoc reference files |
 | `pnpm run generate -- --only=meta` | Live TfL metadata (requires `TFL_APP_KEY`) |
 | `pnpm run generate -- --only=station-sequences` | Bundled station topology snapshot |
+| `pnpm run generate -- --only=station-hubs` | Bundled interchange/hub snapshot (needs `TFL_APP_KEY`, ~509 StopPoint fetches) |
 | `pnpm run sync:spec` | Fetch live swagger → update snapshot + spec.meta.json |
 | `pnpm run check -- --only=drift` | Compare committed snapshot vs live REST paths |
-| `pnpm run check` | Regenerate types/raw/jsdoc + station-sequences gate |
+| `pnpm run check` | Regenerate types/raw/jsdoc + station-sequences + station-hubs gate |
 | `pnpm run check -- --only=generated` | Regenerate types/raw/jsdoc; git-diff gate only |
 | `pnpm run test` | Jest (raw reachability, transport mocks) |
 | `pnpm exec tfl smoke` | Live API smoke (needs `.env`) |

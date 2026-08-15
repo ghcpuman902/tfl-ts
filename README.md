@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml)
 
-> Typed TfL client (v2.6.2): friendly wrappers, 84 raw REST endpoints, and offline station sequences for 20 rail lines.
+> Typed TfL client: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
 
 ## Install and first call
 
@@ -118,6 +118,7 @@ Tools: `get_supported_modes`, `resolve_line_id`, `resolve_stop_id`, `get_line_st
 - Prefer static constants (`LINE_NAMES`, `STATION_SEQUENCES`, mode lists) before live calls.
 - Cache status for about 30 to 60s. Do not poll arrivals faster than about 10 to 15s per stop.
 - `accidentStats` and `airQuality` are deprecated.
+- National Rail arrivals aren't live through TfL: `STATION_HUBS` tracks Southeastern, South Western Railway, and similar operators for topology, but `getArrivals()` returns an empty array for them, not an error.
 - Tube boards use official line colours; bus boards use route-number chips. Do not mix patterns.
 - Roundel trademark: placeholder unless the consumer opts in.
 
@@ -152,6 +153,31 @@ const outbound = bakerloo.orderedRoutes.find(
 );
 console.log(outbound?.stationIds, bakerloo.branches);
 ```
+
+## Station hubs and normalised arrivals
+
+`STATION_HUBS` maps each physical station to its sibling StopPoint ids and the specific id that carries arrivals for each line — Liverpool Street's tube id (`940GZZLULVT`) and rail id (`910GLIVST`) both resolve to one `HUBLST` entry, with Central on the tube id and Elizabeth line on the rail id. No credentials, no network.
+
+```typescript
+import { STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts';
+
+const hub = STATION_HUBS['940GZZLULVT']; // any sibling id works
+const elizabethStopId = hub && resolveArrivalsStopId(hub, 'elizabeth'); // '910GLIVST'
+```
+
+`resolveArrivalsStopId` returns `undefined` when the hub doesn't carry that line, rather than the interchange id — polling the interchange id itself returns zero arrivals from TfL. Third-party National Rail operators (Southeastern, South Western Railway, c2c, and similar) show up in the hub's topology but never return live predictions: TfL's Arrivals API only covers tube, DLR, tram, Overground, and Elizabeth line.
+
+`client.stopPoint.getNormalizedArrivals()` is `getArrivals()` plus a cleaned `destination` (falls through empty `towards` to `destinationName`, common on Elizabeth line and Overground) and `platform` (compass bound, cleaned label, `isUnknown` for TfL's literal "Platform Unknown"):
+
+```typescript
+const arrivals = await client.stopPoint.getNormalizedArrivals({
+  stopPointIds: ['940GZZLUOXC'],
+});
+arrivals[0]?.destination.name;
+arrivals[0]?.platform.label;
+```
+
+`getArrivals()` and `client.raw.*` are unchanged.
 
 ## Colours, severity, and detailed types
 
@@ -204,7 +230,7 @@ stop();
 | Module | Common work |
 |--------|-------------|
 | `client.line` | Status, detailed status, disruptions, routes, arrivals by line, static `LINE_NAMES` / `STATION_SEQUENCES` |
-| `client.stopPoint` | Search, arrivals, stop metadata |
+| `client.stopPoint` | Search, arrivals, normalised arrivals, stop metadata, static `STATION_HUBS` |
 | `client.journey` | Journey planning |
 | `client.mode` | Mode lists and mode arrivals |
 | `client.search` / `place` / `road` / `vehicle` / `occupancy` / `bikePoint` / `cabwise` / `travelTimes` | Supporting APIs |

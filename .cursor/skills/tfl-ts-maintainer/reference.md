@@ -21,8 +21,8 @@ src/
 └── *.ts                      # 14 friendly wrapper modules
 
 script/
-├── generate.ts               # Dispatcher: --only=types,raw,meta,station-sequences,jsdoc
-├── check.ts                  # Dispatcher: --only=generated,station-sequences,drift
+├── generate.ts               # Dispatcher: --only=types,raw,meta,station-sequences,station-hubs,jsdoc
+├── check.ts                  # Dispatcher: --only=generated,station-sequences,station-hubs,drift
 ├── demo.ts                   # Dispatcher: console | realtime | smoke
 ├── generatedMeta.ts          # Writes generated.meta.json
 ├── generateTypes.ts          # types + record artifact meta
@@ -30,10 +30,12 @@ script/
 ├── generateJsdoc.ts          # jsdoc/*
 ├── generateMeta.ts           # meta/* (live API)
 ├── generateStationSequences.ts
+├── generateStationHubs.ts    # meta/StationHubs.ts — interchange membership (live API)
 ├── syncSpec.ts               # Fetch live swagger
 ├── checkDrift.ts             # Snapshot vs live paths
 ├── checkGenerated.ts         # Regenerate + git diff gate
 ├── checkStationSequences.ts  # Validate committed station snapshot
+├── checkStationHubs.ts       # Validate committed hub snapshot
 └── demoSmoke.ts              # Compile + catalog checks
 ```
 
@@ -45,17 +47,21 @@ script/
 | `raw.ts`, `endpoints.ts` | `generateRawClient.ts` | Yes |
 | `jsdoc/*` | `generateJsdoc.ts` | Yes |
 | `meta/*` | `generateMeta.ts` | No (live API data) |
+| `meta/StationHubs.ts` | `generateStationHubs.ts` | No (live API data, but validated offline by `checkStationHubs.ts`) |
 | `generated.meta.json` | `generatedMeta.ts` | No (timestamps) — excluded from check |
 
 ## check internals
 
-`pnpm run check` (default: `generated` + `station-sequences`):
+`pnpm run check` (default: `generated` + `station-sequences` + `station-hubs`):
 
 1. `generated`: runs `pnpm run generate -- --only=types,raw,jsdoc` with `TFL_SKIP_GENERATED_META=1`
 2. `git diff --name-only src/generated`
 3. Ignores `src/generated/generated.meta.json`
 4. Fails if any other generated file differs from committed copy
 5. `station-sequences`: validates the committed station snapshot (no network)
+6. `station-hubs`: validates the committed hub snapshot covers every sequence station, every member resolves back to its hub, and every `lineMemberIds` value points at a real member or the hub id (no network)
+
+`generateStationHubs.ts` only keeps a hub's raw `TransportInterchange` node as `hubId`/`hubName`, not as a member — TfL's own node duplicates the union of every mode at the site (bus routes included) if left in `members`. `lineMemberIds` is filtered to values that resolve to an indexed member, which is what actually excludes bus route ids: TfL's `lineGroup` data mixes bus routes and rail/tube lines in one array with no mode marker.
 
 `pnpm run check -- --only=drift` compares path keys in the committed snapshot vs live; exits 1 if added/removed.
 

@@ -26,7 +26,8 @@ Static metadata (no network)          Live API (network required)
 client.line.LINE_NAMES                client.line.getStatus()
 client.line.LINE_INFO                 client.line.getArrivals()
 LINE_STATION_SEQUENCES                client.line.getRouteSequence()
-client.stopPoint.MODE_NAMES           client.stopPoint.getArrivals()
+STATION_HUBS                          client.stopPoint.getArrivals()
+client.stopPoint.MODE_NAMES           client.stopPoint.getNormalizedArrivals()
 client.journey.MODE_NAMES             client.journey.plan()
 severity / mode constants             client.stopPoint.search()
 ```
@@ -62,6 +63,7 @@ Works in Node.js 18+, browsers, and edge runtimes. Zero runtime dependencies.
 | Validate line ID | `id in client.line.LINE_NAMES` | No |
 | Line display name | `client.line.LINE_NAMES['central']` | No |
 | Station names, order, and branches | `LINE_STATION_SEQUENCES.central` | No |
+| Interchange siblings, which id has arrivals for a line | `STATION_HUBS`, `resolveArrivalsStopId()` | No |
 | List transport modes | `client.stopPoint.MODE_NAMES` | No |
 | Severity labels | `client.line.SEVERITY_DESCRIPTIONS` | No |
 | Current line status, exact TfL shape | `client.line.getStatus()` | Yes |
@@ -146,11 +148,10 @@ const search = await client.stopPoint.search({ query: 'Oxford Circus', modes: ['
 const stopPointId = search.matches?.[0]?.id;
 if (!stopPointId) throw new Error('Stop not found');
 
-// Stage 2: get arrivals (live API)
-const arrivals = await client.line.getArrivals({
-  lineIds: ['central'],
-  stopPointId,
-});
+// Stage 2: get arrivals, normalised (live API)
+// getNormalizedArrivals() fills a blank `towards` with destinationName —
+// TfL sends `towards: ''` for Elizabeth line and Overground predictions.
+const arrivals = await client.stopPoint.getNormalizedArrivals({ stopPointIds: [stopPointId] });
 
 const sorted = [...arrivals].sort(
   (a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0),
@@ -158,9 +159,24 @@ const sorted = [...arrivals].sort(
 
 for (const a of sorted.slice(0, 5)) {
   const mins = Math.round((a.timeToStation ?? 0) / 60);
-  console.log(`${a.lineName} to ${a.towards} in ${mins}min`);
+  console.log(`${a.lineName} to ${a.destination.name} in ${mins}min`);
 }
 ```
+
+### Interchanges: which StopPoint id actually has arrivals
+
+A tube station and its mainline rail counterpart can share one physical interchange but different StopPoint ids, each with different lines. `STATION_HUBS` resolves the right one:
+
+```typescript
+import { STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts';
+
+// Liverpool Street: tube id and rail id both resolve to the same hub
+const hub = STATION_HUBS['940GZZLULVT'];
+const elizabethStopId = hub && resolveArrivalsStopId(hub, 'elizabeth'); // '910GLIVST'
+const centralStopId = hub && resolveArrivalsStopId(hub, 'central'); // '940GZZLULVT'
+```
+
+`resolveArrivalsStopId` returns `undefined`, not the hub id, when the hub doesn't carry that line — polling the interchange id directly returns zero arrivals from TfL. Third-party National Rail operators (Southeastern, South Western Railway, c2c) show up in the hub's topology for completeness, but TfL's Arrivals API never has live predictions for them, only for tube, DLR, tram, Overground, and Elizabeth line.
 
 ## Example 2b: Nearby bus stops by GPS
 
@@ -253,6 +269,8 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Hardcoding metadata | `['tube', 'bus', 'dlr']` inline | `client.stopPoint.MODE_NAMES` |
 | Missing credentials | `new TflClient()` without env | Set `TFL_APP_KEY` |
 | Deprecated modules | `accidentStats`, `airQuality` | Avoid — marked deprecated |
+| Blank `towards` on Elizabeth/Overground | Reading `a.towards` directly | `getNormalizedArrivals()` — falls through to `destinationName` |
+| Polling a National Rail operator's id | Expecting live Southeastern/SWR predictions | TfL's Arrivals API only covers tube, DLR, tram, Overground, Elizabeth line — returns `[]` |
 
 ## Raw escape hatch
 

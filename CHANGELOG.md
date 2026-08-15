@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.7.0 — 2026-08-15
+
+### Station hubs and arrival field normalisation
+
+`STATION_HUBS` is a committed static snapshot of interchange membership: each physical station's `hubNaptanCode`, sibling StopPoint ids, and the StopPoint that actually carries arrivals for each line (`lineMemberIds`). Import it with no credentials. `resolveArrivalsStopId(hub, lineId)` picks the correct sibling for a poll — Liverpool Street Underground (`940GZZLULVT`) and rail (`910GLIVST`) resolve to one `HUBLST` entry, with Central on the tube id and Elizabeth line on the rail id. It returns `undefined` for a line the hub doesn't carry, not the interchange id itself: polling `HUBLST` directly returns zero arrivals from TfL, so falling back to it would look valid and quietly return nothing.
+
+`normalizeArrival` / `normalizeArrivals` add a cleaned `destination` (empty `towards` falls through to `destinationName`) and `platform` (`compassBound`, label, `isUnknown` for TfL's literal "Platform Unknown"). `client.stopPoint.getNormalizedArrivals()` is `getArrivals()` plus that mapper. `getArrivals()` and `client.raw.*` stay unchanged.
+
+TfL's raw StopPoint hierarchy lists a hub as one of its own members and mixes bus route numbers into the same `lineGroup` data used to build `lineMemberIds` — Waterloo's hub node mapped bus routes `1`, `11`, `n381` to bus stop ATCO codes alongside `bakerloo`, `jubilee`, and `south-western-railway`. The generator now drops the hub's own aggregate node from `members` and keeps only `lineMemberIds` entries that resolve to a real member or the hub id, so bus routes can't leak in.
+
+Third-party National Rail operators (Southeastern, South Western Railway, c2c, Greater Anglia, and similar) appear in `lineMemberIds` for topology, since they're genuinely part of a station's TfL-registered hierarchy, but TfL's Arrivals API has no live predictions for them. Polling `south-western-railway`'s member id at Waterloo, or a National Rail-only station entirely outside the TfL network (Epsom, Reigate), returns an empty array rather than an error. Only tube, DLR, tram, Overground, and Elizabeth line return live predictions.
+
+Regenerate hubs with `pnpm run generate -- --only=station-hubs`. `pnpm run check` validates the committed snapshot offline.
+
 ## 2.6.2 — 2026-08-12
 
 ### Primary key is the only required credential

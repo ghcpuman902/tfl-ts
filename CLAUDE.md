@@ -8,7 +8,7 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 
 | Layer | Source | Network? | Examples |
 |-------|--------|----------|----------|
-| **Static metadata** | Bundled at package build time | No | `LINE_STATION_SEQUENCES`, `client.line.LINE_NAMES`, `client.line.LINE_INFO`, `client.stopPoint.MODE_NAMES`, severity constants |
+| **Static metadata** | Bundled at package build time | No | `LINE_STATION_SEQUENCES`, `STATION_HUBS`, `client.line.LINE_NAMES`, `client.line.LINE_INFO`, `client.stopPoint.MODE_NAMES`, severity constants |
 | **Live API calls** | TfL REST API at runtime | Yes | `line.getStatus()`, `line.getRouteSequence()`, `stopPoint.getArrivals()`, `journey.plan()` |
 
 **Before making an API call, check whether static metadata already answers the question.** Line names, station ordering and branches, mode lists, severity descriptions, and validation maps are bundled. Import `LINE_STATION_SEQUENCES` directly when no client credentials are available.
@@ -20,7 +20,7 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Package consumers | Usage patterns, gotchas, copy-paste examples |
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.5.0 sequences + detailed status; 2.6.0 BikePoint counts; 2.6.2 Primary key only) |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.5.0 sequences + detailed status; 2.6.0 BikePoint counts; 2.7.0 station hubs + normalised arrivals) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [LLM_context.md](LLM_context.md) | Contributors | Wrapper implementation rules for this repo |
 | [.cursor/skills/tfl-ts-maintainer/SKILL.md](.cursor/skills/tfl-ts-maintainer/SKILL.md) | Maintainers | Generators, `check`, publish workflow |
@@ -51,9 +51,11 @@ await client.line.getStatus({ modes: ['tube'] });
 await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
 await client.journey.plan({ from: '940GZZLUOXC', to: '940GZZLUBND' });
 
-// Static topology: no API key or network needed for this import
-import { LINE_STATION_SEQUENCES } from 'tfl-ts';
+// Static topology: no API key or network needed for these imports
+import { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts';
 LINE_STATION_SEQUENCES.central;
+const hub = STATION_HUBS['940GZZLULVT']; // Liverpool Street, any sibling id works
+resolveArrivalsStopId(hub, 'elizabeth'); // '910GLIVST' — the id that actually carries arrivals
 
 // Raw escape hatch — every REST endpoint, uniform object params
 await client.raw.line.statusByIds({ ids: ['central'] });
@@ -76,6 +78,7 @@ List all raw endpoints: `pnpm exec tfl list`
 - **Bus stops** can be searched by 5-digit NaPTAN code (e.g. `'51800'`) via `stopPoint.search()`.
 - **Rate limits** apply — cache status data (~30–60s), avoid polling arrivals faster than every 10–15s per stop.
 - **`accidentStats` and `airQuality`** modules are deprecated.
+- **Third-party National Rail arrivals aren't live** — `STATION_HUBS` tracks operators like Southeastern and South Western Railway for topology, but TfL's Arrivals API returns an empty array (not an error) for them; only tube, DLR, tram, Overground, and Elizabeth line have live predictions.
 
 ## Library → UI examples
 

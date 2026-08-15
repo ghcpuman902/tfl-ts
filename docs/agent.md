@@ -29,6 +29,7 @@ These are available synchronously on the client instance after construction:
 | `LINE_NAMES` | `line` | Map of line ID → display name |
 | `LINE_INFO` | `line` | Full line metadata per ID |
 | `STATION_SEQUENCES` | `line` | Station IDs, names, ordered routes, and branch relationships |
+| `STATION_HUBS` | package export | Interchange membership, sibling StopPoint ids, and per-line arrivals ids |
 | `MODE_NAMES` | `line`, `stopPoint`, `journey`, `mode` | Valid transport mode strings |
 | `MODE_METADATA` | `line` | `isTflService`, `isFarePaying`, etc. |
 | `SEVERITY_DESCRIPTIONS` | `line` | All severity label strings |
@@ -50,7 +51,8 @@ Any method that returns a `Promise` hits the network. Key live endpoints:
 | `getStatus()` | `line` | Exact TfL line status response | 30–60s |
 | `getDetailedStatus()` | `line` | Friendly periods, closures, affected routes and stops | 30–60s |
 | `getRouteSequence()` | `line` | Current TfL route and branch response | 1h+ |
-| `getArrivals()` | `line`, `stopPoint`, `mode` | Countdown boards | 10–15s |
+| `getArrivals()` | `line`, `stopPoint`, `mode` | Countdown boards (raw TfL predictions) | 10–15s |
+| `getNormalizedArrivals()` | `stopPoint` | Same fetch, plus cleaned destination and platform | 10–15s |
 | `search()` | `stopPoint`, `line`, `search`, `place` | Resolve IDs from names | 1h–24h |
 | `get()` | `stopPoint`, `line` | Stop/line details | 1h+ |
 | `plan()` | `journey` | Route options | 2–5min |
@@ -93,6 +95,16 @@ client.stopPoint.STOP_POINT_TYPES;
 await client.stopPoint.search({ query: 'Oxford Circus', modes: ['tube'] });
 await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });
 await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
+await client.stopPoint.getNormalizedArrivals({ stopPointIds: ['940GZZLUOXC'] });
+
+import { STATION_HUBS, resolveArrivalsStopId, normalizeArrival } from 'tfl-ts';
+const hub = STATION_HUBS['940GZZLULVT'];
+const elizabethStop = hub && resolveArrivalsStopId(hub, 'elizabeth');
+// resolveArrivalsStopId returns undefined for a line the hub doesn't carry —
+// never the hub id itself, which returns zero arrivals when polled directly.
+// Third-party National Rail operators (southeastern, south-western-railway, …)
+// are mapped for topology but TfL has no live predictions for them; only
+// tube, DLR, tram, Overground, and Elizabeth line return live arrivals.
 
 // Nearby stops by GPS (truncate coords to ~3 decimal places in UI to avoid mobile jitter re-fetching)
 const stops = await client.stopPoint.getByGeoPoint({
