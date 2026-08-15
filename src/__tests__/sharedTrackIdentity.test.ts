@@ -241,4 +241,38 @@ describe('withSharedTrackIdentity', () => {
     expect(tagged.lineId).toBe('central');
     expect(tagged.sharedTrackIdentity).toBeUndefined();
   });
+
+  test('does not downgrade an exclusive-segment tag to ambiguous', () => {
+    const stopRow = {
+      ...prediction({
+        vehicleId: '204',
+        lineId: 'circle',
+        naptanId: '940GZZLUTWH',
+        towards: 'Edgware Road (Circle)',
+      }),
+      sharedTrackIdentity: {
+        confidence: 'exclusive-segment' as const,
+        canonicalLineId: 'circle',
+        rawLineId: 'circle',
+        rawLineIds: ['circle'],
+      },
+    };
+    const [tagged] = withSharedTrackIdentity(
+      [stopRow],
+      ['circle', 'district'],
+      [
+        stopRow,
+        prediction({
+          vehicleId: '204',
+          lineId: 'district',
+          naptanId: '940GZZLUTWH',
+          towards: 'Edgware Road (Circle)',
+        }),
+      ]
+    );
+    expect(tagged.sharedTrackIdentity).toMatchObject({
+      confidence: 'exclusive-segment',
+      canonicalLineId: 'circle',
+    });
+  });
 });

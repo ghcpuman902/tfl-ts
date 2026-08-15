@@ -195,6 +195,15 @@ export const withSharedTrackIdentity = (
     const identity = identities.get(vehicleId);
     if (!identity) return prediction;
 
+    const existing = (prediction as PredictionWithSharedTrackIdentity)
+      .sharedTrackIdentity;
+    if (
+      existing?.confidence === 'exclusive-segment' &&
+      identity.confidence !== 'exclusive-segment'
+    ) {
+      return prediction;
+    }
+
     if (identity.confidence === 'exclusive-segment' && identity.canonicalLineId) {
       return {
         ...prediction,
