@@ -171,7 +171,7 @@ const elizabethStopId = hub && resolveArrivalsStopId(hub, 'elizabeth'); // '910G
 
 `resolveArrivalsStopId` returns `undefined` when the hub doesn't carry that line, rather than the interchange id — polling the interchange id itself returns zero arrivals from TfL. Third-party National Rail operators (Southeastern, South Western Railway, c2c, and similar) show up in the hub's topology but never return live predictions: TfL's Arrivals API only covers tube, DLR, tram, Overground, and Elizabeth line.
 
-`client.stopPoint.getNormalizedArrivals()` is `getArrivals()` plus a cleaned `destination` (falls through empty `towards` to `destinationName`, common on Elizabeth line and Overground) and `platform` (compass bound, cleaned label, `isUnknown` for TfL's literal "Platform Unknown"):
+`client.stopPoint.getNormalizedArrivals()` is `getArrivals()` plus a cleaned `destination` (falls through empty or literal `"null"` `towards` to `destinationName`, common on Elizabeth line, Overground, and some bus termini) and `platform` (compass bound, cleaned label, `isUnknown` for TfL's literal "Platform Unknown"):
 
 ```typescript
 const arrivals = await client.stopPoint.getNormalizedArrivals({

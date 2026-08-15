@@ -25,6 +25,11 @@ describe('resolveArrivalDestination', () => {
       expected: { name: 'Cheshunt Rail Station', source: 'destinationName' },
     },
     {
+      name: 'falls through a literal "null" towards to destinationName',
+      input: { towards: 'null', destinationName: 'Liverpool Street, Station' },
+      expected: { name: 'Liverpool Street, Station', source: 'destinationName' },
+    },
+    {
       name: 'returns none when both are empty',
       input: { towards: '', destinationName: '' },
       expected: { source: 'none' },

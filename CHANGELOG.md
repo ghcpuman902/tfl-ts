@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.0 — 2026-08-15
+
+### Treat literal `"null"` towards as empty
+
+TfL sometimes sends `towards: "null"` on bus terminus predictions (Liverpool Street) instead of omitting the field or sending `""`. `resolveArrivalDestination` already fell through a blank `towards` to `destinationName`. A literal `"null"` or `"undefined"` now does the same, so `getNormalizedArrivals()` shows "Liverpool Street, Station" instead of the word null. `getArrivals()` and `client.raw.*` stay unchanged.
+
 ## 2.8.0 — 2026-08-15
 
 ### Shared-track arrival identity

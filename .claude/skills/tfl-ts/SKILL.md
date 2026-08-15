@@ -150,8 +150,8 @@ const stopPointId = search.matches?.[0]?.id;
 if (!stopPointId) throw new Error('Stop not found');
 
 // Stage 2: get arrivals, normalised (live API)
-// getNormalizedArrivals() fills a blank `towards` with destinationName —
-// TfL sends `towards: ''` for Elizabeth line and Overground predictions.
+// getNormalizedArrivals() fills a blank or literal "null" towards with destinationName.
+// TfL sends towards: '' on Elizabeth line / Overground, and towards: "null" on some bus termini.
 const arrivals = await client.stopPoint.getNormalizedArrivals({ stopPointIds: [stopPointId] });
 
 const sorted = [...arrivals].sort(
@@ -270,7 +270,7 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Hardcoding metadata | `['tube', 'bus', 'dlr']` inline | `client.stopPoint.MODE_NAMES` |
 | Missing credentials | `new TflClient()` without env | Set `TFL_APP_KEY` |
 | Deprecated modules | `accidentStats`, `airQuality` | Avoid — marked deprecated |
-| Blank `towards` on Elizabeth/Overground | Reading `a.towards` directly | `getNormalizedArrivals()` — falls through to `destinationName` |
+| Blank or `"null"` `towards` | Reading `a.towards` directly | `getNormalizedArrivals()` — empty and literal `"null"` fall through to `destinationName` |
 | Polling a National Rail operator's id | Expecting live Southeastern/SWR predictions | TfL's Arrivals API only covers tube, DLR, tram, Overground, Elizabeth line — returns `[]` |
 | First `lineStatuses` row | `line.lineStatuses[0]` as "the" status | `getWorstCurrentStatus(line.lineStatuses)` — TfL does not order rows, and a standing hours notice can sit at index 0 |
 | `isNow` as a clock | Hiding rows with `isNow: false` | `isNow` tracks `disruption.category === 'RealTime'`. Planned work can be in force today with `isNow: false` |

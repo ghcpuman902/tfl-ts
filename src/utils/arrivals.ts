@@ -46,15 +46,26 @@ const toCompassBound = (value: string | undefined): ArrivalCompassBound | undefi
 };
 
 /**
+ * TfL sometimes sends the literal string `"null"` (Liverpool Street bus
+ * arrivals) instead of omitting the field. Treat that as empty.
+ */
+const usableArrivalText = (value?: string): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed || /^(null|undefined)$/i.test(trimmed)) return undefined;
+  return trimmed;
+};
+
+/**
  * Prefer a non-empty `towards`, then `destinationName`.
- * TfL often sends `towards: ""` for Elizabeth line and Overground.
+ * TfL often sends `towards: ""` for Elizabeth line and Overground,
+ * and `towards: "null"` on some bus terminus predictions.
  */
 export const resolveArrivalDestination = (
   prediction: Pick<Prediction, 'towards' | 'destinationName'>
 ): NormalizedArrivalDestination => {
-  const towards = prediction.towards?.trim();
+  const towards = usableArrivalText(prediction.towards);
   if (towards) return { name: towards, source: 'towards' };
-  const destinationName = prediction.destinationName?.trim();
+  const destinationName = usableArrivalText(prediction.destinationName);
   if (destinationName) return { name: destinationName, source: 'destinationName' };
   return { source: 'none' };
 };
