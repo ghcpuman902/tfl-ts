@@ -57,4 +57,14 @@ describe('static station sequences', () => {
     visit(LINE_STATION_SEQUENCES);
     expect([...found]).toEqual([]);
   });
+
+  test('includes river-bus pier sequences on FerryPort ids', () => {
+    const rb1 = LINE_STATION_SEQUENCES.rb1;
+    expect(rb1.modeName).toBe('river-bus');
+    expect(rb1.stations.some((station) => station.id === '930GWMR')).toBe(true);
+    expect(LINE_STATION_SEQUENCES['woolwich-ferry']).toBeDefined();
+    expect(
+      (LINE_STATION_SEQUENCES as Record<string, unknown>).rb2,
+    ).toBeUndefined();
+  });
 });

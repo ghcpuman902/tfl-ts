@@ -1,7 +1,7 @@
 import { Lines } from '../src/generated/meta/Line';
 import { LINE_STATION_SEQUENCES } from '../src/generated/meta/StationSequence';
 
-const INCLUDED_MODES = new Set(['tube', 'elizabeth-line', 'dlr', 'overground', 'tram']);
+const INCLUDED_MODES = new Set(['tube', 'elizabeth-line', 'dlr', 'overground', 'tram', 'river-bus']);
 
 type Sequence = {
   lineId: string;

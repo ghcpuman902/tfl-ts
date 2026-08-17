@@ -104,7 +104,8 @@ const elizabethStop = hub && resolveArrivalsStopId(hub, 'elizabeth');
 // never the hub id itself, which returns zero arrivals when polled directly.
 // Third-party National Rail operators (southeastern, south-western-railway, …)
 // are mapped for topology but TfL has no live predictions for them; only
-// tube, DLR, tram, Overground, and Elizabeth line return live arrivals.
+// tube, DLR, tram, Overground, Elizabeth line, bus, and river-bus return live arrivals.
+// River-bus: poll NaptanFerryPort (930G…), not berths (9300…) or StopPoint/Mode/river-bus.
 
 // Nearby stops by GPS (truncate coords to ~3 decimal places in UI to avoid mobile jitter re-fetching)
 const stops = await client.stopPoint.getByGeoPoint({

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.10.0 — 2026-08-17
+
+### River bus colours, line snapshot, and pier traps
+
+Live river-bus lines are `rb1`, `rb4`, `rb6`, and `woolwich-ferry`. The static `Lines` snapshot no longer lists withdrawn `rb2` (that id 404s). `getLineColor` maps those four ids to London River Services blue (`#039BE5`, PMS 299). Withdrawn `rb2` still falls back to the default grey.
+
+`LINE_STATION_SEQUENCES` now includes river-bus pier order (FerryPort ids). River piers are **not** in `STATION_HUBS`: poll the `NaptanFerryPort` (`930G…`) for arrivals, never a berth (`9300…`). `GET /StopPoint/Mode/river-bus` returns an empty list — discover piers with `line.getStopPoints`, `stopPoint.search({ modes: ['river-bus'] })`, or `getByGeoPoint({ stoptypes: ['NaptanFerryPort'] })`. River predictions send a blank `towards`; use `getNormalizedArrivals()` / `destinationName`. Live `river-tour` lines may be none. URA river stream is still deferred.
+
 ## 2.9.0 — 2026-08-15
 
 ### Treat literal `"null"` towards as empty

@@ -1,10 +1,13 @@
+import { config } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { Lines } from '../src/generated/meta/Line';
 
+config();
+
 const OUTPUT_PATH = path.join(__dirname, '..', 'src', 'generated', 'meta', 'StationSequence.ts');
 
-const INCLUDED_MODES = new Set(['tube', 'elizabeth-line', 'dlr', 'overground', 'tram']);
+const INCLUDED_MODES = new Set(['tube', 'elizabeth-line', 'dlr', 'overground', 'tram', 'river-bus']);
 const DIRECTIONS = ['inbound', 'outbound'] as const;
 const SERVICE_TYPES = ['Regular'] as const;
 const MAX_CONCURRENCY = 4;

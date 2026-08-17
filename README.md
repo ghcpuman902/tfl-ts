@@ -146,7 +146,7 @@ Use `getStatus({ detail: true })` or `client.raw.line.*` for exact TfL field nam
 
 ## Station sequences
 
-Tube, Elizabeth line, DLR, Overground, and Tram topology for 20 lines. No credentials, no network. Identity, order, and branches only (no status or arrivals). Live topology: `client.line.getRouteSequence()`. Also on the client: `client.line.STATION_SEQUENCES`.
+Tube, Elizabeth line, DLR, Overground, Tram, and river-bus pier topology. No credentials, no network. Identity, order, and branches only (no status or arrivals). River piers are not in `STATION_HUBS` — poll the `NaptanFerryPort` id. Live topology: `client.line.getRouteSequence()`. Also on the client: `client.line.STATION_SEQUENCES`.
 
 ```typescript
 import { LINE_STATION_SEQUENCES } from 'tfl-ts';

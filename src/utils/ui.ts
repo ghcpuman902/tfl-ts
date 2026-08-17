@@ -160,6 +160,12 @@ const LINE_COLOR_HEX = {
   'suffragette': '#76B82A',
   'weaver': '#A45A2A',
   'windrush': '#EE2E24',
+
+  // River bus — London River Services blue (PMS 299)
+  'rb1': '#039BE5',
+  'rb4': '#039BE5',
+  'rb6': '#039BE5',
+  'woolwich-ferry': '#039BE5',
 } as const;
 
 /** Lines whose brand hex has poor contrast on dark backgrounds */

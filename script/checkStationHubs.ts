@@ -3,6 +3,7 @@ import { STATION_HUB_LIST, STATION_HUBS } from '../src/generated/meta/StationHub
 
 const expectedStationIds = new Set<string>();
 for (const sequence of Object.values(LINE_STATION_SEQUENCES)) {
+  if (sequence.modeName === 'river-bus') continue;
   for (const station of sequence.stations) {
     const id = station.id.trim();
     if (id) expectedStationIds.add(id);

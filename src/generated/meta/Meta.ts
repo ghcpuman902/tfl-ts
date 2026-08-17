@@ -1,5 +1,5 @@
 // Generated from TfL API Meta data
-// Generated at: 2025-08-22T11:20:41.783Z
+// Generated at: 2026-08-17T18:15:38.514Z
 
 export const Modes = [
   {
@@ -1327,22 +1327,22 @@ export const Categories = [
   {
     "category": "Facility",
     "availableKeys": [
-      "Lifts",
       "Boarding Ramp",
-      "Cash Machines",
-      "Waiting Room",
-      "Boarding Ramps",
-      "Escalators",
+      "Lifts",
       "ASDA Click and Collect",
       "Ticket Halls",
+      "Boarding Ramps",
+      "Escalators",
+      "Cash Machines",
+      "Waiting Room",
+      "Bridge",
+      "Car park",
       "Gates",
       "Toilets",
       "Euro Cash Machines",
       "Payphones",
       "Help Points",
       "WiFi",
-      "Bridge",
-      "Car park",
       "Amazon Lockers",
       "Other Facilities",
       "Left Luggage",
@@ -1416,14 +1416,7 @@ export const PlaceTypes = [
   "SpeedCam",
   "TaxiRank",
   "VariableMessageSign",
-  "Wards",
-  "WaterfreightBridge",
-  "WaterfreightDock",
-  "WaterfreightJetty",
-  "WaterfreightLock",
-  "WaterfreightOther Access Point",
-  "WaterfreightTunnel",
-  "WaterfreightWharf"
+  "Wards"
 ] as const;
 
 export const Severities = [

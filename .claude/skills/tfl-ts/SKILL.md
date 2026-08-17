@@ -177,7 +177,11 @@ const elizabethStopId = hub && resolveArrivalsStopId(hub, 'elizabeth'); // '910G
 const centralStopId = hub && resolveArrivalsStopId(hub, 'central'); // '940GZZLULVT'
 ```
 
-`resolveArrivalsStopId` returns `undefined`, not the hub id, when the hub doesn't carry that line — polling the interchange id directly returns zero arrivals from TfL. Third-party National Rail operators (Southeastern, South Western Railway, c2c) show up in the hub's topology for completeness, but TfL's Arrivals API never has live predictions for them, only for tube, DLR, tram, Overground, and Elizabeth line.
+`resolveArrivalsStopId` returns `undefined`, not the hub id, when the hub doesn't carry that line — polling the interchange id directly returns zero arrivals from TfL. Third-party National Rail operators (Southeastern, South Western Railway, c2c) show up in the hub's topology for completeness, but TfL's Arrivals API never has live predictions for them, only for tube, DLR, tram, Overground, Elizabeth line, bus, and river-bus.
+
+### River bus piers
+
+River-bus arrivals live on `NaptanFerryPort` ids (`930G…`, e.g. Westminster Pier `930GWMR`). Berths (`9300…`, `NaptanFerryBerth`) return `[]`. `GET /StopPoint/Mode/river-bus` is empty — list piers via `line.get({ modes: ['river-bus'] })` then `line.getStopPoints`, or `search({ modes: ['river-bus'] })` / `getByGeoPoint({ stoptypes: ['NaptanFerryPort'] })`. Predictions have blank `towards`; use `getNormalizedArrivals()`. Live lines are `rb1`, `rb4`, `rb6`, `woolwich-ferry`. `river-tour` may have no lines. URA river stream is deferred — REST poll like bus. `STATION_HUBS` does not cover piers; poll the port id, not a berth child.
 
 ## Example 2b: Nearby bus stops by GPS
 
@@ -270,8 +274,11 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Hardcoding metadata | `['tube', 'bus', 'dlr']` inline | `client.stopPoint.MODE_NAMES` |
 | Missing credentials | `new TflClient()` without env | Set `TFL_APP_KEY` |
 | Deprecated modules | `accidentStats`, `airQuality` | Avoid — marked deprecated |
-| Blank or `"null"` `towards` | Reading `a.towards` directly | `getNormalizedArrivals()` — empty and literal `"null"` fall through to `destinationName` |
-| Polling a National Rail operator's id | Expecting live Southeastern/SWR predictions | TfL's Arrivals API only covers tube, DLR, tram, Overground, Elizabeth line — returns `[]` |
+| Blank or `"null"` `towards` | Reading `a.towards` directly | `getNormalizedArrivals()` — empty and literal `"null"` fall through to `destinationName` (also river-bus) |
+| Polling a National Rail operator's id | Expecting live Southeastern/SWR predictions | TfL's Arrivals API only covers tube, DLR, tram, Overground, Elizabeth line, bus, and river-bus — returns `[]` |
+| River-bus berth id | Polling `9300…` / `NaptanFerryBerth` | Poll the pier `NaptanFerryPort` (`930G…`) |
+| `StopPoint/Mode/river-bus` | Using it to list piers | Empty — `line.getStopPoints`, `search({ modes: ['river-bus'] })`, or geo with `NaptanFerryPort` |
+| Live `river-tour` lines | Assuming tour routes exist | `/Line/Mode/river-tour` may return `[]` |
 | First `lineStatuses` row | `line.lineStatuses[0]` as "the" status | `getWorstCurrentStatus(line.lineStatuses)` — TfL does not order rows, and a standing hours notice can sit at index 0 |
 | `isNow` as a clock | Hiding rows with `isNow: false` | `isNow` tracks `disruption.category === 'RealTime'`. Planned work can be in force today with `isNow: false` |
 | Severity 20 as an incident | Sorting Service Closed above Severe Delays | 20 is scheduled closure (weekend W&C, end of traffic day). `sortLinesBySeverityAndOrder` ranks `closed` after incidents |

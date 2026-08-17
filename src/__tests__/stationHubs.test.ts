@@ -38,6 +38,7 @@ describe('static station hubs', () => {
   test('indexes every sequence station', () => {
     const missing: string[] = [];
     for (const sequence of Object.values(LINE_STATION_SEQUENCES)) {
+      if (sequence.modeName === 'river-bus') continue;
       for (const station of sequence.stations) {
         if (!STATION_HUBS[station.id]) missing.push(station.id);
       }

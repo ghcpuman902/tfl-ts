@@ -78,7 +78,8 @@ List all raw endpoints: `pnpm exec tfl list`
 - **Bus stops** can be searched by 5-digit NaPTAN code (e.g. `'51800'`) via `stopPoint.search()`.
 - **Rate limits** apply — cache status data (~30–60s), avoid polling arrivals faster than every 10–15s per stop.
 - **`accidentStats` and `airQuality`** modules are deprecated.
-- **Third-party National Rail arrivals aren't live** — `STATION_HUBS` tracks operators like Southeastern and South Western Railway for topology, but TfL's Arrivals API returns an empty array (not an error) for them; only tube, DLR, tram, Overground, and Elizabeth line have live predictions.
+- **Third-party National Rail arrivals aren't live** — `STATION_HUBS` tracks operators like Southeastern and South Western Railway for topology, but TfL's Arrivals API returns an empty array (not an error) for them; only tube, DLR, tram, Overground, Elizabeth line, bus, and river-bus have live predictions.
+- **River-bus arrivals are on the pier, not the berth** — poll `NaptanFerryPort` (`930G…`). Berths (`9300…`) and `StopPoint/Mode/river-bus` return empty. Piers are not in `STATION_HUBS`.
 
 ## Library → UI examples
 

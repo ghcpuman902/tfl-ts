@@ -34,8 +34,17 @@ describe('line color UI helpers', () => {
     });
   });
 
+  test('getLineColor returns River Services blue for river-bus lines', () => {
+    const river = { hex: '#039BE5', poorDarkContrast: false };
+    expect(getLineColor('rb1')).toEqual(river);
+    expect(getLineColor('rb4')).toEqual(river);
+    expect(getLineColor('rb6')).toEqual(river);
+    expect(getLineColor('woolwich-ferry')).toEqual(river);
+  });
+
   test('getLineColor falls back to default for unknown lines', () => {
     expect(getLineColor('unknown-line')).toEqual(DEFAULT_LINE_COLOR);
+    expect(getLineColor('rb2')).toEqual(DEFAULT_LINE_COLOR);
   });
 
   test('getLineCssProps returns CSS custom properties from hex', () => {

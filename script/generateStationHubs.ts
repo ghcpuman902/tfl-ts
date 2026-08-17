@@ -108,6 +108,8 @@ const collectSequenceStations = (): {
   const nameByStation = new Map<string, string>();
 
   for (const sequence of Object.values(LINE_STATION_SEQUENCES)) {
+    // River-bus piers are not hubs: poll the NaptanFerryPort id, not berth children.
+    if (sequence.modeName === 'river-bus') continue;
     for (const station of sequence.stations) {
       const id = station.id.trim();
       if (!id) continue;
