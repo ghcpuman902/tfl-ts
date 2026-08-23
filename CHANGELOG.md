@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.11.0 — 2026-08-23
+
+### Lift bus-stop Direction fields off additionalProperties
+
+`Towards` and `CompassPoint` are the documented Direction keys on `GET /StopPoint/Meta/Categories`, not first-class StopPoint fields. `normalizeStopPoint` / `normalizeStopPoints` copy them onto the stop as `towards`, `compassPoint`, and `compassBearingDegrees` (clockwise from north), and fill `smsCode` from the first-class field or bag `SmsCode`. Facility / accessibility keys stay in `additionalProperties`.
+
+`client.stopPoint.get` and `getByGeoPoint` apply this. `client.raw.stopPoint.*` is unchanged.
+
+`GET /StopPoint/{490G…}` of a cluster that sits under a rail interchange (`490G000803` at Charing Cross, `490G000565` Hammersmith Bus Station) returns the `HUB*` node, not the cluster. A standalone cluster (`490G000804`) returns itself with stand children. Arrivals on any `490G` id are an empty array — poll the `/^490\d/` children.
+
+`compassPoint` is the stop flag. Do not use Prediction `bearing` (vehicle heading 0–359) as the flag direction. When TfL cannot cleanse a painted letter it copies `->N` into `indicator` and `stopLetter`; those arrows are a compass fallback. A painted letter `W` is Stop W, not west — CompassPoint on Walthamstow Stop W is `N`.
+
+### Parse additional-property strings
+
+`parseAdditionalPropertyValue` turns a bag `value` into `null` / `boolean` / `number` / `date` / `text`. TfL still sends strings (`"true"`, `"yes"`, `""`, `"null"`, ISO, unix ms). The bag is unchanged; this is a read helper.
+
+### Bus name search expands 490G hubs
+
+`stopPoint.searchBusStops(query)` is the passenger-shaped bus search. TfL's `StopPoint/Search` often returns two boarding `490…` stops plus `490G…` area hubs (e.g. `"Trafalgar Sq"`). This method expands up to three named hubs, merges boarding hits, and keeps name matches. Google-style `"Rookery Road (Stop Y)"` pins that letter first. Five-digit SMS codes still resolve via `getBySms`.
+
+`stopPoint.search()` is unchanged. Pure helpers (`isBoardableBusStopId`, `busSearchNameMatches`, `resolveBusNameSearchHits`, …) are exported for apps that already orchestrate fetches. MCP `resolve_stop_id` with `modes: ["bus"]` uses the expanded search.
+
 ## 2.10.0 — 2026-08-17
 
 ### River bus colours, line snapshot, and pier traps

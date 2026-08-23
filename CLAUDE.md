@@ -20,7 +20,7 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Package consumers | Usage patterns, gotchas, copy-paste examples |
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.5.0 sequences + detailed status; 2.6.0 BikePoint counts; 2.7.0 station hubs + normalised arrivals) |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [LLM_context.md](LLM_context.md) | Contributors | Wrapper implementation rules for this repo |
 | [.cursor/skills/tfl-ts-maintainer/SKILL.md](.cursor/skills/tfl-ts-maintainer/SKILL.md) | Maintainers | Generators, `check`, publish workflow |
@@ -80,6 +80,7 @@ List all raw endpoints: `pnpm exec tfl list`
 - **`accidentStats` and `airQuality`** modules are deprecated.
 - **Third-party National Rail arrivals aren't live** — `STATION_HUBS` tracks operators like Southeastern and South Western Railway for topology, but TfL's Arrivals API returns an empty array (not an error) for them; only tube, DLR, tram, Overground, Elizabeth line, bus, and river-bus have live predictions.
 - **River-bus arrivals are on the pier, not the berth** — poll `NaptanFerryPort` (`930G…`). Berths (`9300…`) and `StopPoint/Mode/river-bus` return empty. Piers are not in `STATION_HUBS`.
+- **Stop compass is `CompassPoint`, not Prediction `bearing`.** `get` / `getByGeoPoint` lift `towards`, `compassPoint`, `compassBearingDegrees`, and `smsCode`. A painted stop letter `W` is not west.
 
 ## Library → UI examples
 

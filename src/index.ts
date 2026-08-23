@@ -15,12 +15,7 @@ import { Occupancy } from './occupancy';
 import { Place } from './place';
 import { TravelTimes } from './travelTimes';
 import { Realtime } from './realtime';
-import {
-  Modes,
-  ServiceTypes,
-  DisruptionCategories,
-  Severity,
-} from './generated/meta/Meta';
+import { Modes, ServiceTypes, DisruptionCategories, Severity } from './generated/meta/Meta';
 import { Lines } from './generated/meta/Line';
 import {
   TflError,
@@ -33,27 +28,36 @@ import {
 } from './errors';
 import type { TflApiErrorBody } from './errors';
 
-type ModeName = typeof Modes[number]['modeName'];
-type ServiceType = typeof ServiceTypes[number];
-type DisruptionCategory = typeof DisruptionCategories[number];
-type LineId = typeof Lines[number]['id'];
+type ModeName = (typeof Modes)[number]['modeName'];
+type ServiceType = (typeof ServiceTypes)[number];
+type DisruptionCategory = (typeof DisruptionCategories)[number];
+type LineId = (typeof Lines)[number]['id'];
 
-const modeMetadata: Record<string, {
-  isTflService: boolean;
-  isFarePaying: boolean;
-  isScheduledService: boolean;
-}> = Modes.reduce((acc, mode) => {
-  acc[mode.modeName] = {
-    isTflService: mode.isTflService,
-    isFarePaying: mode.isFarePaying,
-    isScheduledService: mode.isScheduledService,
-  };
-  return acc;
-}, {} as Record<string, {
-  isTflService: boolean;
-  isFarePaying: boolean;
-  isScheduledService: boolean;
-}>);
+const modeMetadata: Record<
+  string,
+  {
+    isTflService: boolean;
+    isFarePaying: boolean;
+    isScheduledService: boolean;
+  }
+> = Modes.reduce(
+  (acc, mode) => {
+    acc[mode.modeName] = {
+      isTflService: mode.isTflService,
+      isFarePaying: mode.isFarePaying,
+      isScheduledService: mode.isScheduledService,
+    };
+    return acc;
+  },
+  {} as Record<
+    string,
+    {
+      isTflService: boolean;
+      isFarePaying: boolean;
+      isScheduledService: boolean;
+    }
+  >
+);
 
 const buildLineIds = () => {
   const lineIds: Record<string, Record<string, string>> = {
@@ -114,8 +118,8 @@ const severityDescriptions = buildSeverityDescriptions();
 
 export type TflLineId = LineId;
 export type TflMode = keyof typeof MODES;
-export type TflServiceType = typeof SERVICE_TYPES[keyof typeof SERVICE_TYPES];
-export type TflDirection = typeof DIRECTIONS[keyof typeof DIRECTIONS];
+export type TflServiceType = (typeof SERVICE_TYPES)[keyof typeof SERVICE_TYPES];
+export type TflDirection = (typeof DIRECTIONS)[keyof typeof DIRECTIONS];
 
 export interface TflClientConfig {
   appId?: string;
@@ -277,6 +281,28 @@ export {
   parseArrivalPlatform,
   resolveArrivalDestination,
 } from './utils/arrivals';
+export { normalizeStopPoint, normalizeStopPoints, parseCompassPoint } from './utils/stopPoint';
+export type {
+  NormalizedStopPoint,
+  NormalizedStopPointFields,
+  StopPointLike,
+} from './utils/stopPoint';
+export { parseAdditionalPropertyValue } from './utils/additionalProperties';
+export type {
+  AdditionalPropertyPrecision,
+  ParsedAdditionalPropertyValue,
+} from './utils/additionalProperties';
+export {
+  busSearchNameMatches,
+  isBoardableBusStopId,
+  isSmsCodeQuery,
+  parseBusStopSearchQuery,
+  pickNamedExpandableMatches,
+  preferStopsMatchingSearch,
+  rankStopsBySearchLetter,
+  resolveBusNameSearchHits,
+} from './utils/busStopSearch';
+export type { BoardableBusStop, SearchBusStopsOptions } from './utils/busStopSearch';
 export type {
   ArrivalCompassBound,
   NormalizedArrival,
@@ -302,10 +328,7 @@ export {
   LINE_STATION_SEQUENCES,
   STATION_SEQUENCES_GENERATED_AT,
 } from './generated/meta/StationSequence';
-export type {
-  StaticLineId,
-  StaticLineStationSequence,
-} from './generated/meta/StationSequence';
+export type { StaticLineId, StaticLineStationSequence } from './generated/meta/StationSequence';
 export {
   STATION_HUBS,
   STATION_HUB_LIST,

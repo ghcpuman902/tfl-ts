@@ -94,6 +94,7 @@ client.stopPoint.STOP_POINT_TYPES;
 // Live
 await client.stopPoint.search({ query: 'Oxford Circus', modes: ['tube'] });
 await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });
+// Bus flags: towards, compassPoint, compassBearingDegrees, smsCode are lifted
 await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
 await client.stopPoint.getNormalizedArrivals({ stopPointIds: ['940GZZLUOXC'] });
 
@@ -229,6 +230,8 @@ const resolveStopId = async (name: string, modes: string[]): Promise<string> => 
 ```
 
 Stop IDs look like `'940GZZLUOXC'` (tube) or `'490003191F'` (bus). They are opaque — never guess.
+
+For bus street names, use `client.stopPoint.searchBusStops(query)` rather than taking `search({ modes: ['bus'] }).matches` as the full stand list. TfL often returns two boarding stops plus `490G…` hubs; `searchBusStops` expands the hubs.
 
 ## Error handling
 
@@ -390,7 +393,7 @@ Use these for styling status boards — they operate on data already fetched fro
 
 A line can carry several `lineStatuses`. `getWorstCurrentStatus` picks the operative row (RealTime first, then PlannedWork / Information whose validity window overlaps now). `getStatusKind` returns `incident` | `plannedWork` | `closed` | `info` | `good`. `sortLinesBySeverityAndOrder` ranks in that order, then by TfL's number inside a kind, then `LINE_ORDER`. It does not mutate the input array.
 
-`validityPeriods[].isNow` is not "affecting passengers now". It tracks `disruption.category === 'RealTime'`. London Trams can show a Part Closure in today's window with `isNow: false`. Severity 20 is scheduled closure, not an unplanned Closed (1). Pass `now: fetchedAt` into the helpers from a prerendered board so they do not call `Date.now()` in the shell. Sectioning "not running" away from disruptions is a board decision, not a library one.
+`validityPeriods[].isNow` is not "affecting passengers now". It tracks `disruption.category === 'RealTime'`. London Trams can show a Part Closure in today's window with `isNow: false`. `validityPeriods[].toDate` is the window end, not when trains resume — weekend engineering often ends at `00:29Z` (01:29 London, end of the traffic day). Overnight-split slices on one row are one possession; do not advertise the first overlapping `toDate`. Current-status helpers do not emit a resume clock. Severity 20 is scheduled closure, not an unplanned Closed (1). Pass `now: fetchedAt` into the helpers from a prerendered board so they do not call `Date.now()` in the shell. Sectioning "not running" away from disruptions is a board decision, not a library one.
 
 **Line colors:** `getLineColor()` returns hex values only (no Tailwind classes). Apply with inline styles or CSS variables — Tailwind cannot see classes inside `node_modules`.
 

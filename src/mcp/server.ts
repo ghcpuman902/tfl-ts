@@ -103,7 +103,7 @@ const TOOLS: ToolDefinition[] = [
   {
     name: 'resolve_stop_id',
     description:
-      'Search TfL for a stop name or NaPTAN code and return compact stop matches. Cached 24h. Use the returned id with get_arrivals.',
+      'Search TfL for a stop name or NaPTAN / SMS code and return compact stop matches. Cached 24h. For modes: ["bus"] this expands 490G… hubs so a street name returns boarding stops, not two raw search hits. Use the returned id with get_arrivals.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -478,22 +478,44 @@ export class TflMcpServer {
       const modes = optionalStringArray(input, 'modes');
       const limit = optionalLimit(input, 5, 10);
       const cacheKey = `stop:${normalize(query)}:${(modes ?? []).sort().join(',')}`;
-      const live = await this.runLive(cacheKey, CACHE_TTLS.stopSearch, async () =>
-        this.getClient().stopPoint.search({ query, modes }),
-      );
+      const live = await this.runLive(cacheKey, CACHE_TTLS.stopSearch, async () => {
+        const busOnly = modes?.length === 1 && modes[0]?.toLowerCase() === 'bus';
+        if (busOnly) {
+          const stops = await this.getClient().stopPoint.searchBusStops({
+            query,
+            maxResults: limit,
+          });
+          return {
+            matches: stops.map((stop) => ({
+              id: stop.id,
+              name: stop.name,
+              modes: ['bus'],
+              lat: stop.lat,
+              lon: stop.lon,
+              stopLetter: stop.stopLetter,
+            })),
+          };
+        }
+        return this.getClient().stopPoint.search({ query, modes });
+      });
       const rawMatches =
         isRecord(live.data) && Array.isArray(live.data.matches) ? live.data.matches : [];
       const matches = rawMatches.slice(0, limit).map((match) => {
         if (!isRecord(match)) {
           return { id: '', name: '' };
         }
+        const record = match as Record<string, unknown>;
         return {
-          id: typeof match.id === 'string' ? match.id : '',
-          name: typeof match.name === 'string' ? match.name : '',
-          modes: Array.isArray(match.modes) ? match.modes.filter((item) => typeof item === 'string') : [],
-          lat: typeof match.lat === 'number' ? match.lat : undefined,
-          lon: typeof match.lon === 'number' ? match.lon : undefined,
-          zone: typeof match.zone === 'string' ? match.zone : undefined,
+          id: typeof record.id === 'string' ? record.id : '',
+          name: typeof record.name === 'string' ? record.name : '',
+          modes: Array.isArray(record.modes)
+            ? record.modes.filter((item): item is string => typeof item === 'string')
+            : [],
+          lat: typeof record.lat === 'number' ? record.lat : undefined,
+          lon: typeof record.lon === 'number' ? record.lon : undefined,
+          zone: typeof record.zone === 'string' ? record.zone : undefined,
+          stopLetter:
+            typeof record.stopLetter === 'string' ? record.stopLetter : undefined,
         };
       });
 

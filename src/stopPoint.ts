@@ -16,6 +16,26 @@ import {
 import { RawClient } from './generated/raw';
 import { BatchRequest } from './utils/batchRequest';
 import { normalizeArrivals, type NormalizedArrival } from './utils/arrivals';
+import {
+  DEFAULT_BUS_SEARCH_HUB_LIMIT,
+  DEFAULT_BUS_SEARCH_HUB_RADIUS_METERS,
+  DEFAULT_BUS_SEARCH_LIMIT,
+  DEFAULT_BUS_SEARCH_STOPS_PER_HUB,
+  isBoardableBusStopId,
+  isBusStop,
+  isSmsCodeQuery,
+  mapBoardableStopsFromGeoResponse,
+  mapBusStopFromSearchMatch,
+  mapBusStopFromStopPoint,
+  mergeBusStopDetail,
+  parseBusStopSearchQuery,
+  pickNamedExpandableMatches,
+  resolveBusNameSearchHits,
+  type BoardableBusStop,
+  type BusStopPointLike,
+  type SearchBusStopsOptions,
+} from './utils/busStopSearch';
+import { normalizeStopPoint, type NormalizedStopPoint } from './utils/stopPoint';
 import type {
   LineIdInput,
   ModeInput,
@@ -616,7 +636,10 @@ export class StopPoint {
   }
 
   /**
-   * Gets a list of StopPoints corresponding to the given list of stop ids
+   * Gets a list of StopPoints corresponding to the given list of stop ids.
+   * Lifts `towards`, `compassPoint`, `compassBearingDegrees`, and `smsCode`
+   * from additionalProperties (Direction / SMS). Facility keys stay in the bag.
+   * `client.raw.stopPoint.get` is the unlifted payload.
    * @param options - Query options for stop points
    * @returns Promise resolving to an array of stop point information
    * @example
@@ -626,7 +649,7 @@ export class StopPoint {
    * // Get stop points by mode
    * const tubeStops = await client.stopPoint.get({ modes: ['tube'] });
    */
-  async get(options: BaseStopPointQuery): Promise<TflApiPresentationEntitiesStopPoint[]>;
+  async get(options: BaseStopPointQuery): Promise<NormalizedStopPoint[]>;
   /**
    * Gets a single StopPoint by ID
    * @param id - Single stop point ID
@@ -634,7 +657,7 @@ export class StopPoint {
    * @example
    * const stop = await client.stopPoint.get('940GZZLUOXC');
    */
-  async get(id: string): Promise<TflApiPresentationEntitiesStopPoint>;
+  async get(id: string): Promise<NormalizedStopPoint>;
   /**
    * Gets multiple StopPoints by array of IDs
    * @param ids - Array of stop point IDs
@@ -642,14 +665,15 @@ export class StopPoint {
    * @example
    * const stops = await client.stopPoint.get(['940GZZLUOXC', '940GZZLUVIC']);
    */
-  async get(ids: string[]): Promise<TflApiPresentationEntitiesStopPoint[]>;
-  async get(input: BaseStopPointQuery | string | string[]): Promise<TflApiPresentationEntitiesStopPoint | TflApiPresentationEntitiesStopPoint[]> {
+  async get(ids: string[]): Promise<NormalizedStopPoint[]>;
+  async get(input: BaseStopPointQuery | string | string[]): Promise<NormalizedStopPoint | NormalizedStopPoint[]> {
     // Handle single ID
     if (typeof input === 'string') {
-      return this.batchRequest.processBatch(
+      const stops = await this.batchRequest.processBatch(
         [input],
         async (chunk) => this.raw.stopPoint.get({ ids: chunk }).then(response => [response[0]])
       );
+      return stops.map(normalizeStopPoint);
     }
 
     // Handle array of IDs
@@ -657,10 +681,11 @@ export class StopPoint {
       if (!input.length) {
         throw new Error('Stop point ID(s) are required');
       }
-      return this.batchRequest.processBatch(
+      const stops = await this.batchRequest.processBatch(
         input,
         async (chunk) => this.raw.stopPoint.get({ ids: chunk })
       );
+      return stops.map(normalizeStopPoint);
     }
 
     // Handle options object (original behavior)
@@ -669,10 +694,11 @@ export class StopPoint {
       throw new Error('Stop point ID(s) are required');
     }
 
-    return this.batchRequest.processBatch(
+    const stops = await this.batchRequest.processBatch(
       stopPointIds,
       async (chunk) => this.raw.stopPoint.get({ ids: chunk, keepTflTypes: input.keepTflTypes })
     );
+    return stops.map(normalizeStopPoint);
   }
 
   /**
@@ -988,7 +1014,8 @@ export class StopPoint {
   }
 
   /**
-   * Gets a list of StopPoints within radius by the specified criteria
+   * Gets a list of StopPoints within radius by the specified criteria.
+   * Each hit is passed through {@link normalizeStopPoint} (towards / compass / smsCode).
    * @param options - Query options for geo location search
    * @returns Promise resolving to stop points response
    * @example
@@ -1014,7 +1041,7 @@ export class StopPoint {
 
     const defaultBusStopTypes = this.STOP_POINT_TYPES.filter((type) => type.includes('Bus'));
 
-    return this.raw.stopPoint.getByGeoPoint({
+    const response = await this.raw.stopPoint.getByGeoPoint({
       lat,
       lon,
       radius,
@@ -1025,6 +1052,11 @@ export class StopPoint {
       stopTypes: stoptypes ?? defaultBusStopTypes,
       keepTflTypes,
     });
+
+    return {
+      ...response,
+      stopPoints: (response.stopPoints ?? []).map(normalizeStopPoint),
+    };
   }
 
   /**
@@ -1083,6 +1115,120 @@ export class StopPoint {
       includeHubs,
       keepTflTypes,
     }) as Promise<ExtendedSearchResponse>;
+  }
+
+  /**
+   * Search boarding bus stops by street name, Google-style
+   * `"Rookery Road (Stop Y)"`, or a 5-digit SMS code.
+   *
+   * {@link search} with `modes: ['bus']` often returns two boarding `490…`
+   * stops plus `490G…` area hubs. This expands the named hubs and keeps
+   * name matches — the list a passenger expects for `"Trafalgar Sq"`.
+   * {@link search} is unchanged (raw TfL matches, including hubs).
+   *
+   * @example
+   * const stops = await client.stopPoint.searchBusStops('Trafalgar Sq');
+   * const stops = await client.stopPoint.searchBusStops({
+   *   query: 'Rookery Road (Stop Y)',
+   *   maxResults: 12,
+   * });
+   */
+  async searchBusStops(
+    query: string,
+    options?: Omit<SearchBusStopsOptions, 'query'>,
+  ): Promise<BoardableBusStop[]>;
+  async searchBusStops(options: SearchBusStopsOptions): Promise<BoardableBusStop[]>;
+  async searchBusStops(
+    queryOrOptions: string | SearchBusStopsOptions,
+    options?: Omit<SearchBusStopsOptions, 'query'>,
+  ): Promise<BoardableBusStop[]> {
+    const resolved: SearchBusStopsOptions =
+      typeof queryOrOptions === 'string'
+        ? { query: queryOrOptions, ...options }
+        : queryOrOptions;
+    const trimmed = resolved.query.trim();
+    const maxResults = resolved.maxResults ?? DEFAULT_BUS_SEARCH_LIMIT;
+    const maxHubs = resolved.maxHubs ?? DEFAULT_BUS_SEARCH_HUB_LIMIT;
+    const hubRadius =
+      resolved.hubRadius ?? DEFAULT_BUS_SEARCH_HUB_RADIUS_METERS;
+
+    if (isSmsCodeQuery(trimmed)) {
+      const smsResult = await this.getBySms(trimmed);
+      const mapped = mapBusStopFromStopPoint(smsResult as BusStopPointLike);
+      return mapped ? [mapped] : [];
+    }
+
+    if (trimmed.length < 2) {
+      throw new Error('Enter at least 2 characters, or a 5-digit SMS code.');
+    }
+
+    const parsed = parseBusStopSearchQuery(trimmed);
+    const response = await this.search({
+      query: parsed.query,
+      modes: ['bus'],
+      maxResults,
+    });
+    const matches = (response.matches ?? []).filter(
+      (match) => match.id && isBusStop(match.modes),
+    );
+
+    const boardable = matches
+      .filter((match) => match.id && isBoardableBusStopId(match.id))
+      .map(mapBusStopFromSearchMatch)
+      .filter((stop): stop is BoardableBusStop => stop !== null);
+
+    const hubs = pickNamedExpandableMatches(matches, parsed.query, maxHubs);
+    const nearbyGroups =
+      hubs.length === 0
+        ? []
+        : await Promise.all(
+            hubs.map(async (hub) => {
+              const nearby = await this.getByGeoPoint({
+                lat: hub.lat!,
+                lon: hub.lon!,
+                radius: hubRadius,
+                modes: ['bus'],
+                returnLines: true,
+              });
+              return mapBoardableStopsFromGeoResponse(
+                nearby.stopPoints ?? [],
+                DEFAULT_BUS_SEARCH_STOPS_PER_HUB,
+              );
+            }),
+          );
+
+    const enriched =
+      boardable.length > 0 && hubs.length === 0
+        ? await this.enrichBoardableBusStops(boardable.slice(0, maxResults))
+        : boardable;
+
+    return resolveBusNameSearchHits(
+      enriched,
+      nearbyGroups,
+      parsed.query,
+      parsed.stopLetter,
+      [],
+      maxResults,
+    );
+  }
+
+  private async enrichBoardableBusStops(
+    stops: BoardableBusStop[],
+  ): Promise<BoardableBusStop[]> {
+    if (stops.length === 0) return stops;
+    try {
+      const details = await this.get(stops.map((stop) => stop.id));
+      const list = Array.isArray(details) ? details : [details];
+      const byId = new Map(
+        list
+          .map(mapBusStopFromStopPoint)
+          .filter((stop): stop is BoardableBusStop => stop !== null)
+          .map((stop) => [stop.id, stop] as const),
+      );
+      return stops.map((stop) => mergeBusStopDetail(stop, byId.get(stop.id)));
+    } catch {
+      return stops;
+    }
   }
 
   /**

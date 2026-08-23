@@ -67,6 +67,8 @@ const { matches } = await client.stopPoint.search({
   query: 'Oxford Circus',
   modes: ['tube'],
 });
+
+const busStops = await client.stopPoint.searchBusStops('Trafalgar Sq');
 ```
 
 ### Next.js
@@ -123,6 +125,7 @@ Tools: `get_supported_modes`, `resolve_line_id`, `resolve_stop_id`, `get_line_st
 - Roundel trademark: placeholder unless the consumer opts in.
 - A line can carry several `lineStatuses`. Do not read `[0]`. Use `getWorstCurrentStatus(line.lineStatuses)` for the operative row.
 - `validityPeriods[].isNow` follows `disruption.category === 'RealTime'`. It is not a clock check. Planned engineering can be in force today with `isNow: false`.
+- `validityPeriods[].toDate` is the window end, not when trains resume. Weekend engineering often ends at `00:29Z` (01:29 London, end of the traffic day). Overnight-split slices on one row are one possession; do not treat the first overlapping `toDate` as the next train.
 - Severity 20 is scheduled closure (Waterloo & City weekends, end of traffic day), not an unplanned Closed (1). `sortLinesBySeverityAndOrder` ranks it after incidents.
 - Circle / H&C / Met `lineId` flips along shared track. Use `withSharedTrackIdentity`. Do not rewrite raw `lineId`.
 
@@ -182,6 +185,15 @@ arrivals[0]?.platform.label;
 ```
 
 `getArrivals()` and `client.raw.*` are unchanged.
+
+`client.stopPoint.get` and `getByGeoPoint` lift Direction additional properties onto the stop: `towards`, `compassPoint`, and `compassBearingDegrees`. `smsCode` is filled from the first-class field or bag `SmsCode`. Facility keys stay in `additionalProperties` as TfL strings. `parseAdditionalPropertyValue` turns a bag `value` into `null` / boolean / number / date / text (`"yes"`, `"null"`, unix ms `InstallDate`). `client.raw.stopPoint.*` is unlifted. Do not use Prediction `bearing` (vehicle heading) as the stop flag; a painted `stopLetter` of `W` is Stop W, not west.
+
+```typescript
+const [stop] = await client.stopPoint.get({ stopPointIds: ['490013766E'] });
+stop.towards; // 'Aldwych'
+stop.compassPoint; // 'E'
+stop.compassBearingDegrees; // 90
+```
 
 On Circle / Hammersmith & City / Metropolitan shared track, TfL assigns `lineId` per station, not per train. The same `vehicleId` can be `circle` at Victoria and `hammersmith-city` at Liverpool Street. `withSharedTrackIdentity(stopRows, lineIds, networkArrivals)` adds `sharedTrackIdentity` (`canonicalLineId` from an exclusive-segment hit, or `ambiguous` + `rawLineIds`). It does not rewrite raw `lineId`. `line.getArrivals({ lineIds })` with no `stopPointId` is the network-wide poll that evidence needs.
 

@@ -30,6 +30,7 @@ STATION_HUBS                          client.stopPoint.getArrivals()
 client.stopPoint.MODE_NAMES           client.stopPoint.getNormalizedArrivals()
 client.journey.MODE_NAMES             client.journey.plan()
 severity / mode constants             client.stopPoint.search()
+                                      client.stopPoint.searchBusStops()
 ```
 
 **Always check static metadata first.** If you only need line names, station order and branches, mode lists, or ID validation, do not call the API. Import `LINE_STATION_SEQUENCES` directly when no configured client is available.
@@ -72,6 +73,7 @@ Works in Node.js 18+, browsers, and edge runtimes. Zero runtime dependencies.
 | Live arrivals | `client.stopPoint.getArrivals()` | Yes |
 | Journey options | `client.journey.plan()` | Yes |
 | Resolve stop by name | `client.stopPoint.search()` | Yes |
+| Resolve bus stops by street name | `client.stopPoint.searchBusStops()` | Yes |
 
 ## Example 1: Tube line status board
 
@@ -203,8 +205,25 @@ const stops = await client.stopPoint.getByGeoPoint({
 });
 
 for (const stop of stops.stopPoints ?? []) {
-  console.log(stop.commonName, stop.id);
+  // towards / compassPoint are lifted from additionalProperties Direction keys
+  console.log(stop.commonName, stop.id, stop.towards, stop.compassPoint);
 }
+```
+
+## Example 2c: Bus stops by street name
+
+`search({ modes: ['bus'] })` is raw TfL: a few boarding `490…` hits plus `490G…` hubs. `searchBusStops` expands those hubs and keeps name matches.
+
+```typescript
+import TflClient from 'tfl-ts';
+
+const client = new TflClient();
+
+const stops = await client.stopPoint.searchBusStops('Trafalgar Sq');
+// Charing Cross E/F plus Whitehall, Northumberland Avenue, Trafalgar Square stands…
+
+const pinned = await client.stopPoint.searchBusStops('Rookery Road (Stop Y)');
+// Stop Y first, then the other stands on that street
 ```
 
 ## Example 3: Journey planning
@@ -281,8 +300,13 @@ const arrivals = await client.stopPoint.getArrivals({ stopPointIds: [stopId] });
 | Live `river-tour` lines | Assuming tour routes exist | `/Line/Mode/river-tour` may return `[]` |
 | First `lineStatuses` row | `line.lineStatuses[0]` as "the" status | `getWorstCurrentStatus(line.lineStatuses)` — TfL does not order rows, and a standing hours notice can sit at index 0 |
 | `isNow` as a clock | Hiding rows with `isNow: false` | `isNow` tracks `disruption.category === 'RealTime'`. Planned work can be in force today with `isNow: false` |
+| `toDate` as next train | Painting "until 01:29" from the first overlapping `toDate` | Window end, often traffic-day close (`00:29Z` / 01:29 London), not when trains resume. Overnight-split slices on one row are one possession. `getCurrentLineStatuses` does not emit a resume clock |
 | Severity 20 as an incident | Sorting Service Closed above Severe Delays | 20 is scheduled closure (weekend W&C, end of traffic day). `sortLinesBySeverityAndOrder` ranks `closed` after incidents |
 | Circle / H&C / Met `lineId` flips on shared track | Trusting `lineId` at Liverpool Street / King's Cross | `withSharedTrackIdentity(stopRows, lineIds, networkArrivals)` — exclusive-segment → `canonicalLineId`; 2+ raw lines with no exclusive hit → `ambiguous` + `rawLineIds`; do not invent a line |
+| GET `490G…` under an interchange | Expecting the cluster with stand children | Clusters that sit under `HUBCHX` / `HUBHMS` remap to the interchange. Standalone clusters (`490G000804`) keep their id and lettered children. Arrivals on any `490G` are `[]` — poll `/^490\d/` stands |
+| Stop compass vs vehicle bearing | `arrival.bearing` as the flag direction | `stop.compassPoint` / `compassBearingDegrees` from `normalizeStopPoint` (applied by `get` / `getByGeoPoint`). Prediction `bearing` is the vehicle 0–359 |
+| Painted letter `W` as west | Parsing `stopLetter` `W` as compass | CompassPoint additional property, or a `->W` indicator. `W` is often Stop W (Walthamstow Stop W faces north) |
+| additionalProperties as typed JSON | Assuming `value` is boolean / Date | Bag values are strings. `parseAdditionalPropertyValue(prop.value)` yields `null` / boolean / number / date / text. `"null"`, `"yes"`, unix-ms dates |
 
 ## Raw escape hatch
 
