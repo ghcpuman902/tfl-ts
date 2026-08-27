@@ -488,6 +488,19 @@ Tools return compact JSON: a plain-text `summary` plus structured fields (`lines
 
 Full setup, TTLs, and security notes: [mcp.md](./mcp.md). Release notes: [CHANGELOG.md](../CHANGELOG.md).
 
+## Offline doc lookup (`tfl docs`)
+
+This entire reference — and every other file linked from this page — is bundled in the npm package and readable from the CLI without repo access or a network call:
+
+```bash
+npx tfl-ts docs ls                 # every bundled doc, with audience
+npx tfl-ts docs cat docs/agent.md  # print this file
+npx tfl-ts docs find caching       # find the right doc by keyword
+npx tfl-ts docs grep -i STATION_HUBS
+```
+
+Use this when your context has been compacted mid-session and you no longer have the conventions above loaded — it is faster and more reliable than re-deriving them from raw TfL responses.
+
 ## Further reading
 
 - [examples/README.md](../examples/README.md) — library → UI index (tube + bus)

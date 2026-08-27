@@ -15,15 +15,19 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 
 ## Where to read next
 
+This file is also readable offline once the package is installed, without repo access: `npx tfl-ts docs cat CLAUDE.md`. Run `npx tfl-ts docs ls` for everything below, `docs find <query>` to locate the right one, and `docs grep <pattern>` to search all of them at once — useful when your context has been compacted and you no longer remember which file had the answer.
+
 | File | Audience | Purpose |
 |------|----------|---------|
+| [AGENTS.md](AGENTS.md) | Any agent/tool that looks for `AGENTS.md` specifically | Pointer to this file |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Package consumers | Usage patterns, gotchas, copy-paste examples |
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.12.0 `tfl docs` CLI; 2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [LLM_context.md](LLM_context.md) | Contributors | Wrapper implementation rules for this repo |
 | [.cursor/skills/tfl-ts-maintainer/SKILL.md](.cursor/skills/tfl-ts-maintainer/SKILL.md) | Maintainers | Generators, `check`, publish workflow |
+| [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) | Maintainers | Why `tfl docs` and `AGENTS.md` exist |
 
 ## Install and credentials
 
@@ -62,6 +66,8 @@ await client.raw.line.statusByIds({ ids: ['central'] });
 ```
 
 List all raw endpoints: `pnpm exec tfl list`
+
+Read any doc in this table offline: `pnpm exec tfl docs cat <id>` (e.g. `docs/mcp.md`), or search across all of them with `pnpm exec tfl docs find <query>` / `docs grep <pattern>`.
 
 ## Rules for agents working in this repo
 
