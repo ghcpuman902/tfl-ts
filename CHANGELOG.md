@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0 — 2026-08-27
+
+### `tfl docs` — offline lookup for tfl-ts's own agent documentation
+
+`npx tfl-ts docs ls|cat|find|grep` reads the same Markdown files already shipped in the npm tarball (`CLAUDE.md`, `AGENTS.md`, `docs/agent.md`, `docs/mcp.md`, `docs/REALTIME.md`, `docs/MIGRATION-v2.md`, `examples/README.md`, `.claude/skills/tfl-ts/SKILL.md`, `ERROR.md`, `CHANGELOG.md`) without a repo checkout or network access. `ls` lists everything with its audience, `cat <id>` prints one file, `find <query>` ranks the most relevant doc, and `grep [-i] <pattern>` full-text searches across all of them. This is for agents that have lost tfl-ts's conventions from a compacted context window and need to re-fetch them from a shell — see [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) for the reasoning (adapted from reading [vercel-labs/vgpu](https://github.com/vercel-labs/vgpu)'s `vgpu docs` command).
+
+Added `AGENTS.md` at the repo root — a short pointer to `CLAUDE.md` — for agents/tools that look for that filename specifically.
+
+Fixed the CLI's argument dispatch: `tfl <command>` no longer routes through `util.parseArgs`'s strict option validation, which previously threw `Unknown option '--ids'` for exactly the documented usage (`tfl raw line.get --ids central`, and any other `raw` call with flags). Each subcommand now parses its own arguments; `tfl list --tag <tag>` is unaffected.
+
 ## 2.11.0 — 2026-08-23
 
 ### Lift bus-stop Direction fields off additionalProperties
