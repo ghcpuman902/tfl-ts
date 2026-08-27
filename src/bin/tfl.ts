@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { parseArgs } from 'util';
 import TflClient from '../index';
 import { ENDPOINTS } from '../generated/endpoints';
 import { startTflMcpServer } from '../mcp/server';
+import { runDocsCommand } from './docs';
 
 const printHelp = (): void => {
   console.log(`tfl-ts CLI
@@ -10,6 +10,7 @@ const printHelp = (): void => {
 Usage:
   tfl raw <tag>.<method> [--key value ...]
   tfl list [--tag <tag>]
+  tfl docs <ls|cat|find|grep> [args]
   tfl smoke
   tfl mcp
 
@@ -17,7 +18,10 @@ Examples:
   tfl raw line.get --ids central
   tfl raw stopPoint.arrivals --id 940GZZLUOXC
   tfl list --tag line
+  tfl docs cat CLAUDE.md
   tfl mcp
+
+Run "tfl docs help" for offline agent-documentation lookup.
 `);
 };
 
@@ -91,30 +95,41 @@ const runSmoke = async (): Promise<void> => {
   console.log('Smoke checks passed.');
 };
 
-const main = async (): Promise<void> => {
-  const { positionals, values } = parseArgs({
-    args: process.argv.slice(2),
-    allowPositionals: true,
-    options: {
-      tag: { type: 'string' },
-      help: { type: 'boolean', short: 'h' },
-    },
-  });
+const findFlagValue = (argv: string[], flag: string): string | undefined => {
+  const index = argv.indexOf(flag);
+  if (index === -1) {
+    return undefined;
+  }
+  return argv[index + 1];
+};
 
-  if (values.help) {
+// Deliberately avoids Node's util.parseArgs for dispatch: its default strict mode
+// rejects any `--flag` it wasn't told about ahead of time, which breaks `raw`'s
+// whole point (forwarding arbitrary `--key value` pairs straight to any of the 84
+// generated raw operations). Only the subcommand name is a fixed positional; every
+// flag after it is interpreted by that subcommand's own parsing.
+const main = async (): Promise<void> => {
+  const argv = process.argv.slice(2);
+
+  if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
     printHelp();
     return;
   }
 
-  const command = positionals[0];
+  const [command, ...rest] = argv;
 
   if (command === 'list') {
-    listEndpoints(values.tag);
+    listEndpoints(findFlagValue(rest, '--tag'));
     return;
   }
 
   if (command === 'smoke') {
     await runSmoke();
+    return;
+  }
+
+  if (command === 'docs') {
+    runDocsCommand(rest);
     return;
   }
 
@@ -124,12 +139,12 @@ const main = async (): Promise<void> => {
   }
 
   if (command === 'raw') {
-    const target = positionals[1];
+    const target = rest[0];
     if (!target) {
       throw new Error('Missing raw target. Example: tfl raw line.get --ids central');
     }
 
-    await runRaw(target, parseCliArgs(positionals.slice(2)));
+    await runRaw(target, parseCliArgs(rest.slice(1)));
     return;
   }
 
