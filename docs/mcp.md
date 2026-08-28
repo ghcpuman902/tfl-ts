@@ -53,7 +53,9 @@ The server intentionally exposes a small tool set instead of all raw TfL endpoin
 { "operation": "grep", "pattern": "STATION_HUBS", "caseInsensitive": true }
 ```
 
-Unknown ids, empty queries, no matches, and invalid pagination return a tool error (`isError: true`) whose text is JSON `{ "code", "message", "fix" }` with codes such as `TFL_DOCS_UNKNOWN_ID`, `TFL_DOCS_NOT_FOUND`, and `TFL_DOCS_INVALID_ARGUMENT`. Do not request the whole of `ERROR.md` in one read; follow `nextOffset`.
+Unknown ids, empty queries, no matches, and invalid pagination return a tool error (`isError: true`) whose text is JSON `{ "code", "message", "fix" }` with codes such as `TFL_DOCS_UNKNOWN_ID`, `TFL_DOCS_NOT_FOUND`, and `TFL_DOCS_INVALID_ARGUMENT`. Live tools use the same JSON shape (`TFL_MCP_INVALID_ARGUMENT`, `TFL_MCP_MISSING_APP_KEY`, `TFL_MCP_UPSTREAM`). The `message` field keeps the previous English sentence; parse the JSON rather than matching the raw text as a plain string. Do not request the whole of `ERROR.md` in one read; follow `nextOffset`.
+
+`get_line_status` requires `lineIds` or `modes` in its schema (`anyOf`). An empty argument object is invalid.
 
 ## Response shape (agent-friendly)
 

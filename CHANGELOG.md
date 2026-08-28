@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.14.0 — 2026-08-28
+
+### Docs catalogue root, CLI exit codes, MCP tool errors
+
+`tfl docs cat CLAUDE.md` looked for `dist/CLAUDE.md` after compile because `packageRoot` was `join(__dirname, '..')`. In source that is the repo root; in `dist/cjs/docs.js` it is `dist/`. Jest imported `src/docs.ts`, so the suite stayed green while `npx tfl-ts docs cat` and MCP `docs` `read` failed with "reinstall". The reader now walks up to the `package.json` whose `name` is `tfl-ts`, skipping `dist/cjs` and `dist/esm` type-only manifests. A compiled-binary test runs `dist/cjs/bin/tfl.js docs cat CLAUDE.md`.
+
+`tfl` still exits 0 on success and non-zero on failure. The non-zero values are now specific: 1 error (including docs find/grep misses), 2 usage, 3 missing `TFL_APP_KEY`, 4 missing shipped file. `tfl raw line.notAMethod` is resolved against `ENDPOINTS` before constructing `TflClient`, so a typo no longer demands a key. Scripts that only check `exit !== 0` are unchanged. Scripts that compared `exit === 1` for every failure need to treat 2–4 as failure too.
+
+MCP `serverInfo.version` is `1.3.0`. Live-tool errors use the same `{ code, message, fix }` JSON as `docs`. `get_arrivals` with a missing `stopPointId` still says `"stopPointId" must be a non-empty string.` in `message`. `get_line_status` advertises `anyOf: [{ required: ["lineIds"] }, { required: ["modes"] }]`. Agents that treated live error text as a non-JSON string should `JSON.parse` it.
+
 ## 2.13.1 — 2026-08-28
 
 ### Native Node ESM can load the package

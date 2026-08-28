@@ -17,6 +17,20 @@ The client provides several specialized error classes:
 - **`TflTimeoutError`** - Request timeout errors
 - **`TflConfigError`** - Configuration issues (missing credentials, etc.)
 
+### CLI exit codes (`tfl`)
+
+`tfl` still uses exit 0 for success and a non-zero code for every failure, so `if [ $? -ne 0 ]` does not change. From 2.14.0 the non-zero values are specific:
+
+| Code | Meaning | Examples |
+|------|---------|----------|
+| 0 | Success | `tfl docs ls`, `tfl list` |
+| 1 | Command failed | `tfl docs find` / `grep` with no matches, live API errors |
+| 2 | Usage | unknown command, unknown doc id, unknown `tfl raw` operation, missing args |
+| 3 | Missing credentials | `TflConfigError` / no `TFL_APP_KEY` |
+| 4 | Missing shipped file | a `DOC_MANIFEST` path is listed but absent on disk |
+
+`tfl raw line.notAMethod` exits 2 without requiring a key. A valid operation without `TFL_APP_KEY` exits 3.
+
 ### Basic Error Handling
 
 ```typescript

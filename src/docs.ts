@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 
 export interface DocEntry {
   /** Stable identifier used on the command line, e.g. `tfl docs cat CLAUDE.md`. */
@@ -153,7 +153,42 @@ export const setDocsPackageRootForTests = (root: string | undefined): void => {
   packageRootOverride = root;
 };
 
-const packageRoot = (): string => packageRootOverride ?? join(__dirname, '..');
+const PACKAGE_NAME = 'tfl-ts';
+
+/**
+ * Walk from a compiled or source file up to the directory whose package.json
+ * `name` is `tfl-ts`. `join(__dirname, '..')` is `src/` in tests and `dist/`
+ * after `tsc`, so it cannot be the catalogue root. Nested `dist/cjs/package.json`
+ * and `dist/esm/package.json` only set `"type"` and must be skipped.
+ */
+export const resolveDocsPackageRoot = (fromDir: string): string => {
+  let dir = fromDir;
+  for (;;) {
+    const pkgPath = join(dir, 'package.json');
+    if (existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { name?: string };
+        if (pkg.name === PACKAGE_NAME) {
+          return dir;
+        }
+      } catch {
+        // Keep walking; a truncated package.json is not the catalogue root.
+      }
+    }
+
+    const parent = dirname(dir);
+    if (parent === dir) {
+      throw new DocsError(
+        'TFL_DOCS_MISSING_FILE',
+        `Could not find the tfl-ts package root starting from ${fromDir}.`,
+        'Reinstall tfl-ts. Docs ship next to package.json (CLAUDE.md), not under dist/.',
+      );
+    }
+    dir = parent;
+  }
+};
+
+const packageRoot = (): string => packageRootOverride ?? resolveDocsPackageRoot(__dirname);
 
 const knownIds = (): string => DOC_MANIFEST.map((entry) => entry.id).join(', ');
 
@@ -184,7 +219,7 @@ export const readDoc = (id: string): string => {
     throw new DocsError(
       'TFL_DOCS_MISSING_FILE',
       `Doc "${entry.id}" is listed in the manifest but missing on disk at ${filePath}.`,
-      'Reinstall tfl-ts. Every DOC_MANIFEST path must ship in the npm tarball.',
+      'Docs ship next to package.json (CLAUDE.md), not under dist/. Reinstall tfl-ts if this is an npm install.',
     );
   }
 

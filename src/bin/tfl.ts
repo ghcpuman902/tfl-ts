@@ -2,7 +2,7 @@
 import TflClient from '../index';
 import { ENDPOINTS } from '../generated/endpoints';
 import { startTflMcpServer } from '../mcp/server';
-import { DocsError } from '../docs';
+import { CliError, CLI_EXIT, getCliExitCode, printCliError } from './cliExit';
 import { runDocsCommand } from './docs';
 
 const printHelp = (): void => {
@@ -23,6 +23,8 @@ Examples:
   tfl mcp
 
 Run "tfl docs help" for offline agent-documentation lookup.
+
+Exit codes: 0 ok, 1 error, 2 usage, 3 missing TFL_APP_KEY, 4 missing shipped file
 `);
 };
 
@@ -53,10 +55,25 @@ export const parseCliArgs = (argv: string[]): Record<string, string | string[]> 
   return result;
 };
 
+const isKnownRawOperation = (tag: string, method: string): boolean =>
+  ENDPOINTS.some((endpoint) => endpoint.tagKey === tag && endpoint.methodName === method);
+
 const runRaw = async (target: string, args: Record<string, string | string[]>): Promise<void> => {
   const [tag, method] = target.split('.');
   if (!tag || !method) {
-    throw new Error('Expected format <tag>.<method>, e.g. line.get');
+    throw new CliError(
+      CLI_EXIT.USAGE,
+      'Expected format <tag>.<method>, e.g. line.get',
+      'Run "tfl list" to see valid operations.',
+    );
+  }
+
+  if (!isKnownRawOperation(tag, method)) {
+    throw new CliError(
+      CLI_EXIT.USAGE,
+      `Unknown raw operation: ${tag}.${method}`,
+      'Run "tfl list" to see valid tag.method names.',
+    );
   }
 
   const client = new TflClient();
@@ -64,7 +81,11 @@ const runRaw = async (target: string, args: Record<string, string | string[]>): 
   const operation = namespace?.[method];
 
   if (!operation) {
-    throw new Error(`Unknown raw operation: ${tag}.${method}`);
+    throw new CliError(
+      CLI_EXIT.USAGE,
+      `Unknown raw operation: ${tag}.${method}`,
+      'Run "tfl list" to see valid tag.method names.',
+    );
   }
 
   const result = await operation.call(namespace, args);
@@ -140,29 +161,29 @@ export const dispatchCli = async (argv: string[]): Promise<void> => {
   if (command === 'raw') {
     const target = rest[0];
     if (!target) {
-      throw new Error('Missing raw target. Example: tfl raw line.get --ids central');
+      throw new CliError(
+        CLI_EXIT.USAGE,
+        'Missing raw target. Example: tfl raw line.get --ids central',
+        'Run "tfl list" to see valid operations.',
+      );
     }
 
     await runRaw(target, parseCliArgs(rest.slice(1)));
     return;
   }
 
-  throw new Error(`Unknown command: ${command}\nRun "tfl --help" for usage.`);
+  throw new CliError(
+    CLI_EXIT.USAGE,
+    `Unknown command: ${command}\nRun "tfl --help" for usage.`,
+    'Valid commands: raw, list, docs, smoke, mcp.',
+  );
 };
 
-const printCliError = (error: unknown): void => {
-  if (error instanceof DocsError) {
-    console.error(error.message);
-    console.error(error.fix);
-    return;
-  }
-
-  console.error(error instanceof Error ? error.message : error);
-};
+export { CLI_EXIT, CliError, getCliExitCode } from './cliExit';
 
 if (require.main === module) {
   dispatchCli(process.argv.slice(2)).catch((error: unknown) => {
     printCliError(error);
-    process.exit(1);
+    process.exit(getCliExitCode(error));
   });
 }

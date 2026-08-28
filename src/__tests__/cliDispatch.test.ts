@@ -1,4 +1,5 @@
 import { dispatchCli, parseCliArgs } from '../bin/tfl';
+import { CLI_EXIT, getCliExitCode } from '../bin/cliExit';
 
 describe('CLI dispatch', () => {
   const originalAppId = process.env.TFL_APP_ID;
@@ -35,6 +36,24 @@ describe('CLI dispatch', () => {
   test('raw --ids reaches the credential error, not an unknown option', async () => {
     await expect(dispatchCli(['raw', 'line.get', '--ids', 'central'])).rejects.toThrow(/Missing TFL_APP_KEY/);
     await expect(dispatchCli(['raw', 'line.get', '--ids', 'central'])).rejects.not.toThrow(/Unknown option/);
+    try {
+      await dispatchCli(['raw', 'line.get', '--ids', 'central']);
+    } catch (error) {
+      expect(getCliExitCode(error)).toBe(CLI_EXIT.CONFIG);
+    }
+  });
+
+  test('unknown raw operations reject before asking for TFL_APP_KEY', async () => {
+    await expect(dispatchCli(['raw', 'line.notAMethod', '--ids', 'central'])).rejects.toThrow(
+      /Unknown raw operation: line\.notAMethod/,
+    );
+    try {
+      await dispatchCli(['raw', 'line.notAMethod']);
+      throw new Error('expected throw');
+    } catch (error) {
+      expect(getCliExitCode(error)).toBe(CLI_EXIT.USAGE);
+      expect(String(error)).not.toMatch(/Missing TFL_APP_KEY/);
+    }
   });
 
   test('unknown commands reject', async () => {

@@ -8,6 +8,7 @@ import {
   readDocSlice,
   requireFindMatches,
 } from '../docs';
+import { TflConfigError, TflError } from '../errors';
 import { Lines } from '../generated/meta/Line';
 import { Modes } from '../generated/meta/Meta';
 import {
@@ -44,6 +45,7 @@ interface ToolDefinition {
     properties: Record<string, unknown>;
     required?: string[];
     additionalProperties: false;
+    anyOf?: Array<{ required: string[] }>;
   };
 }
 
@@ -59,7 +61,7 @@ interface LiveEnvelope<T> {
 }
 
 const SERVER_NAME = 'tfl-ts';
-const SERVER_VERSION = '1.2.0';
+const SERVER_VERSION = '1.3.0';
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
 const SUPPORTED_PROTOCOL_VERSIONS = new Set([
   '2024-11-05',
@@ -185,18 +187,20 @@ const TOOLS: ToolDefinition[] = [
   {
     name: 'get_line_status',
     description:
-      'Get compact live line status (id, name, status, optional reason). Provide lineIds or modes. Set issuesOnly=true to hide Good Service lines. Cached 60s.',
+      'Get compact live line status (id, name, status, optional reason). Provide lineIds or modes (at least one). Set issuesOnly=true to hide Good Service lines. Cached 60s.',
     inputSchema: {
       type: 'object',
       properties: {
         lineIds: {
           type: 'array',
           items: { type: 'string' },
+          minItems: 1,
           description: 'Canonical lowercase line IDs, for example ["central"].',
         },
         modes: {
           type: 'array',
           items: { type: 'string' },
+          minItems: 1,
           description: 'Transport modes, for example ["tube"].',
         },
         issuesOnly: {
@@ -206,6 +210,7 @@ const TOOLS: ToolDefinition[] = [
         },
       },
       additionalProperties: false,
+      anyOf: [{ required: ['lineIds'] }, { required: ['modes'] }],
     },
   },
   {
@@ -265,13 +270,63 @@ const TOOLS: ToolDefinition[] = [
   },
 ];
 
+class McpError extends Error {
+  readonly code: string;
+  readonly fix: string;
+
+  constructor(code: string, message: string, fix: string) {
+    super(message);
+    this.name = 'McpError';
+    this.code = code;
+    this.fix = fix;
+  }
+}
+
+const invalidArgument = (message: string, fix: string): McpError =>
+  new McpError('TFL_MCP_INVALID_ARGUMENT', message, fix);
+
+const toolErrorPayload = (error: unknown): { code: string; message: string; fix: string } => {
+  if (error instanceof DocsError || error instanceof McpError) {
+    return { code: error.code, message: error.message, fix: error.fix };
+  }
+  if (error instanceof TflConfigError) {
+    return {
+      code: 'TFL_MCP_MISSING_APP_KEY',
+      message: error.message,
+      fix: 'Set TFL_APP_KEY in the MCP server env.',
+    };
+  }
+  if (error instanceof TflError) {
+    return {
+      code: 'TFL_MCP_UPSTREAM',
+      message: error.message,
+      fix: 'Check the stop or line id, credentials, and TfL status.',
+    };
+  }
+  if (error instanceof Error) {
+    return {
+      code: 'TFL_MCP_ERROR',
+      message: error.message,
+      fix: 'Check the tool name and arguments.',
+    };
+  }
+  return {
+    code: 'TFL_MCP_ERROR',
+    message: 'Unknown tool error.',
+    fix: 'Check the tool name and arguments.',
+  };
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const requireString = (input: Record<string, unknown>, key: string): string => {
   const value = input[key];
   if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new Error(`"${key}" must be a non-empty string.`);
+    throw invalidArgument(
+      `"${key}" must be a non-empty string.`,
+      `Pass ${key} as a non-empty string.`,
+    );
   }
   return value.trim();
 };
@@ -282,7 +337,7 @@ const optionalStringArray = (input: Record<string, unknown>, key: string): strin
     return undefined;
   }
   if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
-    throw new Error(`"${key}" must be an array of strings.`);
+    throw invalidArgument(`"${key}" must be an array of strings.`, `Pass ${key} as an array of strings.`);
   }
   return value.map((item) => item.trim()).filter(Boolean);
 };
@@ -293,7 +348,7 @@ const optionalBoolean = (input: Record<string, unknown>, key: string, defaultVal
     return defaultValue;
   }
   if (typeof value !== 'boolean') {
-    throw new Error(`"${key}" must be a boolean.`);
+    throw invalidArgument(`"${key}" must be a boolean.`, `Pass ${key} as true or false.`);
   }
   return value;
 };
@@ -308,7 +363,10 @@ const optionalLimit = (
     return defaultValue;
   }
   if (!Number.isInteger(value) || (value as number) < 1 || (value as number) > maximum) {
-    throw new Error(`"limit" must be an integer between 1 and ${maximum}.`);
+    throw invalidArgument(
+      `"limit" must be an integer between 1 and ${maximum}.`,
+      `Pass a limit between 1 and ${maximum}.`,
+    );
   }
   return value as number;
 };
@@ -502,14 +560,8 @@ export class TflMcpServer {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     } catch (error) {
-      const text =
-        error instanceof DocsError
-          ? JSON.stringify({ code: error.code, message: error.message, fix: error.fix }, null, 2)
-          : error instanceof Error
-            ? error.message
-            : 'Unknown tool error.';
       return {
-        content: [{ type: 'text', text }],
+        content: [{ type: 'text', text: JSON.stringify(toolErrorPayload(error), null, 2) }],
         isError: true,
       };
     }
@@ -625,7 +677,10 @@ export class TflMcpServer {
       const modes = optionalStringArray(input, 'modes');
       const issuesOnly = optionalBoolean(input, 'issuesOnly', false);
       if (!lineIds?.length && !modes?.length) {
-        throw new Error('Provide at least one "lineIds" or "modes" value.');
+        throw invalidArgument(
+          'Provide at least one "lineIds" or "modes" value.',
+          'Call get_line_status with lineIds: ["central"] or modes: ["tube"].',
+        );
       }
 
       const cacheKey = `status:${(lineIds ?? []).sort().join(',')}:${(modes ?? []).sort().join(',')}`;
@@ -759,7 +814,11 @@ export class TflMcpServer {
       };
     }
 
-    throw new Error(`Unknown tool: ${name}`);
+    throw new McpError(
+      'TFL_MCP_UNKNOWN_TOOL',
+      `Unknown tool: ${name}`,
+      'Call tools/list. Valid tools: get_supported_modes, resolve_line_id, docs, resolve_stop_id, get_line_status, get_arrivals, plan_journey.',
+    );
   }
 
   private executeDocsTool(input: Record<string, unknown>): unknown {

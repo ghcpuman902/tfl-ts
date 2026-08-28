@@ -50,7 +50,7 @@ describe('TflMcpServer', () => {
       result: {
         protocolVersion: '2025-06-18',
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'tfl-ts', version: '1.2.0' },
+        serverInfo: { name: 'tfl-ts', version: '1.3.0' },
       },
     });
     const instructions = (response?.result as { instructions?: string }).instructions ?? '';
@@ -64,7 +64,7 @@ describe('TflMcpServer', () => {
       method: 'tools/list',
     });
 
-    const result = response?.result as { tools: Array<{ name: string }> };
+    const result = response?.result as { tools: Array<{ name: string; inputSchema?: Record<string, unknown> }> };
     expect(result.tools.map((tool) => tool.name)).toEqual([
       'get_supported_modes',
       'resolve_line_id',
@@ -73,6 +73,11 @@ describe('TflMcpServer', () => {
       'get_line_status',
       'get_arrivals',
       'plan_journey',
+    ]);
+    const status = result.tools.find((tool) => tool.name === 'get_line_status');
+    expect(status?.inputSchema?.anyOf).toEqual([
+      { required: ['lineIds'] },
+      { required: ['modes'] },
     ]);
   });
 
@@ -106,18 +111,35 @@ describe('TflMcpServer', () => {
     expect(response).toBeNull();
   });
 
-  test('returns tool errors without terminating the server', async () => {
-    const response = await server.handleMessage({
-      jsonrpc: '2.0',
-      id: 4,
-      method: 'tools/call',
-      params: {
-        name: 'get_arrivals',
-        arguments: {},
-      },
-    });
+  test('returns structured tool errors without terminating the server', async () => {
+    const arrivals = parseToolError(
+      await server.handleMessage({
+        jsonrpc: '2.0',
+        id: 4,
+        method: 'tools/call',
+        params: {
+          name: 'get_arrivals',
+          arguments: {},
+        },
+      }),
+    );
+    expect(arrivals.code).toBe('TFL_MCP_INVALID_ARGUMENT');
+    expect(String(arrivals.message)).toBe('"stopPointId" must be a non-empty string.');
+    expect(String(arrivals.fix).length).toBeGreaterThan(0);
 
-    expect(response?.result).toMatchObject({ isError: true });
+    const status = parseToolError(
+      await server.handleMessage({
+        jsonrpc: '2.0',
+        id: 5,
+        method: 'tools/call',
+        params: {
+          name: 'get_line_status',
+          arguments: {},
+        },
+      }),
+    );
+    expect(status.code).toBe('TFL_MCP_INVALID_ARGUMENT');
+    expect(String(status.message)).toMatch(/lineIds/i);
   });
 
   test('docs list returns the full manifest', async () => {
@@ -199,5 +221,23 @@ describe('TflMcpServer', () => {
     expect(Array.isArray(payload.docs)).toBe(true);
     const read = parseToolPayload(await callDocs(server, 22, { operation: 'read', id: 'AGENTS.md', limit: 10 }));
     expect(String(read.content).length).toBeGreaterThan(0);
+  });
+
+  test('live tools return TFL_MCP_MISSING_APP_KEY without a key', async () => {
+    delete process.env.TFL_APP_KEY;
+    const error = parseToolError(
+      await server.handleMessage({
+        jsonrpc: '2.0',
+        id: 23,
+        method: 'tools/call',
+        params: {
+          name: 'get_arrivals',
+          arguments: { stopPointId: '940GZZLUOXC' },
+        },
+      }),
+    );
+    expect(error.code).toBe('TFL_MCP_MISSING_APP_KEY');
+    expect(String(error.message)).toMatch(/Missing TFL_APP_KEY/);
+    expect(String(error.fix)).toMatch(/TFL_APP_KEY/);
   });
 });

@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
@@ -11,6 +11,7 @@ import {
   listDocs,
   readDoc,
   readDocSlice,
+  resolveDocsPackageRoot,
   setDocsPackageRootForTests,
 } from '../docs';
 import { runDocsCommand } from '../bin/docs';
@@ -85,6 +86,27 @@ describe('tfl docs catalogue', () => {
     const matches = findDocs('mcp');
     expect(matches.length).toBeGreaterThan(0);
     expect(matches[0].id).toBe('docs/mcp.md');
+  });
+
+  test('resolveDocsPackageRoot skips dist/*/package.json and finds name tfl-ts', () => {
+    const root = mkdtempSync(join(tmpdir(), 'tfl-docs-root-'));
+    try {
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'tfl-ts', version: '0.0.0' }));
+      writeFileSync(join(root, 'CLAUDE.md'), 'fixture quick start\n');
+      mkdirSync(join(root, 'dist/cjs'), { recursive: true });
+      mkdirSync(join(root, 'dist/esm'), { recursive: true });
+      writeFileSync(join(root, 'dist/cjs/package.json'), JSON.stringify({ type: 'commonjs' }));
+      writeFileSync(join(root, 'dist/esm/package.json'), JSON.stringify({ type: 'module' }));
+
+      expect(resolveDocsPackageRoot(join(root, 'dist/cjs'))).toBe(root);
+      expect(resolveDocsPackageRoot(join(root, 'dist/esm'))).toBe(root);
+
+      setDocsPackageRootForTests(root);
+      expect(catDoc('CLAUDE.md')).toContain('fixture quick start');
+    } finally {
+      setDocsPackageRootForTests(undefined);
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test('findDocs falls back to document bodies', () => {
