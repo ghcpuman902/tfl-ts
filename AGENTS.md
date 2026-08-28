@@ -23,7 +23,7 @@ Register at [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/), subscribe t
 
 ```typescript
 import TflClient from 'tfl-ts';
-import { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts/meta';
+import { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId, Lines } from 'tfl-ts/meta';
 
 const client = new TflClient(); // reads TFL_APP_KEY from process.env
 

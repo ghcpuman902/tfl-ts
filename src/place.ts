@@ -13,7 +13,7 @@ import {
   TflApiPresentationEntitiesPlaceCategory,
   TflApiPresentationEntitiesStopPoint,
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { Categories, PlaceTypes } from './generated/meta/Meta';
 import { BatchRequest } from './utils/batchRequest';
 

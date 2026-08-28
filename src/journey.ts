@@ -43,7 +43,7 @@ import {
   TflApiPresentationEntitiesJourneyPlannerLeg,
   TflApiPresentationEntitiesJourneyPlannerJourneyFare
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { TflHttpError } from './errors';
 import { formatDistance } from './utils/format';
 import { stripTypeFields } from './utils/stripTypes';

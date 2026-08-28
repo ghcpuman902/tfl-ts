@@ -106,7 +106,7 @@ export {
   TflErrorHandler,
 } from './errors';
 export type { TflApiErrorBody } from './errors';
-export { RawClient } from './generated/raw';
+export { RawClient } from './generated/rawClient';
 export { ENDPOINTS, ENDPOINT_COUNT } from './generated/endpoints';
 export type { EndpointDefinition } from './generated/endpoints';
 export { Realtime, pollArrivals, pollLineArrivals, pollVehicleArrivals } from './realtime';

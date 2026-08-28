@@ -10,6 +10,7 @@ export {
 } from './generated/meta/StationHubs';
 export type { StationHubInfo, StationHubMember } from './generated/meta/StationHubs';
 export { resolveArrivalsStopId, resolveArrivalsStopIds } from './utils/stopHierarchy';
+export { Lines } from './generated/meta/Line';
 export {
   LINE_IDS,
   MODES,

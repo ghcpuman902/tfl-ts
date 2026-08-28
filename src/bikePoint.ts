@@ -2,7 +2,7 @@ import {
   TflApiPresentationEntitiesAdditionalProperties, 
   TflApiPresentationEntitiesPlace
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { 
   extractStatus, 
 } from './utils/bikePoint';

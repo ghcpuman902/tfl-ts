@@ -13,7 +13,7 @@ import {
   TflApiPresentationEntitiesDisruptedPoint,
   SystemObject
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { BatchRequest } from './utils/batchRequest';
 import { normalizeArrivals, type NormalizedArrival } from './utils/arrivals';
 import {

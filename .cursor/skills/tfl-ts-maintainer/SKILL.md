@@ -10,7 +10,7 @@ description: Maintains the tfl-ts library — layered v2 architecture, OpenAPI s
 ```
 src/generated/openapi/tfl-v1.json     # committed snapshot (source of truth)
   → generate (types)  → src/generated/types.ts
-  → generate (raw)    → src/generated/raw.ts + src/generated/raw/<tag>.ts + endpoints.ts
+  → generate (raw)    → src/generated/rawClient.ts + src/generated/raw/<tag>.ts + endpoints.ts
   → generate (jsdoc)  → src/generated/jsdoc/*
   → generate (meta)   → src/generated/meta/* (live TfL API; needs .env)
 src/core/http.ts                      # stable transport — never regenerate
@@ -21,7 +21,7 @@ src/ui.ts / src/meta.ts               # tfl-ts/ui and tfl-ts/meta entrypoints
 ```
 
 **Invariants agents must preserve:**
-- `pnpm run build` = two `tsc` projects (CJS `dist/cjs`, ESM `dist/esm`) plus `script/writeDistModuleType.ts` — never wire generation into `build`
+- `pnpm run build` = two `tsc` projects (CJS `dist/cjs`, ESM `dist/esm`) plus `script/rewriteEsmSpecifiers.ts` and `script/writeDistModuleType.ts` — never wire generation into `build`
 - Wrappers import `./generated/types` and call `this.raw.<tag>.<method>()` — never depend on swagger-typescript-api client method shapes
 - Every REST endpoint reachable via `client.raw.*` (84 operations)
 - Generated code headers are deterministic; timestamps live only in `src/generated/generated.meta.json`
@@ -30,17 +30,17 @@ src/ui.ts / src/meta.ts               # tfl-ts/ui and tfl-ts/meta entrypoints
 
 | Command | Purpose |
 |---------|---------|
-| `pnpm run build` | Compile CJS + ESM (`tsc` only, two projects) |
+| `pnpm run build` | Compile CJS + ESM (`tsc` only, two projects), rewrite ESM specifiers, write dist package.json |
 | `pnpm run generate` | Full regen: types + raw + meta + station-sequences + station-hubs + jsdoc |
 | `pnpm run generate -- --only=types` | types.ts via swagger-typescript-api `--no-client` |
-| `pnpm run generate -- --only=raw` | raw.ts facade + `src/generated/raw/<tag>.ts` + endpoints.ts |
+| `pnpm run generate -- --only=raw` | rawClient.ts facade + `src/generated/raw/<tag>.ts` + endpoints.ts |
 | `pnpm run generate -- --only=jsdoc` | jsdoc reference files |
 | `pnpm run generate -- --only=meta` | Live TfL metadata (requires `TFL_APP_KEY`) |
 | `pnpm run generate -- --only=station-sequences` | Bundled station topology snapshot |
 | `pnpm run generate -- --only=station-hubs` | Bundled interchange/hub snapshot (needs `TFL_APP_KEY`, ~509 StopPoint fetches) |
 | `pnpm run sync:spec` | Fetch live swagger → update snapshot + spec.meta.json |
 | `pnpm run check -- --only=drift` | Compare committed snapshot vs live REST paths |
-| `pnpm run check` | Regenerate types/raw/jsdoc + station-sequences + station-hubs + bundle gzip ceilings |
+| `pnpm run check` | Regenerate types/raw/jsdoc + station-sequences + station-hubs + bundle gzip ceilings (`script/.bundle-tmp`; does not rewrite `docs/design/bundle-*.json`) |
 | `pnpm run check -- --only=generated` | Regenerate types/raw/jsdoc; git-diff gate only |
 | `pnpm run test` | Jest (raw reachability, transport mocks) |
 | `pnpm exec tfl smoke` | Live API smoke (needs `.env`) |
@@ -54,7 +54,7 @@ src/ui.ts / src/meta.ts               # tfl-ts/ui and tfl-ts/meta entrypoints
 **When TfL adds/removes REST endpoints:**
 1. `pnpm run sync:spec`
 2. `pnpm run generate`
-3. Review diff — commit `types.ts`, `raw.ts`, `endpoints.ts`, `jsdoc/*`, `openapi/*`
+3. Review diff — commit `types.ts`, `rawClient.ts`, `endpoints.ts`, `jsdoc/*`, `openapi/*`
 4. Add/adjust friendly wrappers if needed (wrappers are hand-maintained)
 5. `pnpm run test && pnpm run check`
 
@@ -75,7 +75,7 @@ After `pnpm run check`, only this file may change when running a full intentiona
 ## Wrapper implementation pattern
 
 ```typescript
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import type { TflApiPresentationEntitiesLine } from './generated/types';
 
 export class Line {
@@ -102,16 +102,16 @@ Raw naming: swagger `Line_StatusByIds` → `client.raw.line.statusByIds()`.
 ## Pre-publish checklist
 
 ```bash
+pnpm run build
 pnpm run test
 pnpm run check
-pnpm run build
 # optional (network + .env):
 pnpm run check -- --only=drift
 pnpm exec tfl smoke
 pnpm pack   # inspect tarball contents
 ```
 
-`prepublishOnly` runs: `test` → `check` → `build`.
+`prepublishOnly` runs: `build` → `test` → `check`.
 
 ## Publish to npm
 
@@ -131,7 +131,7 @@ Bump `version` in `package.json` before publishing. Major bumps need `docs/MIGRA
 | `check` fails after every run | Timestamps in generated `.ts` files | Use `generated.meta.json` only; keep code headers deterministic |
 | `build` breaks all wrappers | Generation ran during build | Keep `build` = clean + `tsc`; run `generate` explicitly |
 | Raw method not found | Wrong operation name | `pnpm exec tfl list --tag <tag>` |
-| `generate -- --only=meta` fails | Missing credentials | `.env` with `TFL_APP_KEY` |
+| Native ESM `ERR_UNSUPPORTED_DIR_IMPORT` | `generated/raw.js` beside `generated/raw/` | Facade is `rawClient.ts`; `rewriteEsmSpecifiers.ts` must run in `build` |
 
 ## Agent-facing docs catalogue
 

@@ -8,7 +8,7 @@ tfl-ts v2 separates **generation** from **build** and insulates friendly wrapper
 ```
 src/generated/openapi/tfl-v1.json   # committed OpenAPI snapshot
   → generate:types → src/generated/types.ts      (swagger-typescript-api, --no-client)
-  → generate:raw   → src/generated/raw.ts         (owned generator, uniform object-param API)
+  → generate:raw   → src/generated/rawClient.ts   (owned generator, uniform object-param API)
                    → src/generated/endpoints.ts    (endpoint registry)
 src/core/http.ts                      # stable transport (auth, retry, timeout, errors)
 src/*.ts wrappers                     # human-friendly API; call this.raw.* internally
@@ -486,7 +486,8 @@ src/
 ├── generated/
 │   ├── openapi/          # Committed OpenAPI snapshot + spec.meta.json
 │   ├── types.ts          # Types only (swagger-typescript-api --no-client)
-│   ├── raw.ts            # RawClient (owned generator)
+│   ├── rawClient.ts      # RawClient (owned generator)
+│   ├── raw/              # Per-tag factories
 │   ├── endpoints.ts      # Endpoint registry (84 operations)
 │   ├── jsdoc/            # Generated JSDoc for AI/human reference (not imported)
 │   ├── meta/             # Generated metadata (requires live API for sync)
@@ -499,7 +500,7 @@ src/
 ├── stopPoint.ts
 └── … (12 more modules)
 script/
-├── generateRawClient.ts  # Emits raw.ts + endpoints.ts from snapshot
+├── generateRawClient.ts  # Emits rawClient.ts + endpoints.ts from snapshot
 ├── generateJsdoc.ts
 ├── generateMeta.ts
 ├── syncSpec.ts
@@ -518,7 +519,7 @@ script/
 
 #### **Wrapper implementation pattern (v2)**
 ```typescript
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import type { TflApiPresentationEntitiesLine } from './generated/types';
 
 export class Line {

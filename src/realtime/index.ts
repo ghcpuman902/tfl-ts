@@ -1,4 +1,4 @@
-import { RawClient } from '../generated/raw';
+import { RawClient } from '../generated/rawClient';
 import type { TflApiPresentationEntitiesPrediction } from '../generated/types';
 import { TflHttpError } from '../errors';
 

@@ -1,6 +1,6 @@
 {
   "name": "tfl-ts",
-  "version": "2.13.0",
+  "version": "2.13.1",
   "description": "Typed TypeScript client for the Transport for London API: friendly wrappers, full raw coverage, static station sequences, and UI helpers for official line colours.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -50,7 +50,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "pnpm run clean && tsc -p tsconfig.json && tsc -p tsconfig.esm.json && ts-node script/writeDistModuleType.ts",
+    "build": "pnpm run clean && tsc -p tsconfig.json && tsc -p tsconfig.esm.json && ts-node script/rewriteEsmSpecifiers.ts && ts-node script/writeDistModuleType.ts",
     "measure:bundle": "ts-node script/measureBundle.ts",
     "test": "jest",
     "lint": "eslint src",
@@ -60,7 +60,7 @@
     "check": "ts-node script/check.ts",
     "demo": "ts-node script/demo.ts",
     "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run test && pnpm run check && pnpm run build"
+    "prepublishOnly": "pnpm run build && pnpm run test && pnpm run check"
   },
   "keywords": [
     "tfl",

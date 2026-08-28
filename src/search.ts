@@ -5,7 +5,7 @@ import {
   TflApiPresentationEntitiesSearchResponse,
   TflApiPresentationEntitiesSearchMatch,
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { Categories, SearchProviders, Sorts } from './generated/meta/Meta';
 
 export interface SearchQuery {

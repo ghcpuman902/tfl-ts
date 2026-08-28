@@ -11,7 +11,7 @@ src/
 │   │   └── spec.meta.json    # sha256, fetchedAt, pathCount
 │   ├── generated.meta.json   # Generation timestamps (excluded from drift check)
 │   ├── types.ts              # swagger-typescript-api --no-client
-│   ├── raw.ts                # RawClient facade — lazy per-tag getters
+│   ├── rawClient.ts          # RawClient facade — lazy per-tag getters
 │   ├── raw/                  # Per-tag factories (line.ts, stopPoint.ts, …)
 │   ├── endpoints.ts          # Registry (84 endpoints)
 │   ├── jsdoc/                # AI/human reference — do not import in wrappers
@@ -27,7 +27,8 @@ script/
 ├── demo.ts                   # Dispatcher: console | realtime | smoke
 ├── generatedMeta.ts          # Writes generated.meta.json
 ├── generateTypes.ts          # types + record artifact meta
-├── generateRawClient.ts      # raw.ts facade + raw/<tag>.ts + endpoints.ts
+├── generateRawClient.ts      # rawClient.ts facade + raw/<tag>.ts + endpoints.ts
+├── rewriteEsmSpecifiers.ts   # dist/esm relative imports get .js / index.js
 ├── generateJsdoc.ts          # jsdoc/*
 ├── generateMeta.ts           # meta/* (live API)
 ├── generateStationSequences.ts
@@ -45,7 +46,7 @@ script/
 | Output | Tool | Deterministic? |
 |--------|------|----------------|
 | `types.ts` | swagger-typescript-api 13.12.2 (pinned) | Yes (from snapshot) |
-| `raw.ts`, `endpoints.ts` | `generateRawClient.ts` | Yes |
+| `rawClient.ts`, `endpoints.ts` | `generateRawClient.ts` | Yes |
 | `jsdoc/*` | `generateJsdoc.ts` | Yes |
 | `meta/*` | `generateMeta.ts` | No (live API data) |
 | `meta/StationHubs.ts` | `generateStationHubs.ts` | No (live API data, but validated offline by `checkStationHubs.ts`) |
@@ -53,7 +54,7 @@ script/
 
 ## check internals
 
-`pnpm run check` (default: `generated` + `station-sequences` + `station-hubs`):
+`pnpm run check` (default: `generated` + `station-sequences` + `station-hubs` + `bundle`):
 
 1. `generated`: runs `pnpm run generate -- --only=types,raw,jsdoc` with `TFL_SKIP_GENERATED_META=1`
 2. `git diff --name-only src/generated`
@@ -61,6 +62,7 @@ script/
 4. Fails if any other generated file differs from committed copy
 5. `station-sequences`: validates the committed station snapshot (no network)
 6. `station-hubs`: validates the committed hub snapshot covers every sequence station, every member resolves back to its hub, and every `lineMemberIds` value points at a real member or the hub id (no network)
+7. `bundle`: measures gzip into `script/.bundle-tmp` and compares to `script/bundleCeilings.json`. Does not rewrite `docs/design/bundle-before.json` / `bundle-after.json` (frozen 2.13.0 snapshots).
 
 `generateStationHubs.ts` only keeps a hub's raw `TransportInterchange` node as `hubId`/`hubName`, not as a member — TfL's own node duplicates the union of every mode at the site (bus routes included) if left in `members`. `lineMemberIds` is filtered to values that resolve to an indexed member, which is what actually excludes bus route ids: TfL's `lineGroup` data mixes bus routes and rail/tube lines in one array with no mode marker.
 

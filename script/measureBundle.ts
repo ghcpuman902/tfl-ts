@@ -1,10 +1,10 @@
 /**
- * Bundle-size ledger for 2.12 → 2.13.
+ * Measure gzip for the 2.13 fixtures. Same esbuild flags as the frozen ledger.
  *
- *   pnpm exec ts-node script/measureBundle.ts --phase=before
- *   pnpm exec ts-node script/measureBundle.ts --phase=after
+ *   pnpm exec ts-node script/measureBundle.ts
  *
- * Writes JSON to stdout. Same esbuild flags both phases.
+ * Writes script/.bundle-tmp/report.json (gitignored). Does not write
+ * docs/design/bundle-before.json or bundle-after.json — those are the 2.13.0 cut.
  */
 import { gzipSync } from 'zlib';
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
@@ -31,10 +31,13 @@ type FixtureResult = {
 const parsePhase = (): Phase => {
   const arg = process.argv.find((item) => item.startsWith('--phase='));
   const value = arg?.slice('--phase='.length);
+  if (value === undefined) {
+    return 'after';
+  }
   if (value === 'before' || value === 'after') {
     return value;
   }
-  console.error('Pass --phase=before or --phase=after');
+  console.error('Pass --phase=before or --phase=after, or omit for after');
   process.exit(1);
 };
 
@@ -294,8 +297,7 @@ const main = async (): Promise<void> => {
     construct,
   };
 
-  const outPath = path.join(ROOT, 'docs', 'design', `bundle-${phase}.json`);
-  mkdirSync(path.dirname(outPath), { recursive: true });
+  const outPath = path.join(OUT_DIR, 'report.json');
   writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
   console.log(JSON.stringify(report, null, 2));
   console.log(`\nWrote ${outPath}`);

@@ -48,13 +48,13 @@ const main = (): void => {
     execSync('pnpm run build', { cwd: ROOT, stdio: 'inherit' });
   }
 
-  execSync('pnpm exec ts-node script/measureBundle.ts --phase=after', {
+  execSync('pnpm exec ts-node script/measureBundle.ts', {
     cwd: ROOT,
     stdio: 'inherit',
   });
 
   const report = JSON.parse(
-    readFileSync(path.join(ROOT, 'docs/design/bundle-after.json'), 'utf8'),
+    readFileSync(path.join(ROOT, 'script/.bundle-tmp/report.json'), 'utf8'),
   ) as MeasureReport;
   const ceilings = JSON.parse(
     readFileSync(path.join(ROOT, 'script/bundleCeilings.json'), 'utf8'),

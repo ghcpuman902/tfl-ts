@@ -75,8 +75,9 @@ const QUERY_INPUT_ALIASES: Record<string, Record<string, string>> = {
 
 const GENERATION_META_HINT = '// Generation timestamps: see ./generated.meta.json';
 const ENDPOINTS_PATH = path.join(__dirname, '..', 'src', 'generated', 'endpoints.ts');
-const RAW_FACADE_PATH = path.join(__dirname, '..', 'src', 'generated', 'raw.ts');
+const RAW_FACADE_PATH = path.join(__dirname, '..', 'src', 'generated', 'rawClient.ts');
 const RAW_DIR = path.join(__dirname, '..', 'src', 'generated', 'raw');
+const LEGACY_RAW_FACADE_PATH = path.join(__dirname, '..', 'src', 'generated', 'raw.ts');
 
 const toCamelCase = (value: string): string =>
   value.replace(/[-_](.)/g, (_, char: string) => char.toUpperCase()).replace(/^./, (c) => c.toLowerCase());
@@ -435,6 +436,9 @@ ${lazyFields}
 }
 `;
 
+  if (fs.existsSync(LEGACY_RAW_FACADE_PATH)) {
+    fs.unlinkSync(LEGACY_RAW_FACADE_PATH);
+  }
   fs.writeFileSync(ENDPOINTS_PATH, endpointsFile);
   fs.writeFileSync(RAW_FACADE_PATH, rawFile);
   recordGeneratedArtifact('raw', { endpointCount: endpoints.length, tagCount: tagKeys.length });

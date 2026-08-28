@@ -59,6 +59,8 @@ import type { TflApiPresentationEntitiesLine } from 'tfl-ts/dist/cjs/generated/t
 
 The deprecated `./generated/tfl` re-export still exists for compatibility but will be removed in a future major release.
 
+From 2.13, `package.json` `exports` only lists `.`, `./ui`, `./meta`, and `./utils/ui`. Deep paths such as `tfl-ts/dist/generated/meta/Line.js` are blocked. Use `import { Lines } from 'tfl-ts/meta'`. The raw facade file is `dist/*/generated/rawClient.js`, not `generated/raw.js` beside the per-tag folder.
+
 ### 4. Realtime polling
 
 SignalR/URA push is deferred. Use instant-pull polling instead:

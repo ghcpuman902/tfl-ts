@@ -2,7 +2,7 @@ import {
   TflApiPresentationEntitiesRoadCorridor,
   TflApiPresentationEntitiesRoadDisruption
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 
 // Import raw data from generated meta files
 import { ROAD_DATA } from './generated/jsdoc/Road';

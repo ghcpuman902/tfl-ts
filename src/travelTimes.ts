@@ -7,7 +7,7 @@
 import {
   SystemObject,
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 
 type TravelDirection = 'Average' | 'From' | 'To';
 

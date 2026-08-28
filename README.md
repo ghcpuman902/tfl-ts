@@ -285,12 +285,12 @@ Playground demos under `playground/demo/` are for clones, not package consumers.
 ```
 OpenAPI snapshot (committed)
   → types.ts        (swagger-typescript-api, types only)
-  → raw.ts          (owned generator, uniform object-param API)
+  → rawClient.ts    (owned generator, uniform object-param API)
   → client.raw.*    (public escape hatch)
   → wrappers        (line, stopPoint, …)
 ```
 
-`pnpm run build` compiles TypeScript only. No network, no regeneration.
+`pnpm run build` compiles TypeScript to CJS and ESM. No network, no OpenAPI regeneration.
 
 ## Contributing
 

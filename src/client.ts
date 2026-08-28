@@ -1,5 +1,5 @@
 import { TflHttpClient } from './core/http';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { Line } from './line';
 import { AccidentStats } from './accidentStats';
 import { AirQuality } from './airQuality';

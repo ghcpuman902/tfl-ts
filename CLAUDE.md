@@ -28,7 +28,7 @@ This file and the shipped docs below are readable offline once the package is in
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
 | [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) | Maintainers | Why `tfl docs`, `AGENTS.md`, and MCP `docs` exist |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.13.0 tree-shake `tfl-ts/ui` + `tfl-ts/meta`; 2.12.0 offline `tfl docs` + MCP `docs`; 2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.13.1 native ESM load; 2.13.0 tree-shake `tfl-ts/ui` + `tfl-ts/meta`; 2.12.0 offline `tfl docs` + MCP `docs`; 2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [ERROR.md](ERROR.md) | Anyone handling failures | Error shapes |
 | [docs/REALTIME.md](docs/REALTIME.md) | Agents building live boards | Polling vs deferred push |
@@ -68,7 +68,7 @@ await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
 await client.journey.plan({ from: '940GZZLUOXC', to: '940GZZLUBND' });
 
 // Static topology: no API key or network needed for these imports
-import { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts/meta';
+import { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId, Lines } from 'tfl-ts/meta';
 import { getLineColor } from 'tfl-ts/ui';
 LINE_STATION_SEQUENCES.central;
 const hub = STATION_HUBS['940GZZLULVT']; // Liverpool Street, any sibling id works

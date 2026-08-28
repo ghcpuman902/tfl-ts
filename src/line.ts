@@ -10,7 +10,7 @@ import {
   TflApiPresentationEntitiesTimetableResponse as TflTimetableResponse,
   TflApiPresentationEntitiesPrediction as TflPrediction
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import type { TflHttpClient } from './core/http';
 import { BatchRequest } from './utils/batchRequest';
 import { TflValidationError } from './errors';

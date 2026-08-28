@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.13.1 — 2026-08-28
+
+### Native Node ESM can load the package
+
+2.13.0 emitted ESM with extensionless relative imports. Node does not guess `.js`, so `import 'tfl-ts'` under native ESM (`tsx --test`, `node --input-type=module`) threw `ERR_UNSUPPORTED_DIR_IMPORT`. CJS `require('tfl-ts')` and bundlers still worked, which is why Jest in this repo did not catch it.
+
+The `RawClient` file was `generated/raw.js` next to the per-tag directory `generated/raw/`. Node treated `from './generated/raw'` as a directory import. The facade is now `generated/rawClient.js`. Build rewrites `dist/esm` specifiers to `./foo.js` or `./foo/index.js`, adds `with { type: 'json' }` on JSON imports, and uses `createRequire(import.meta.url)` for station sequences.
+
+`Lines` is exported from `tfl-ts/meta`. Do not import `tfl-ts/dist/generated/meta/Line.js`; the `exports` map does not allow that path.
+
 ## 2.13.0 — 2026-08-28
 
 ### Tree-shakeable entrypoints and lazy wrappers

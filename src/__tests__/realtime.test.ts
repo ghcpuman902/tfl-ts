@@ -4,7 +4,7 @@ import {
   pollVehicleArrivals,
 } from '../realtime';
 import { TflHttpError } from '../errors';
-import type { RawClient } from '../generated/raw';
+import type { RawClient } from '../generated/rawClient';
 import type { TflApiPresentationEntitiesPrediction } from '../generated/types';
 
 /** Match realtime DEFAULT_INTERVAL_MS (at/above MIN_RECOMMENDED_INTERVAL_MS). */

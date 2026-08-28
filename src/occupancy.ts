@@ -7,7 +7,7 @@ import {
   TflApiPresentationEntitiesCarParkOccupancy,
   TflApiPresentationEntitiesChargeConnectorOccupancy,
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import { BatchRequest } from './utils/batchRequest';
 
 export interface OccupancyCarParkByIdQuery {

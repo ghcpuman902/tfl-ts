@@ -30,7 +30,7 @@
 
 import { 
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 
 // Import raw data from generated meta files
 import { 

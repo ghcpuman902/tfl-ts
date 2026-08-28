@@ -10,7 +10,7 @@ import {
   TflApiPresentationEntitiesPrediction,
   TflApiPresentationEntitiesActiveServiceType,
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 import type { ModeInput, ModeName } from './utils/autocomplete';
 
 // Import generated metadata (NEVER hardcode!)

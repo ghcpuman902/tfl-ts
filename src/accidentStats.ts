@@ -1,7 +1,7 @@
 import { 
   TflApiPresentationEntitiesAccidentStatsAccidentDetail as TflAccidentDetail
 } from './generated/types';
-import { RawClient } from './generated/raw';
+import { RawClient } from './generated/rawClient';
 
 
 
