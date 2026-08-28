@@ -42,6 +42,7 @@ src/index.ts                          # TflClient { raw, realtime, line, … }
 | `pnpm run check -- --only=generated` | Regenerate types/raw/jsdoc; git-diff gate only |
 | `pnpm run test` | Jest (raw reachability, transport mocks) |
 | `pnpm exec tfl smoke` | Live API smoke (needs `.env`) |
+| `pnpm exec tfl docs ls\|cat\|find\|grep` | Offline lookup over the agent-facing docs catalogue (`src/docs.ts`) |
 | `pnpm run demo` | Console tour (`playground/demo.ts`) |
 | `pnpm run demo -- realtime` | Realtime polling demo |
 | `pnpm run demo -- smoke` | Compile + catalog checks (`--live` optional) |
@@ -130,9 +131,19 @@ Bump `version` in `package.json` before publishing. Major bumps need `docs/MIGRA
 | Raw method not found | Wrong operation name | `pnpm exec tfl list --tag <tag>` |
 | `generate -- --only=meta` fails | Missing credentials | `.env` with `TFL_APP_KEY` |
 
+## Agent-facing docs catalogue
+
+`src/docs.ts` hardcodes the list of Markdown files `tfl docs` and the MCP `docs` tool can serve (`DOC_MANIFEST`). When adding a new agent-facing `.md` file to the repo:
+1. Add it to `package.json`'s `files` array so it ships in the npm tarball.
+2. Add a `{ id, path, title, audience }` entry to `DOC_MANIFEST`.
+3. `pnpm run test` — `src/__tests__/docsCli.test.ts` asserts every manifest entry resolves, is covered by `files[]`, and that `AGENTS.md` / `CLAUDE.md` still share the critical tokens.
+
+Do **not** add developer-only docs (`LLM_context.md`, `.cursor/skills/`) to the manifest — `tfl docs` only serves what ships to consumers. Keep `AGENTS.md` self-contained (not a pointer); do not generate it from `CLAUDE.md`.
+
 ## Additional resources
 
 - Architecture & migration: [docs/MIGRATION-v2.md](../../../docs/MIGRATION-v2.md)
 - Realtime (deferred push): [docs/REALTIME.md](../../../docs/REALTIME.md)
 - AI wrapper conventions: [LLM_context.md](../../../LLM_context.md)
 - Detailed file map: [reference.md](reference.md)
+- Why `tfl docs` / `AGENTS.md` exist: [docs/design/agent-friendly-cli.md](../../../docs/design/agent-friendly-cli.md)

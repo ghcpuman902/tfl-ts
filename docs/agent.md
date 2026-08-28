@@ -1,6 +1,6 @@
 # tfl-ts — Agent Reference
 
-This document is the detailed reference for AI coding agents integrating the **tfl-ts** npm package. For install, first-success examples, and screenshots, see [README.md](../README.md). For quick patterns, see [.claude/skills/tfl-ts/SKILL.md](../.claude/skills/tfl-ts/SKILL.md). For repo maintenance, see [LLM_context.md](../LLM_context.md).
+This document is the detailed reference for AI coding agents integrating the **tfl-ts** npm package. For install, first-success examples, and screenshots, see [README.md](../README.md). For quick patterns, see [.claude/skills/tfl-ts/SKILL.md](../.claude/skills/tfl-ts/SKILL.md). For repo maintenance (clone only, not in `tfl docs`), see [LLM_context.md](../LLM_context.md).
 
 ## Package overview
 
@@ -470,7 +470,7 @@ All live methods call `https://api.tfl.gov.uk/` with the `app_key` query paramet
 
 If the host agent supports MCP, prefer the built-in local server over inventing direct TfL HTTP calls. Run `npx -y tfl-ts@latest mcp` with the user's own credentials.
 
-Tools return compact JSON: a plain-text `summary` plus structured fields (`lines`, `arrivals`, `matches`, `journeys`). Live tools also include `cacheHit` and `fetchedAt`. Use `issuesOnly` on status and `lineIds` on arrivals when you only need a slice of the board.
+Tools return compact JSON: a plain-text `summary` plus structured fields (`lines`, `arrivals`, `matches`, `journeys`). Live tools also include `cacheHit` and `fetchedAt`. Use `issuesOnly` on status and `lineIds` on arrivals when you only need a slice of the board. The `docs` tool (`list` / `read` / `find` / `grep`) is offline and needs no API key.
 
 ```json
 {
@@ -487,6 +487,21 @@ Tools return compact JSON: a plain-text `summary` plus structured fields (`lines
 ```
 
 Full setup, TTLs, and security notes: [mcp.md](./mcp.md). Release notes: [CHANGELOG.md](../CHANGELOG.md).
+
+## Offline doc lookup (`tfl docs` / MCP `docs`)
+
+Every file listed by `tfl docs ls` ships in the npm package and is readable from the CLI or the MCP `docs` tool, without repo access or a network call:
+
+```bash
+npx tfl-ts docs ls                 # every bundled doc, with audience
+npx tfl-ts docs cat docs/agent.md  # print this file
+npx tfl-ts docs find caching       # find the right doc by keyword (id, title, then body)
+npx tfl-ts docs grep -i STATION_HUBS
+```
+
+MCP equivalent (no API key): `{ "operation": "list" }` / `{ "operation": "find", "query": "caching" }` / `{ "operation": "read", "id": "docs/agent.md" }` / `{ "operation": "grep", "pattern": "STATION_HUBS" }`. Large reads are paginated with `offset` / `limit` / `nextOffset`.
+
+Use this when your context has been compacted mid-session and you no longer have the conventions above loaded — it is faster and more reliable than re-deriving them from raw TfL responses.
 
 ## Further reading
 

@@ -15,13 +15,29 @@ TfL mixes stable reference data with real-time data, but the raw API does not se
 
 ## Where to read next
 
+This file and the shipped docs below are readable offline once the package is installed: `npx tfl-ts docs cat CLAUDE.md`. Run `npx tfl-ts docs ls` for the full catalogue, `docs find <query>` to locate the right file (id, title, audience, then body), and `docs grep <pattern>` to search all of them. The local MCP `docs` tool uses the same catalogue.
+
+### Shipped (`tfl docs` / MCP `docs`)
+
 | File | Audience | Purpose |
 |------|----------|---------|
+| [AGENTS.md](AGENTS.md) | Any agent/tool that looks for `AGENTS.md` | Self-contained quick start |
+| [CLAUDE.md](CLAUDE.md) | Claude Code / any agent | This file — fuller quick start |
+| [README.md](README.md) | Humans and agents installing the package | Install, examples, MCP snippet |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Package consumers | Usage patterns, gotchas, copy-paste examples |
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
+| [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) | Maintainers | Why `tfl docs`, `AGENTS.md`, and MCP `docs` exist |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.12.0 offline `tfl docs` + MCP `docs`; 2.11.0 bus-stop compass + hub search; 2.10.0 river-bus; 2.7.0 station hubs) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
+| [ERROR.md](ERROR.md) | Anyone handling failures | Error shapes |
+| [docs/REALTIME.md](docs/REALTIME.md) | Agents building live boards | Polling vs deferred push |
+| [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) | Upgraders | v1 → v2 |
+
+### Repo only (clone; not in `tfl docs`)
+
+| File | Audience | Purpose |
+|------|----------|---------|
 | [LLM_context.md](LLM_context.md) | Contributors | Wrapper implementation rules for this repo |
 | [.cursor/skills/tfl-ts-maintainer/SKILL.md](.cursor/skills/tfl-ts-maintainer/SKILL.md) | Maintainers | Generators, `check`, publish workflow |
 
@@ -62,6 +78,8 @@ await client.raw.line.statusByIds({ ids: ['central'] });
 ```
 
 List all raw endpoints: `pnpm exec tfl list`
+
+Read a shipped doc offline: `pnpm exec tfl docs cat <id>` (e.g. `docs/mcp.md`). Search with `pnpm exec tfl docs find <query>` / `docs grep <pattern>`. The MCP `docs` tool is the same catalogue.
 
 ## Rules for agents working in this repo
 

@@ -1,5 +1,13 @@
 import { createInterface } from 'readline';
 import TflClient from '../index';
+import {
+  DocsError,
+  FIND_RESULT_LIMIT,
+  grepDocsPage,
+  listDocs,
+  readDocSlice,
+  requireFindMatches,
+} from '../docs';
 import { Lines } from '../generated/meta/Line';
 import { Modes } from '../generated/meta/Meta';
 import {
@@ -51,7 +59,7 @@ interface LiveEnvelope<T> {
 }
 
 const SERVER_NAME = 'tfl-ts';
-const SERVER_VERSION = '1.1.0';
+const SERVER_VERSION = '1.2.0';
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
 const SUPPORTED_PROTOCOL_VERSIONS = new Set([
   '2024-11-05',
@@ -97,6 +105,52 @@ const TOOLS: ToolDefinition[] = [
         },
       },
       required: ['query'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'docs',
+    description:
+      'Read tfl-ts bundled agent docs offline (same catalogue as `tfl docs`). No TfL API call, no credentials. Prefer list → find → read; use grep to locate symbols across docs. Large files are paginated by line.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        operation: {
+          type: 'string',
+          enum: ['list', 'read', 'find', 'grep'],
+          description: 'list catalogue | read one doc | find by id/title/audience/body | grep content',
+        },
+        id: {
+          type: 'string',
+          description: 'Doc id or path for operation=read (e.g. "CLAUDE.md", "docs/mcp.md").',
+        },
+        query: {
+          type: 'string',
+          description: 'For operation=find: keyword against id, title, audience, or body.',
+        },
+        pattern: {
+          type: 'string',
+          description: 'For operation=grep: literal substring (not regex), same as CLI.',
+        },
+        caseInsensitive: {
+          type: 'boolean',
+          default: false,
+          description: 'For operation=grep only.',
+        },
+        offset: {
+          type: 'integer',
+          minimum: 0,
+          default: 0,
+          description: 'For read: 0-based line offset. For grep: 0-based match offset.',
+        },
+        limit: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 200,
+          description: 'For read: max lines (default 80). For grep: max matches (default 50).',
+        },
+      },
+      required: ['operation'],
       additionalProperties: false,
     },
   },
@@ -259,6 +313,36 @@ const optionalLimit = (
   return value as number;
 };
 
+const optionalOffset = (input: Record<string, unknown>): number | undefined => {
+  const value = input.offset;
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Number.isInteger(value) || (value as number) < 0) {
+    throw new DocsError(
+      'TFL_DOCS_INVALID_ARGUMENT',
+      '"offset" must be an integer >= 0.',
+      'Pass offset: 0 to start at the beginning.',
+    );
+  }
+  return value as number;
+};
+
+const optionalDocsLimit = (input: Record<string, unknown>): number | undefined => {
+  const value = input.limit;
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Number.isInteger(value) || (value as number) < 1 || (value as number) > 200) {
+    throw new DocsError(
+      'TFL_DOCS_INVALID_ARGUMENT',
+      '"limit" must be an integer between 1 and 200.',
+      'Pass a limit between 1 and 200.',
+    );
+  }
+  return value as number;
+};
+
 const normalize = (value: string): string =>
   value.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -379,7 +463,7 @@ export class TflMcpServer {
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
           instructions:
-            'Prefer static tools (resolve_line_id, get_supported_modes) before live tools. Live tools return compact JSON with a human-readable "summary" field. Use the user’s local TfL credentials; responses are cached and rate-limited.',
+            'Prefer static tools (docs, resolve_line_id, get_supported_modes) before live tools. docs reads the same bundled catalogue as `tfl docs` and needs no API key. Live tools return compact JSON with a human-readable "summary" field. Use the user’s local TfL credentials; responses are cached and rate-limited.',
         });
       }
 
@@ -418,13 +502,14 @@ export class TflMcpServer {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     } catch (error) {
+      const text =
+        error instanceof DocsError
+          ? JSON.stringify({ code: error.code, message: error.message, fix: error.fix }, null, 2)
+          : error instanceof Error
+            ? error.message
+            : 'Unknown tool error.';
       return {
-        content: [
-          {
-            type: 'text',
-            text: error instanceof Error ? error.message : 'Unknown tool error.',
-          },
-        ],
+        content: [{ type: 'text', text }],
         isError: true,
       };
     }
@@ -471,6 +556,10 @@ export class TflMcpServer {
         matches,
         best: matches[0] ?? null,
       };
+    }
+
+    if (name === 'docs') {
+      return this.executeDocsTool(input);
     }
 
     if (name === 'resolve_stop_id') {
@@ -671,6 +760,123 @@ export class TflMcpServer {
     }
 
     throw new Error(`Unknown tool: ${name}`);
+  }
+
+  private executeDocsTool(input: Record<string, unknown>): unknown {
+    const operation = input.operation;
+    if (typeof operation !== 'string' || operation.trim().length === 0) {
+      throw new DocsError(
+        'TFL_DOCS_INVALID_ARGUMENT',
+        '"operation" must be one of: list, read, find, grep.',
+        'Call docs with operation: "list" first.',
+      );
+    }
+
+    if (operation === 'list') {
+      const docs = listDocs().map((entry) => ({
+        id: entry.id,
+        title: entry.title,
+        audience: entry.audience,
+      }));
+      return {
+        summary: `${docs.length} bundled docs. Start with AGENTS.md or CLAUDE.md.`,
+        operation: 'list',
+        docs,
+      };
+    }
+
+    if (operation === 'find') {
+      if (typeof input.query !== 'string') {
+        throw new DocsError(
+          'TFL_DOCS_INVALID_ARGUMENT',
+          'Missing query. Example: { "operation": "find", "query": "caching" }',
+          'Pass query as a non-empty string.',
+        );
+      }
+      const allMatches = requireFindMatches(input.query);
+      const matches = allMatches.slice(0, FIND_RESULT_LIMIT).map((entry) => ({
+        id: entry.id,
+        title: entry.title,
+        audience: entry.audience,
+      }));
+      const omitted = allMatches.length - matches.length;
+      return {
+        summary:
+          omitted > 0
+            ? `${matches[0].id} — ${matches[0].title} (${omitted} more omitted)`
+            : `${matches[0].id} — ${matches[0].title}`,
+        operation: 'find',
+        matches,
+        best: matches[0] ?? null,
+        truncated: omitted > 0,
+        total: allMatches.length,
+      };
+    }
+
+    if (operation === 'read') {
+      if (typeof input.id !== 'string' || input.id.trim().length === 0) {
+        throw new DocsError(
+          'TFL_DOCS_INVALID_ARGUMENT',
+          'Missing doc id. Example: { "operation": "read", "id": "CLAUDE.md" }',
+          'Run operation: "list" to see valid ids.',
+        );
+      }
+      const slice = readDocSlice(input.id, {
+        offset: optionalOffset(input),
+        limit: optionalDocsLimit(input),
+      });
+      const consumed = slice.content.length === 0 ? 0 : slice.content.split('\n').length;
+      const startLine = consumed === 0 ? slice.offset : slice.offset + 1;
+      const endLine = slice.offset + consumed;
+      return {
+        summary:
+          slice.totalLines === 0
+            ? `${slice.id} is empty`
+            : `${slice.id} lines ${startLine}–${endLine} of ${slice.totalLines}`,
+        operation: 'read',
+        ...slice,
+      };
+    }
+
+    if (operation === 'grep') {
+      if (typeof input.pattern !== 'string') {
+        throw new DocsError(
+          'TFL_DOCS_INVALID_ARGUMENT',
+          'Missing pattern. Example: { "operation": "grep", "pattern": "STATION_HUBS" }',
+          'Pass pattern as a literal substring. Set caseInsensitive: true to ignore case.',
+        );
+      }
+      const caseInsensitive = optionalBoolean(input, 'caseInsensitive', false);
+      const page = grepDocsPage(input.pattern, {
+        caseInsensitive,
+        offset: optionalOffset(input),
+        limit: optionalDocsLimit(input),
+      });
+      if (page.totalMatches === 0) {
+        throw new DocsError(
+          'TFL_DOCS_NOT_FOUND',
+          `No matches for "${input.pattern}".`,
+          'Try a shorter literal substring, or set caseInsensitive: true.',
+        );
+      }
+      const shown = page.matches.length;
+      return {
+        summary: `${page.totalMatches} matches for "${input.pattern}" (showing ${shown})`,
+        operation: 'grep',
+        pattern: input.pattern,
+        caseInsensitive,
+        totalMatches: page.totalMatches,
+        truncated: page.truncated,
+        nextOffset: page.nextOffset,
+        matches: page.matches,
+      };
+    }
+
+    throw new DocsError(
+      'TFL_DOCS_INVALID_ARGUMENT',
+      `Unknown docs operation: ${operation}`,
+      'Valid operations: list, read, find, grep.',
+    );
   }
 
   private getClient(): TflClient {

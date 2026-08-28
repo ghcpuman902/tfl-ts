@@ -28,12 +28,32 @@ The process communicates over stdio. It does not open a network port or send cre
 |------|--------------|-------------|
 | `get_supported_modes` | No | Bundled metadata |
 | `resolve_line_id` | No | Bundled metadata |
+| `docs` | No | Bundled Markdown (`DOC_MANIFEST`) |
 | `resolve_stop_id` | Yes | 24 hours |
 | `get_line_status` | Yes | 60 seconds |
 | `get_arrivals` | Yes | 15 seconds |
 | `plan_journey` | Yes | 2 minutes |
 
 The server intentionally exposes a small tool set instead of all raw TfL endpoints. This reduces tool-selection noise and discourages broad, accidental API requests.
+
+### Offline `docs` tool
+
+`docs` is the MCP face of `tfl docs`. It needs no `TFL_APP_KEY` and never calls TfL. One tool, four operations:
+
+| `operation` | Required input | Notes |
+|-------------|----------------|-------|
+| `list` | — | Full catalogue: id, title, audience |
+| `find` | `query` | Ranked id/title/audience, then body. Capped at 20. |
+| `read` | `id` | Line slice. Defaults: `offset` 0, `limit` 80 (max 200). Returns `totalLines`, `truncated`, `nextOffset`. |
+| `grep` | `pattern` | Literal substring. Optional `caseInsensitive`. Match pagination via `offset` / `limit` (default 50). Returns `totalMatches`, `truncated`, `nextOffset`. |
+
+```json
+{ "operation": "find", "query": "caching" }
+{ "operation": "read", "id": "docs/agent.md", "offset": 0, "limit": 80 }
+{ "operation": "grep", "pattern": "STATION_HUBS", "caseInsensitive": true }
+```
+
+Unknown ids, empty queries, no matches, and invalid pagination return a tool error (`isError: true`) whose text is JSON `{ "code", "message", "fix" }` with codes such as `TFL_DOCS_UNKNOWN_ID`, `TFL_DOCS_NOT_FOUND`, and `TFL_DOCS_INVALID_ARGUMENT`. Do not request the whole of `ERROR.md` in one read; follow `nextOffset`.
 
 ## Response shape (agent-friendly)
 

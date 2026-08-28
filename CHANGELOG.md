@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0 — 2026-08-28
+
+### `tfl docs` and MCP `docs` — one offline catalogue
+
+`npx tfl-ts docs ls|cat|find|grep` reads Markdown already shipped in the npm tarball (including `README.md`, `AGENTS.md`, `CLAUDE.md`, `docs/agent.md`, `docs/mcp.md`, and `docs/design/agent-friendly-cli.md`) without a repo checkout or network access. `find` ranks id, title, and audience first, then searches document bodies, so `tfl docs find caching` resolves. Empty find/grep results and unknown top-level commands exit non-zero.
+
+The local MCP server adds a read-only `docs` tool (`list` / `read` / `find` / `grep`) over the same `DOC_MANIFEST`. `read` and `grep` are paginated. No API key. Structured errors carry `code`, `message`, and `fix`. MCP `serverInfo.version` is `1.2.0`.
+
+`AGENTS.md` is a compact self-contained quick start for tools that load that filename, not a pointer to `CLAUDE.md`.
+
+Fixed CLI argument dispatch: `tfl <command>` no longer routes through `util.parseArgs`'s strict option validation, which previously threw `Unknown option '--ids'` for the documented usage (`tfl raw line.get --ids central`). Each subcommand now parses its own arguments; `tfl list --tag <tag>` is unaffected.
+
 ## 2.11.0 — 2026-08-23
 
 ### Lift bus-stop Direction fields off additionalProperties

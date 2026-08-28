@@ -29,4 +29,10 @@ export default defineConfig(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
+  {
+    files: ['src/bin/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
 );

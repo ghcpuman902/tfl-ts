@@ -319,6 +319,10 @@ When no friendly wrapper exists, use `client.raw.*`:
 
 Discover endpoints: `npx tfl list` or `npx tfl list --tag line`
 
+## Offline docs from the CLI
+
+If this skill file drops out of context, re-fetch it (or any other bundled doc) without repo access: `npx tfl-ts docs cat .claude/skills/tfl-ts/SKILL.md`. `npx tfl-ts docs ls` lists everything available; `docs find <query>` / `docs grep <pattern>` search across all of them. The MCP `docs` tool is the same catalogue (`list` / `read` / `find` / `grep`).
+
 ## Error handling
 
 ```typescript
