@@ -59,4 +59,9 @@ dist/types/
 # Temporary files
 *.tmp
 *.temp
-.cache/ 
+.cache/
+
+# Local agent skill checkouts (do not pack; only .claude/skills/tfl-ts ships)
+.agents/
+.claude/skills/imlaf-audit
+skills-lock.json 

@@ -26,4 +26,9 @@ script/.bundle-tmp
 # Internal working notes for agents (not shipped, not committed)
 docs/internal/
 
+# Local agent skill checkouts (shipped consumer skill is .claude/skills/tfl-ts only)
+.agents/
+.claude/skills/imlaf-audit
+skills-lock.json
+
 */.DS_Store
