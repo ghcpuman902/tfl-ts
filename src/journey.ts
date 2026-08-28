@@ -489,6 +489,9 @@ export interface JourneyQuery {
  * };
  */
 export class Journey {
+  /** Incremented in the constructor so tests can assert lazy TflClient getters. */
+  static instanceCount = 0;
+
   /** API name for this module */
   static readonly API_NAME = 'Journey API';
 
@@ -610,7 +613,9 @@ export class Journey {
   /** Available bike proficiency levels */
   public readonly BIKE_PROFICIENCIES = BIKE_PROFICIENCIES;
 
-  constructor(private raw: RawClient) {}
+  constructor(private raw: RawClient) {
+    Journey.instanceCount += 1;
+  }
 
   /**
    * Plan a journey between two locations

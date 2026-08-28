@@ -5,7 +5,7 @@
  * including status extraction, filtering, and property access.
  *
  * @example
- * import { getPropertyValue, findElectricBikes } from 'tfl-ts/utils/bikePoint';
+ * import { getPropertyValue, findElectricBikes } from 'tfl-ts';
  *
  * // Get property values from bike point data
  * const bikes = getPropertyValue(bikePoint, 'NbBikes');

@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.13.0 — 2026-08-28
+
+### Tree-shakeable entrypoints and lazy wrappers
+
+Importing UI helpers or station topology from `'tfl-ts'` used to evaluate the whole CommonJS barrel: every wrapper, all 84 raw methods, station sequences, hubs, and the line catalogue. A Client Component that only needed line colours paid for that graph (esbuild minify+gzip **77,845 bytes**).
+
+The package now ships ESM and CJS, marks `sideEffects: false`, and adds `tfl-ts/ui` and `tfl-ts/meta`. `TflClient` still uses `client.line.getStatus()`; wrappers and `client.raw.<tag>` are created on first access. Station sequences are not loaded for `getStatus()`. `tfl-ts/utils/ui` remains as a deprecated alias.
+
+Measured with the same esbuild flags as 2.12 (see [docs/design/2.13-bundle.md](docs/design/2.13-bundle.md)):
+
+- Status board helpers via `tfl-ts/ui`: **3,560 bytes gzip** (no sequences, no `RawClient`, no `TFL_APP_KEY`). Same helpers via `'tfl-ts'`: 77,845 → **34,824**.
+- Topology via `tfl-ts/meta`: **39,218**. Hubs + `resolveArrivalsStopId` via `tfl-ts/meta`: **24,591**.
+- `import TflClient`: 77,780 → **47,655**. That path still statically includes every wrapper module. Use `/ui` and `/meta` in the browser.
+
+`new TflClient()` no longer constructs Journey. `client.raw.travelTime` is not allocated until that getter runs.
+
+Accepted: dual CJS/ESM copies in mixed graphs; `Object.keys(client)` omits lazy modules; `tfl-ts/dist/...` deep imports move to `dist/cjs` or `dist/esm`; importing `RawClient` still parses every tag file.
+
 ## 2.12.0 — 2026-08-28
 
 ### `tfl docs` and MCP `docs` — one offline catalogue

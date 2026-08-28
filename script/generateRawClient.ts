@@ -75,7 +75,8 @@ const QUERY_INPUT_ALIASES: Record<string, Record<string, string>> = {
 
 const GENERATION_META_HINT = '// Generation timestamps: see ./generated.meta.json';
 const ENDPOINTS_PATH = path.join(__dirname, '..', 'src', 'generated', 'endpoints.ts');
-const RAW_PATH = path.join(__dirname, '..', 'src', 'generated', 'raw.ts');
+const RAW_FACADE_PATH = path.join(__dirname, '..', 'src', 'generated', 'raw.ts');
+const RAW_DIR = path.join(__dirname, '..', 'src', 'generated', 'raw');
 
 const toCamelCase = (value: string): string =>
   value.replace(/[-_](.)/g, (_, char: string) => char.toUpperCase()).replace(/^./, (c) => c.toLowerCase());
@@ -269,7 +270,7 @@ const buildMethodBody = (endpoint: EndpointDef): string => {
 
   return `    const query: Record<string, string | number | boolean | string[] | undefined> = {};
 ${queryEntries.join('\n')}
-    return this.http.request<${endpoint.returnType}>({
+    return http.request<${endpoint.returnType}>({
       method: '${endpoint.httpMethod}',
       path: ${pathExpr},
       query,
@@ -278,12 +279,33 @@ ${queryEntries.join('\n')}
     });`;
 };
 
+const collectTypeNames = (tagEndpoints: EndpointDef[]): string[] => {
+  const typeNames = new Set<string>();
+  for (const endpoint of tagEndpoints) {
+    const { returnType } = endpoint;
+    if (
+      returnType === 'unknown' ||
+      returnType === 'unknown[]' ||
+      returnType === 'Record<string, unknown>' ||
+      returnType === 'string' ||
+      returnType === 'number' ||
+      returnType === 'boolean'
+    ) {
+      continue;
+    }
+    if (returnType.endsWith('[]')) {
+      typeNames.add(returnType.slice(0, -2));
+    } else {
+      typeNames.add(returnType);
+    }
+  }
+  return [...typeNames].sort();
+};
+
 const generate = (): void => {
   const doc = JSON.parse(fs.readFileSync(SPEC_PATH, 'utf8')) as SwaggerDoc;
   const endpoints = buildEndpoints(doc);
   const provenance = readSpecProvenance();
-
-  const argsInterfaces = endpoints.map(buildArgsInterface).join('\n\n');
 
   const endpointsFile = `// Auto-generated endpoint registry. Do not edit manually.
 // Source: ${provenance}
@@ -318,62 +340,18 @@ export const ENDPOINT_COUNT = ${endpoints.length} as const;
     return acc;
   }, {});
 
-  const namespaceBlocks = Object.entries(byTag)
-    .map(([tagKey, tagEndpoints]) => {
-      const methods = tagEndpoints
-        .map((endpoint) => {
-          const argsType = `${toPascalCase(tagKey)}${toPascalCase(endpoint.methodName)}Args`;
-          const argsDefault = endpoint.requiredParams.length === 0 ? ' = {}' : '';
-          return `    /**
-     * ${endpoint.summary.replace(/\*/g, '')}
-     * @operationId ${endpoint.operationId}
-     * @deprecated ${endpoint.deprecated}
-     */
-    ${endpoint.methodName}: async (args: ${argsType}${argsDefault}): Promise<${endpoint.returnType}> => {
-${buildMethodBody(endpoint)}
-    },`;
-        })
-        .join('\n\n');
+  const tagKeys = Object.keys(byTag).sort();
 
-      return `  readonly ${tagKey} = {
-${methods}
-  };`;
-    })
-    .join('\n\n');
-
-  const typeNames = new Set<string>();
-  for (const endpoint of endpoints) {
-    const { returnType } = endpoint;
-    if (
-      returnType === 'unknown' ||
-      returnType === 'unknown[]' ||
-      returnType === 'Record<string, unknown>' ||
-      returnType === 'string' ||
-      returnType === 'number' ||
-      returnType === 'boolean'
-    ) {
-      continue;
-    }
-    if (returnType.endsWith('[]')) {
-      typeNames.add(returnType.slice(0, -2));
-    } else {
-      typeNames.add(returnType);
-    }
+  fs.mkdirSync(RAW_DIR, { recursive: true });
+  for (const existing of fs.readdirSync(RAW_DIR)) {
+    fs.unlinkSync(path.join(RAW_DIR, existing));
   }
 
-  const typeImportBlock = typeNames.size
-    ? `import type {\n  ${[...typeNames].sort().join(',\n  ')},\n} from './types';\n\n`
-    : '';
-
-  const rawFile = `// Auto-generated raw TfL API client. Do not edit manually.
+  const sharedFile = `// Auto-generated raw TfL API client. Do not edit manually.
 // Source: ${provenance}
 ${GENERATION_META_HINT}
 
-import { TflHttpClient } from '../core/http';
-${typeImportBlock}
-${argsInterfaces}
-
-const formatPathParam = (value: string | number | boolean | string[] | undefined): string => {
+export const formatPathParam = (value: string | number | boolean | string[] | undefined): string => {
   if (Array.isArray(value)) {
     return value.join(',');
   }
@@ -382,19 +360,87 @@ const formatPathParam = (value: string | number | boolean | string[] | undefined
   }
   return String(value);
 };
+`;
+  fs.writeFileSync(path.join(RAW_DIR, '_shared.ts'), sharedFile);
+
+  const factoryNames: Array<{ tagKey: string; factory: string }> = [];
+
+  for (const tagKey of tagKeys) {
+    const tagEndpoints = byTag[tagKey];
+    const factory = `create${toPascalCase(tagKey)}Raw`;
+    factoryNames.push({ tagKey, factory });
+
+    const argsInterfaces = tagEndpoints.map(buildArgsInterface).join('\n\n');
+    const typeNames = collectTypeNames(tagEndpoints);
+    const typeImportBlock = typeNames.length
+      ? `import type {\n  ${typeNames.join(',\n  ')},\n} from '../types';\n`
+      : '';
+
+    const methods = tagEndpoints
+      .map((endpoint) => {
+        const argsType = `${toPascalCase(tagKey)}${toPascalCase(endpoint.methodName)}Args`;
+        const argsDefault = endpoint.requiredParams.length === 0 ? ' = {}' : '';
+        return `    /**
+     * ${endpoint.summary.replace(/\*/g, '')}
+     * @operationId ${endpoint.operationId}
+     * @deprecated ${endpoint.deprecated}
+     */
+    ${endpoint.methodName}: async (args: ${argsType}${argsDefault}): Promise<${endpoint.returnType}> => {
+${buildMethodBody(endpoint)}
+    },`;
+      })
+      .join('\n\n');
+
+    const tagFile = `// Auto-generated raw TfL API client. Do not edit manually.
+// Source: ${provenance}
+${GENERATION_META_HINT}
+
+import type { TflHttpClient } from '../../core/http';
+import { formatPathParam } from './_shared';
+${typeImportBlock}
+${argsInterfaces}
+
+export const ${factory} = (http: TflHttpClient) => ({
+${methods}
+});
+`;
+    fs.writeFileSync(path.join(RAW_DIR, `${tagKey}.ts`), tagFile);
+  }
+
+  const factoryImports = factoryNames
+    .map(({ tagKey, factory }) => `import { ${factory} } from './raw/${tagKey}';`)
+    .join('\n');
+
+  const lazyFields = factoryNames
+    .map(({ tagKey, factory }) => {
+      const cache = `_${tagKey}`;
+      return `  private ${cache}?: ReturnType<typeof ${factory}>;
+  get ${tagKey}() {
+    return (this.${cache} ??= ${factory}(this.http));
+  }`;
+    })
+    .join('\n\n');
+
+  const rawFile = `// Auto-generated raw TfL API client. Do not edit manually.
+// Source: ${provenance}
+${GENERATION_META_HINT}
+
+import type { TflHttpClient } from '../core/http';
+${factoryImports}
 
 export class RawClient {
   constructor(private readonly http: TflHttpClient) {}
 
-${namespaceBlocks}
+${lazyFields}
 }
 `;
 
   fs.writeFileSync(ENDPOINTS_PATH, endpointsFile);
-  fs.writeFileSync(RAW_PATH, rawFile);
-  recordGeneratedArtifact('raw', { endpointCount: endpoints.length });
+  fs.writeFileSync(RAW_FACADE_PATH, rawFile);
+  recordGeneratedArtifact('raw', { endpointCount: endpoints.length, tagCount: tagKeys.length });
   console.log(`Generated ${endpoints.length} endpoints -> ${ENDPOINTS_PATH}`);
-  console.log(`Generated RawClient -> ${RAW_PATH}`);
+  console.log(`Generated RawClient facade -> ${RAW_FACADE_PATH}`);
+  console.log(`Generated ${tagKeys.length} raw tag modules -> ${RAW_DIR}`);
 };
 
 generate();

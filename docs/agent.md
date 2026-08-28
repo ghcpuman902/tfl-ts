@@ -40,7 +40,7 @@ These are available synchronously on the client instance after construction:
 | `STOP_POINT_TYPES` | `stopPoint` | Stop type enums |
 | `LINE_IDS` | package export | Mode-grouped line name → ID maps |
 
-**Use static metadata for:** input validation, dropdowns, display labels, station diagrams, severity styling, mode filtering — anything that does not need current operational state. Import `LINE_STATION_SEQUENCES` directly when credentials are unavailable; the same data is exposed as `client.line.STATION_SEQUENCES` for an existing client.
+**Use static metadata for:** input validation, dropdowns, display labels, station diagrams, severity styling, mode filtering — anything that does not need current operational state. Import `LINE_STATION_SEQUENCES` from `tfl-ts/meta` when credentials are unavailable. The same data is still on `client.line.STATION_SEQUENCES` (loaded on first access). Client Components should import colours from `tfl-ts/ui`.
 
 ### Live (runtime TfL REST API)
 
@@ -98,7 +98,7 @@ await client.stopPoint.get({ stopPointIds: ['940GZZLUOXC'] });
 await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
 await client.stopPoint.getNormalizedArrivals({ stopPointIds: ['940GZZLUOXC'] });
 
-import { STATION_HUBS, resolveArrivalsStopId, normalizeArrival } from 'tfl-ts';
+import { STATION_HUBS, resolveArrivalsStopId, normalizeArrival } from 'tfl-ts/meta';
 const hub = STATION_HUBS['940GZZLULVT'];
 const elizabethStop = hub && resolveArrivalsStopId(hub, 'elizabeth');
 // resolveArrivalsStopId returns undefined for a line the hub doesn't carry —
@@ -386,7 +386,7 @@ import {
   getStatusKind,
   isNormalService,
   isScheduledClosure,
-} from 'tfl-ts';
+} from 'tfl-ts/ui';
 ```
 
 Use these for styling status boards — they operate on data already fetched from the API.

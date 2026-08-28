@@ -33,7 +33,7 @@ severity / mode constants             client.stopPoint.search()
                                       client.stopPoint.searchBusStops()
 ```
 
-**Always check static metadata first.** If you only need line names, station order and branches, mode lists, or ID validation, do not call the API. Import `LINE_STATION_SEQUENCES` directly when no configured client is available.
+**Always check static metadata first.** If you only need line names, station order and branches, mode lists, or ID validation, do not call the API. Import `LINE_STATION_SEQUENCES` from `tfl-ts/meta` when no configured client is available. In Client Components import colours from `tfl-ts/ui`.
 
 ## Setup
 
@@ -81,13 +81,14 @@ Full branded board (partition disruptions / good service, colour bars, night bad
 [tfl-components](https://github.com/ghcpuman902/tfl-components) · try it in the [API explorer](https://tfl.manglekuo.com/docs/explorer)
 
 ```typescript
-import TflClient, {
+import TflClient from 'tfl-ts';
+import {
   sortLinesBySeverityAndOrder,
   getSeverityCategory,
   getLineColor,
   getWorstCurrentStatus,
   isNormalService,
-} from 'tfl-ts';
+} from 'tfl-ts/ui';
 
 const client = new TflClient();
 
@@ -128,7 +129,7 @@ Use `getStatus({ detail: true })` only when the exact generated TfL field names 
 `getLineColor()` returns hex values, not CSS framework classes. Use inline styles so colors work regardless of Tailwind/CSS setup:
 
 ```tsx
-import { getLineColor, getLineCssProps } from 'tfl-ts';
+import { getLineColor, getLineCssProps } from 'tfl-ts/ui';
 
 const colors = getLineColor(line.id ?? ''); // normalizes elizabeth-line → elizabeth
 
@@ -171,7 +172,7 @@ for (const a of sorted.slice(0, 5)) {
 A tube station and its mainline rail counterpart can share one physical interchange but different StopPoint ids, each with different lines. `STATION_HUBS` resolves the right one:
 
 ```typescript
-import { STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts';
+import { STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts/meta';
 
 // Liverpool Street: tube id and rail id both resolve to the same hub
 const hub = STATION_HUBS['940GZZLULVT'];

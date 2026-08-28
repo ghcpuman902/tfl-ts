@@ -53,7 +53,8 @@ pnpm exec tfl raw line.get --modes tube
 import type { TflApiPresentationEntitiesLine } from 'tfl-ts/dist/generated/tfl';
 
 // v2
-import type { TflApiPresentationEntitiesLine } from 'tfl-ts/dist/generated/types';
+import type { TflApiPresentationEntitiesLine } from 'tfl-ts/dist/cjs/generated/types';
+// or, under ESM bundlers: tfl-ts/dist/esm/generated/types
 ```
 
 The deprecated `./generated/tfl` re-export still exists for compatibility but will be removed in a future major release.

@@ -1,0 +1,17 @@
+{
+  "statusBoardUi": {
+    "gzipBytes": 4200,
+    "mustNotContainStationSequences": true,
+    "mustNotContainRawClient": true,
+    "mustNotContainProcessEnv": true
+  },
+  "topologyMeta": {
+    "gzipBytes": 48000
+  },
+  "hubsMeta": {
+    "gzipBytes": 30000
+  },
+  "tflClient": {
+    "gzipBytes": 56000
+  }
+}

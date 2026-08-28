@@ -8,7 +8,7 @@ Claude Code also loads [CLAUDE.md](./CLAUDE.md), which is the longer form of thi
 
 TfL mixes stable reference data with real-time data. tfl-ts splits them:
 
-- **Static (no network):** `LINE_STATION_SEQUENCES`, `STATION_HUBS`, `client.line.LINE_NAMES`, `client.line.LINE_INFO`, `client.stopPoint.MODE_NAMES`, severity tables. Import these when you only need names, order, or ID checks.
+- **Static (no network):** `LINE_STATION_SEQUENCES`, `STATION_HUBS` from `tfl-ts/meta`; colours from `tfl-ts/ui`; `client.line.LINE_NAMES`, `client.line.LINE_INFO`, `client.stopPoint.MODE_NAMES`, severity tables. Import these when you only need names, order, or ID checks.
 - **Live (network):** `line.getStatus()`, `stopPoint.getArrivals()`, `journey.plan()`, and the rest of the wrappers. These need `TFL_APP_KEY`.
 
 Check static metadata before you call the API.
@@ -22,7 +22,8 @@ TFL_APP_KEY=your-primary-key
 Register at [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/), subscribe to "500 Requests per min", then Profile → Show for the Primary key.
 
 ```typescript
-import TflClient, { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts';
+import TflClient from 'tfl-ts';
+import { LINE_STATION_SEQUENCES, STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts/meta';
 
 const client = new TflClient(); // reads TFL_APP_KEY from process.env
 
@@ -48,7 +49,7 @@ npx tfl-ts docs grep -i STATION_HUBS
 
 ## Rules if you are working in this repo
 
-- **`pnpm run build`** compiles TypeScript only. Never wire generation into `build`.
+- **`pnpm run build`** compiles TypeScript only (CJS + ESM). Never wire generation into `build`.
 - Wrappers call `this.raw.<tag>.<method>()`. Keep every REST endpoint on `client.raw`.
 - Use `lineIds` / `stopPointIds` in public wrappers, not generic `ids`.
 

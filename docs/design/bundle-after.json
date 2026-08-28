@@ -1,0 +1,91 @@
+{
+  "phase": "after",
+  "layout": "dual",
+  "measuredAt": "2026-08-28T10:14:30.697Z",
+  "esbuild": "0.25",
+  "flags": {
+    "bundle": true,
+    "minify": true,
+    "format": "esm"
+  },
+  "fixtures": [
+    {
+      "id": "statusBoardBarrel",
+      "label": "Status board via 'tfl-ts' (barrel)",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/index.js",
+      "rawBytes": 341468,
+      "gzipBytes": 34824,
+      "containsStationSequences": true,
+      "containsRawClient": false,
+      "containsProcessEnv": false
+    },
+    {
+      "id": "statusBoardUi",
+      "label": "Status board via tfl-ts/ui",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/ui.js",
+      "rawBytes": 20726,
+      "gzipBytes": 3560,
+      "containsStationSequences": false,
+      "containsRawClient": false,
+      "containsProcessEnv": false
+    },
+    {
+      "id": "topologyBarrel",
+      "label": "Topology via barrel",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/index.js",
+      "rawBytes": 479982,
+      "gzipBytes": 48904,
+      "containsStationSequences": true,
+      "containsRawClient": false,
+      "containsProcessEnv": false
+    },
+    {
+      "id": "topologyMeta",
+      "label": "Topology via tfl-ts/meta",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/meta.js",
+      "rawBytes": 447470,
+      "gzipBytes": 39218,
+      "containsStationSequences": true,
+      "containsRawClient": false,
+      "containsProcessEnv": false
+    },
+    {
+      "id": "hubsMeta",
+      "label": "Hubs + resolveArrivalsStopId via tfl-ts/meta",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/meta.js",
+      "rawBytes": 306159,
+      "gzipBytes": 24591,
+      "containsStationSequences": true,
+      "containsRawClient": false,
+      "containsProcessEnv": false
+    },
+    {
+      "id": "hubsBarrel",
+      "label": "Hubs + resolveArrivalsStopId via barrel",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/index.js",
+      "rawBytes": 338673,
+      "gzipBytes": 33738,
+      "containsStationSequences": true,
+      "containsRawClient": false,
+      "containsProcessEnv": false
+    },
+    {
+      "id": "tflClient",
+      "label": "import TflClient from tfl-ts",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/esm/index.js",
+      "rawBytes": 397676,
+      "gzipBytes": 47655,
+      "containsStationSequences": true,
+      "containsRawClient": true,
+      "containsProcessEnv": true
+    }
+  ],
+  "construct": {
+    "journeyConstructedOnNew": false,
+    "journeyConstructedOnLineAccess": false,
+    "journeyConstructedOnJourneyAccess": true,
+    "sequencesModuleLoadedOnClientImport": true,
+    "sequencesLoadedOnLineAccess": true,
+    "sequencesLoadedOnSequencesAccess": true
+  }
+}

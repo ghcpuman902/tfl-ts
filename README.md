@@ -154,7 +154,7 @@ Use `getStatus({ detail: true })` or `client.raw.line.*` for exact TfL field nam
 Tube, Elizabeth line, DLR, Overground, Tram, and river-bus pier topology. No credentials, no network. Identity, order, and branches only (no status or arrivals). River piers are not in `STATION_HUBS` — poll the `NaptanFerryPort` id. Live topology: `client.line.getRouteSequence()`. Also on the client: `client.line.STATION_SEQUENCES`.
 
 ```typescript
-import { LINE_STATION_SEQUENCES } from 'tfl-ts';
+import { LINE_STATION_SEQUENCES } from 'tfl-ts/meta';
 
 const bakerloo = LINE_STATION_SEQUENCES.bakerloo;
 const outbound = bakerloo.orderedRoutes.find(
@@ -168,7 +168,7 @@ console.log(outbound?.stationIds, bakerloo.branches);
 `STATION_HUBS` maps each physical station to its sibling StopPoint ids and the specific id that carries arrivals for each line — Liverpool Street's tube id (`940GZZLULVT`) and rail id (`910GLIVST`) both resolve to one `HUBLST` entry, with Central on the tube id and Elizabeth line on the rail id. No credentials, no network.
 
 ```typescript
-import { STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts';
+import { STATION_HUBS, resolveArrivalsStopId } from 'tfl-ts/meta';
 
 const hub = STATION_HUBS['940GZZLULVT']; // any sibling id works
 const elizabethStopId = hub && resolveArrivalsStopId(hub, 'elizabeth'); // '910GLIVST'
@@ -218,7 +218,7 @@ import {
   getLineStatusSummary,
   getWorstCurrentStatus,
   getStatusKind,
-} from 'tfl-ts';
+} from 'tfl-ts/ui';
 
 const { hex } = getLineColor('central'); // #E32017
 const styles = getLineInlineStyles('central');

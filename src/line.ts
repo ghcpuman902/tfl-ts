@@ -28,7 +28,7 @@ import type {
 
 // Import raw data from generated meta files
 import { Lines } from './generated/meta/Line';
-import { LINE_STATION_SEQUENCES } from './generated/meta/StationSequence';
+import { loadStationSequences } from './utils/loadStationSequences';
 import { 
   Modes, 
   ServiceTypes, 
@@ -358,7 +358,9 @@ export class Line {
   public readonly LINE_INFO = LINE_INFO;
 
   /** Static station names, ordered routes, and branches for rail lines. */
-  public readonly STATION_SEQUENCES = LINE_STATION_SEQUENCES;
+  get STATION_SEQUENCES(): (typeof import('./generated/meta/StationSequence'))['LINE_STATION_SEQUENCES'] {
+    return loadStationSequences().LINE_STATION_SEQUENCES;
+  }
 
   /** Map of mode names to their metadata (static, no HTTP request needed) */
   public readonly MODE_METADATA = modeMetadata;

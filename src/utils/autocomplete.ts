@@ -7,15 +7,16 @@
  * accepting any string (open enums, bus route numbers, future TfL IDs).
  */
 
-import { Lines } from '../generated/meta/Line';
-import { Modes, ServiceTypes } from '../generated/meta/Meta';
+type LinesList = (typeof import('../generated/meta/Line').Lines);
+type ModesList = (typeof import('../generated/meta/Meta').Modes);
+type ServiceTypesList = (typeof import('../generated/meta/Meta').ServiceTypes);
 
 /** Suggests `T` literals; still accepts any string at the type level. */
 export type AutocompleteString<T extends string> = T | (string & {});
 
-export type ModeName = (typeof Modes)[number]['modeName'];
-export type ServiceType = (typeof ServiceTypes)[number];
-export type TflLineId = (typeof Lines)[number]['id'];
+export type ModeName = ModesList[number]['modeName'];
+export type ServiceType = ServiceTypesList[number];
+export type TflLineId = LinesList[number]['id'];
 
 /**
  * Slug-style line IDs for IntelliSense (tube, DLR, rail, river, …).
@@ -23,7 +24,7 @@ export type TflLineId = (typeof Lines)[number]['id'];
  * routes remain valid via {@link AutocompleteString}.
  */
 export type NamedLineId = Extract<
-  (typeof Lines)[number],
+  LinesList[number],
   { modeName: Exclude<ModeName, 'bus'> }
 >['id'];
 

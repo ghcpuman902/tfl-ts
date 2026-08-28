@@ -223,7 +223,7 @@ describe('tfl docs catalogue', () => {
   test('AGENTS.md and CLAUDE.md share the critical facts', () => {
     const agents = readDoc('AGENTS.md');
     const claude = readDoc('CLAUDE.md');
-    const required = ['LINE_STATION_SEQUENCES', 'STATION_HUBS', 'client.raw', 'pnpm run build', 'tfl docs'];
+    const required = ['LINE_STATION_SEQUENCES', 'STATION_HUBS', 'client.raw', 'pnpm run build', 'tfl docs', 'tfl-ts/ui'];
     for (const token of required) {
       expect(agents).toContain(token);
       expect(claude).toContain(token);

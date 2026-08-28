@@ -115,6 +115,12 @@ export const DOC_MANIFEST: DocEntry[] = [
     audience: 'Maintainers',
   },
   {
+    id: 'docs/design/2.13-bundle.md',
+    path: 'docs/design/2.13-bundle.md',
+    title: '2.13 tree-shaking bundle ledger',
+    audience: 'Maintainers',
+  },
+  {
     id: 'examples/README.md',
     path: 'examples/README.md',
     title: 'Library to UI mapping',

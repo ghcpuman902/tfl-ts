@@ -1,0 +1,72 @@
+{
+  "phase": "before",
+  "layout": "legacy",
+  "measuredAt": "2026-08-28T09:59:06.181Z",
+  "esbuild": "0.25",
+  "flags": {
+    "bundle": true,
+    "minify": true,
+    "format": "esm"
+  },
+  "fixtures": [
+    {
+      "id": "statusBoardBarrel",
+      "label": "Status board via 'tfl-ts' (barrel)",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/index.js",
+      "rawBytes": 610903,
+      "gzipBytes": 77845,
+      "containsStationSequences": true,
+      "containsRawClient": true,
+      "containsProcessEnv": true
+    },
+    {
+      "id": "statusBoardUi",
+      "label": "Status board via tfl-ts/ui",
+      "importPath": null,
+      "skipped": "tfl-ts/ui does not exist in this emit (2.12)"
+    },
+    {
+      "id": "topologyBarrel",
+      "label": "Topology via barrel",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/index.js",
+      "rawBytes": 610519,
+      "gzipBytes": 77779,
+      "containsStationSequences": true,
+      "containsRawClient": true,
+      "containsProcessEnv": true
+    },
+    {
+      "id": "topologyMeta",
+      "label": "Topology via tfl-ts/meta",
+      "importPath": null,
+      "skipped": "tfl-ts/meta does not exist in this emit (2.12)"
+    },
+    {
+      "id": "hubsBarrel",
+      "label": "Hubs + resolveArrivalsStopId via barrel",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/index.js",
+      "rawBytes": 610591,
+      "gzipBytes": 77799,
+      "containsStationSequences": true,
+      "containsRawClient": true,
+      "containsProcessEnv": true
+    },
+    {
+      "id": "tflClient",
+      "label": "import TflClient from tfl-ts",
+      "importPath": "/Users/manglekuo/dev/nextjs/tfl-ts/dist/index.js",
+      "rawBytes": 610465,
+      "gzipBytes": 77780,
+      "containsStationSequences": true,
+      "containsRawClient": true,
+      "containsProcessEnv": true
+    }
+  ],
+  "construct": {
+    "journeyModuleLoadedOnImport": true,
+    "journeyConstructedOnNew": true,
+    "sequencesModuleLoadedOnImport": true,
+    "sequencesLoadedOnLineAccess": true,
+    "sequencesLoadedOnSequencesAccess": true
+  }
+}

@@ -5,7 +5,7 @@
  * including line colors, severity helpers, accessibility utilities, and more.
  * 
  * @example
- * import { getLineColor, getSeverityCategory, getAccessibleSeverityLabel } from 'tfl-ts/utils/ui';
+ * import { getLineColor, getSeverityCategory, getAccessibleSeverityLabel } from 'tfl-ts/ui';
  * 
  * // Get line colors for styling
  * const colors = getLineColor('central'); // { hex: '#E32017', poorDarkContrast: false }
@@ -19,7 +19,6 @@
  */
 
 // Import generated metadata for accurate data
-import { Lines } from '../generated/meta/Line';
 import { Severity } from '../generated/meta/Meta';
 import {
   compareLineStatuses,
@@ -45,9 +44,9 @@ export {
 export type { CurrentStatusOptions, LineStatusLike, StatusKind } from './lineStatus';
 
 // Types
-export type LineId = typeof Lines[number]['id'];
+export type LineId = (typeof import('../generated/meta/Line').Lines)[number]['id'];
 export type SeverityLevel = number; // Use number to match generated API types
-export type SeverityDescription = typeof Severity[number]['description'];
+export type SeverityDescription = (typeof import('../generated/meta/Meta').Severity)[number]['description'];
 
 /**
  * How poor-dark-contrast lines (e.g. Northern) stay readable on dark surfaces.

@@ -11,7 +11,8 @@ src/
 │   │   └── spec.meta.json    # sha256, fetchedAt, pathCount
 │   ├── generated.meta.json   # Generation timestamps (excluded from drift check)
 │   ├── types.ts              # swagger-typescript-api --no-client
-│   ├── raw.ts                # RawClient — uniform object-param API
+│   ├── raw.ts                # RawClient facade — lazy per-tag getters
+│   ├── raw/                  # Per-tag factories (line.ts, stopPoint.ts, …)
 │   ├── endpoints.ts          # Registry (84 endpoints)
 │   ├── jsdoc/                # AI/human reference — do not import in wrappers
 │   ├── meta/                 # TfL metadata constants (from live API)
@@ -22,11 +23,11 @@ src/
 
 script/
 ├── generate.ts               # Dispatcher: --only=types,raw,meta,station-sequences,station-hubs,jsdoc
-├── check.ts                  # Dispatcher: --only=generated,station-sequences,station-hubs,drift
+├── check.ts                  # Dispatcher: --only=generated,station-sequences,station-hubs,bundle,drift
 ├── demo.ts                   # Dispatcher: console | realtime | smoke
 ├── generatedMeta.ts          # Writes generated.meta.json
 ├── generateTypes.ts          # types + record artifact meta
-├── generateRawClient.ts      # raw.ts + endpoints.ts
+├── generateRawClient.ts      # raw.ts facade + raw/<tag>.ts + endpoints.ts
 ├── generateJsdoc.ts          # jsdoc/*
 ├── generateMeta.ts           # meta/* (live API)
 ├── generateStationSequences.ts
