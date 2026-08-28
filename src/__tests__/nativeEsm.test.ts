@@ -37,12 +37,21 @@ describe('native Node ESM emit', () => {
     expect(road).toMatch(/generated\.meta\.json['"] with \{ type: 'json' \}/);
   });
 
-  test('node loads tfl-ts, tfl-ts/ui, and tfl-ts/meta', () => {
+  test('node loads tfl-ts, tfl-ts/ui, tfl-ts/meta, and 2.11 dist specifiers', () => {
     const out = execFileSync(process.execPath, [path.join(__dirname, 'nativeEsmLoad.mjs')], {
       cwd: ROOT,
       encoding: 'utf8',
       env: { ...process.env, TFL_APP_KEY: 'test-app-key' },
     });
     expect(out).toContain('native-esm-ok');
+  });
+
+  test('node CJS loads tfl-ts and 2.11 dist specifiers', () => {
+    const out = execFileSync(process.execPath, [path.join(__dirname, 'nativeCjsLoad.cjs')], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      env: { ...process.env, TFL_APP_KEY: 'test-app-key' },
+    });
+    expect(out).toContain('native-cjs-ok');
   });
 });

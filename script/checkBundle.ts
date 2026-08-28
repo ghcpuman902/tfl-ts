@@ -28,7 +28,7 @@ const assertExports = (): void => {
     sideEffects?: boolean;
   };
   const keys = Object.keys(pkg.exports ?? {});
-  for (const key of ['.', './ui', './meta']) {
+  for (const key of ['.', './ui', './meta', './dist/generated/meta/Line.js', './dist/*.js']) {
     if (!keys.includes(key)) {
       console.error(`package.json exports missing ${key}`);
       process.exit(1);

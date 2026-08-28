@@ -30,6 +30,33 @@
       "import": "./dist/esm/utils/ui.js",
       "require": "./dist/cjs/utils/ui.js"
     },
+    "./dist/generated/meta/Line.js": {
+      "types": "./dist/cjs/compat/deprecatedLineCatalogue.d.ts",
+      "import": "./dist/esm/compat/deprecatedLineCatalogue.js",
+      "require": "./dist/cjs/compat/deprecatedLineCatalogue.js"
+    },
+    "./dist/generated/meta/Line": {
+      "types": "./dist/cjs/compat/deprecatedLineCatalogue.d.ts",
+      "import": "./dist/esm/compat/deprecatedLineCatalogue.js",
+      "require": "./dist/cjs/compat/deprecatedLineCatalogue.js"
+    },
+    "./dist/generated/raw.js": {
+      "types": "./dist/cjs/compat/deprecatedRawClient.d.ts",
+      "import": "./dist/esm/compat/deprecatedRawClient.js",
+      "require": "./dist/cjs/compat/deprecatedRawClient.js"
+    },
+    "./dist/generated/raw": {
+      "types": "./dist/cjs/compat/deprecatedRawClient.d.ts",
+      "import": "./dist/esm/compat/deprecatedRawClient.js",
+      "require": "./dist/cjs/compat/deprecatedRawClient.js"
+    },
+    "./dist/cjs/*": "./dist/cjs/*",
+    "./dist/esm/*": "./dist/esm/*",
+    "./dist/*.js": {
+      "types": "./dist/cjs/*.d.ts",
+      "import": "./dist/esm/*.js",
+      "require": "./dist/cjs/*.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

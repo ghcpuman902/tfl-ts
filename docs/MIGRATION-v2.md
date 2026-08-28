@@ -59,7 +59,7 @@ import type { TflApiPresentationEntitiesLine } from 'tfl-ts/dist/cjs/generated/t
 
 The deprecated `./generated/tfl` re-export still exists for compatibility but will be removed in a future major release.
 
-From 2.13, `package.json` `exports` only lists `.`, `./ui`, `./meta`, and `./utils/ui`. Deep paths such as `tfl-ts/dist/generated/meta/Line.js` are blocked. Use `import { Lines } from 'tfl-ts/meta'`. The raw facade file is `dist/*/generated/rawClient.js`, not `generated/raw.js` beside the per-tag folder.
+2.13 still accepts 2.11 deep specifiers such as `tfl-ts/dist/generated/meta/Line.js` and `tfl-ts/dist/generated/tfl`. They map onto `dist/cjs` / `dist/esm`. `tfl-ts/dist/generated/raw.js` maps to the `rawClient` facade. Those paths are deprecated; `tfl-ts/meta` and `client.raw` are the ones to use in new code. They stay until a major.
 
 ### 4. Realtime polling
 

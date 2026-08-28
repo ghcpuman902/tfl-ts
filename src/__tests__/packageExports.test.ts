@@ -11,11 +11,15 @@ describe('package exports', () => {
     module: string;
   };
 
-  test('exposes ., ./ui, and ./meta with sideEffects false', () => {
+  test('exposes ., ./ui, ./meta, and 2.11 dist aliases', () => {
     expect(pkg.sideEffects).toBe(false);
     expect(pkg.exports['.']).toBeDefined();
     expect(pkg.exports['./ui']).toBeDefined();
     expect(pkg.exports['./meta']).toBeDefined();
+    expect(pkg.exports['./utils/ui']).toBeDefined();
+    expect(pkg.exports['./dist/generated/meta/Line.js']).toBeDefined();
+    expect(pkg.exports['./dist/generated/raw.js']).toBeDefined();
+    expect(pkg.exports['./dist/*.js']).toBeDefined();
     expect(pkg.main).toContain('dist/cjs');
     expect(pkg.module).toContain('dist/esm');
   });

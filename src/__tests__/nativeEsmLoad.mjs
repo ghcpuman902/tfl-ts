@@ -25,6 +25,16 @@ if (typeof getLineColor !== 'function') {
   throw new Error('tfl-ts barrel getLineColor missing');
 }
 
+const lineMod = await import('tfl-ts/dist/generated/meta/Line.js');
+if (!Array.isArray(lineMod.Lines) || lineMod.Lines.length === 0) {
+  throw new Error('tfl-ts/dist/generated/meta/Line.js missing Lines');
+}
+
+const rawMod = await import('tfl-ts/dist/generated/raw.js');
+if (typeof rawMod.RawClient !== 'function') {
+  throw new Error('tfl-ts/dist/generated/raw.js missing RawClient');
+}
+
 const client = new TflClient();
 if (client.line.STATION_SEQUENCES.bakerloo.lineName !== 'Bakerloo') {
   throw new Error('client.line.STATION_SEQUENCES failed under ESM');

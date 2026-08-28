@@ -6,6 +6,8 @@
  * 
  * @example
  * import { getLineColor, getSeverityCategory, getAccessibleSeverityLabel } from 'tfl-ts/ui';
+ *
+ * // `tfl-ts/utils/ui` still resolves (deprecated alias). Prefer `tfl-ts/ui`.
  * 
  * // Get line colors for styling
  * const colors = getLineColor('central'); // { hex: '#E32017', poorDarkContrast: false }

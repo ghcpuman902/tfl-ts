@@ -8,7 +8,11 @@
 
 The `RawClient` file was `generated/raw.js` next to the per-tag directory `generated/raw/`. Node treated `from './generated/raw'` as a directory import. The facade is now `generated/rawClient.js`. Build rewrites `dist/esm` specifiers to `./foo.js` or `./foo/index.js`, adds `with { type: 'json' }` on JSON imports, and uses `createRequire(import.meta.url)` for station sequences.
 
-`Lines` is exported from `tfl-ts/meta`. Do not import `tfl-ts/dist/generated/meta/Line.js`; the `exports` map does not allow that path.
+### 2.11 `dist/` specifiers still resolve
+
+2.13.0's `exports` map blocked every `tfl-ts/dist/…` subpath (`ERR_PACKAGE_PATH_NOT_EXPORTED`). 2.11 had no `exports` field, so `import { Lines } from 'tfl-ts/dist/generated/meta/Line.js'` worked. Blocking that in a minor is a break.
+
+Those specifiers are restored as aliases onto `dist/cjs` / `dist/esm`. `tfl-ts/dist/generated/raw.js` points at `rawClient`. They are deprecated, same idea as `tfl-ts/utils/ui`. New code can use `tfl-ts/ui` and `tfl-ts/meta` (`Lines` is on `/meta`). Existing 2.11 imports do not have to change until a major.
 
 ## 2.13.0 — 2026-08-28
 
@@ -26,7 +30,7 @@ Measured with the same esbuild flags as 2.12 (see [docs/design/2.13-bundle.md](d
 
 `new TflClient()` no longer constructs Journey. `client.raw.travelTime` is not allocated until that getter runs.
 
-Accepted: dual CJS/ESM copies in mixed graphs; `Object.keys(client)` omits lazy modules; `tfl-ts/dist/...` deep imports move to `dist/cjs` or `dist/esm`; importing `RawClient` still parses every tag file.
+Accepted: dual CJS/ESM copies in mixed graphs; `Object.keys(client)` omits lazy modules; importing `RawClient` still parses every tag file. 2.11 `tfl-ts/dist/…` specifiers stay as deprecated aliases (see 2.13.1).
 
 ## 2.12.0 — 2026-08-28
 
