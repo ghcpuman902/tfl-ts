@@ -110,9 +110,9 @@ Read-only MCP (`npx tfl-ts mcp`), cached and rate-limited. Static tools never ca
 }
 ```
 
-Tools: `get_supported_modes`, `resolve_line_id`, `resolve_stop_id`, `get_line_status`, `get_arrivals`, `plan_journey`.
+Tools: `get_supported_modes`, `resolve_line_id`, `docs`, `resolve_stop_id`, `get_line_status`, `get_arrivals`, `plan_journey`.
 
-No repo access, or lost your context? `npx tfl-ts docs ls` lists every bundled agent doc (this README, `CLAUDE.md`, `docs/agent.md`, `docs/mcp.md`, …), `docs cat <id>` prints one, and `docs find <query>` / `docs grep <pattern>` search across all of them — offline, no API key required.
+No repo access, or lost your context? `npx tfl-ts docs ls` lists every bundled agent doc (this README, `CLAUDE.md`, `docs/agent.md`, `docs/mcp.md`, …). `docs cat <id>` prints one, and `docs find <query>` / `docs grep <pattern>` search across all of them — offline, no API key. The local MCP `docs` tool reads the same catalogue.
 
 ## Gotchas
 
@@ -270,12 +270,13 @@ Zero runtime dependencies (Node, browser, and edge with `fetch`).
 | [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) | Agent quick-start: static vs live |
 | [docs/agent.md](docs/agent.md) | Module reference, caching, Next.js patterns |
 | [.claude/skills/tfl-ts/SKILL.md](.claude/skills/tfl-ts/SKILL.md) | Usage patterns and gotchas |
-| [docs/mcp.md](docs/mcp.md) | Local MCP server |
+| [docs/mcp.md](docs/mcp.md) | Local MCP server (includes offline `docs` tool) |
 | [CHANGELOG.md](CHANGELOG.md) | Release notes |
 | [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) | v1 → v2 migration |
 | [examples/](examples/) | Library → UI mapping (tube + bus) |
+| [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) | Why `tfl docs` and MCP `docs` exist |
 
-All of the above ship in the npm package and are readable offline via `npx tfl-ts docs ls|cat|find|grep` — no clone required.
+All of the above ship in the npm package and are readable offline via `npx tfl-ts docs ls|cat|find|grep` or the MCP `docs` tool — no clone required.
 
 Playground demos under `playground/demo/` are for clones, not package consumers.
 

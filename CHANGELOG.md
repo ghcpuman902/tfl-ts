@@ -1,14 +1,16 @@
 # Changelog
 
-## 2.12.0 — 2026-08-27
+## 2.12.0 — 2026-08-28
 
-### `tfl docs` — offline lookup for tfl-ts's own agent documentation
+### `tfl docs` and MCP `docs` — one offline catalogue
 
-`npx tfl-ts docs ls|cat|find|grep` reads the same Markdown files already shipped in the npm tarball (`CLAUDE.md`, `AGENTS.md`, `docs/agent.md`, `docs/mcp.md`, `docs/REALTIME.md`, `docs/MIGRATION-v2.md`, `examples/README.md`, `.claude/skills/tfl-ts/SKILL.md`, `ERROR.md`, `CHANGELOG.md`) without a repo checkout or network access. `ls` lists everything with its audience, `cat <id>` prints one file, `find <query>` ranks the most relevant doc, and `grep [-i] <pattern>` full-text searches across all of them. This is for agents that have lost tfl-ts's conventions from a compacted context window and need to re-fetch them from a shell — see [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) for the reasoning (adapted from reading [vercel-labs/vgpu](https://github.com/vercel-labs/vgpu)'s `vgpu docs` command).
+`npx tfl-ts docs ls|cat|find|grep` reads Markdown already shipped in the npm tarball (including `README.md`, `AGENTS.md`, `CLAUDE.md`, `docs/agent.md`, `docs/mcp.md`, and `docs/design/agent-friendly-cli.md`) without a repo checkout or network access. `find` ranks id, title, and audience first, then searches document bodies, so `tfl docs find caching` resolves. Empty find/grep results and unknown top-level commands exit non-zero.
 
-Added `AGENTS.md` at the repo root — a short pointer to `CLAUDE.md` — for agents/tools that look for that filename specifically.
+The local MCP server adds a read-only `docs` tool (`list` / `read` / `find` / `grep`) over the same `DOC_MANIFEST`. `read` and `grep` are paginated. No API key. Structured errors carry `code`, `message`, and `fix`. MCP `serverInfo.version` is `1.2.0`.
 
-Fixed the CLI's argument dispatch: `tfl <command>` no longer routes through `util.parseArgs`'s strict option validation, which previously threw `Unknown option '--ids'` for exactly the documented usage (`tfl raw line.get --ids central`, and any other `raw` call with flags). Each subcommand now parses its own arguments; `tfl list --tag <tag>` is unaffected.
+`AGENTS.md` is a compact self-contained quick start for tools that load that filename, not a pointer to `CLAUDE.md`.
+
+Fixed CLI argument dispatch: `tfl <command>` no longer routes through `util.parseArgs`'s strict option validation, which previously threw `Unknown option '--ids'` for the documented usage (`tfl raw line.get --ids central`). Each subcommand now parses its own arguments; `tfl list --tag <tag>` is unaffected.
 
 ## 2.11.0 — 2026-08-23
 

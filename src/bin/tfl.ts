@@ -2,6 +2,7 @@
 import TflClient from '../index';
 import { ENDPOINTS } from '../generated/endpoints';
 import { startTflMcpServer } from '../mcp/server';
+import { DocsError } from '../docs';
 import { runDocsCommand } from './docs';
 
 const printHelp = (): void => {
@@ -25,7 +26,7 @@ Run "tfl docs help" for offline agent-documentation lookup.
 `);
 };
 
-const parseCliArgs = (argv: string[]): Record<string, string | string[]> => {
+export const parseCliArgs = (argv: string[]): Record<string, string | string[]> => {
   const result: Record<string, string | string[]> = {};
 
   for (let i = 0; i < argv.length; i++) {
@@ -83,9 +84,9 @@ const listEndpoints = (tagFilter?: string): void => {
 const runSmoke = async (): Promise<void> => {
   const client = new TflClient();
   const checks = [
-    () => client.raw.mode.getActiveServiceTypes({}),
-    () => client.raw.line.metaModes({}),
-    () => client.raw.stopPoint.metaModes({}),
+    (): Promise<unknown> => client.raw.mode.getActiveServiceTypes({}),
+    (): Promise<unknown> => client.raw.line.metaModes({}),
+    (): Promise<unknown> => client.raw.stopPoint.metaModes({}),
   ];
 
   for (const check of checks) {
@@ -108,9 +109,7 @@ const findFlagValue = (argv: string[], flag: string): string | undefined => {
 // whole point (forwarding arbitrary `--key value` pairs straight to any of the 84
 // generated raw operations). Only the subcommand name is a fixed positional; every
 // flag after it is interpreted by that subcommand's own parsing.
-const main = async (): Promise<void> => {
-  const argv = process.argv.slice(2);
-
+export const dispatchCli = async (argv: string[]): Promise<void> => {
   if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
     printHelp();
     return;
@@ -148,10 +147,22 @@ const main = async (): Promise<void> => {
     return;
   }
 
-  printHelp();
+  throw new Error(`Unknown command: ${command}\nRun "tfl --help" for usage.`);
 };
 
-main().catch((error) => {
+const printCliError = (error: unknown): void => {
+  if (error instanceof DocsError) {
+    console.error(error.message);
+    console.error(error.fix);
+    return;
+  }
+
   console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+};
+
+if (require.main === module) {
+  dispatchCli(process.argv.slice(2)).catch((error: unknown) => {
+    printCliError(error);
+    process.exit(1);
+  });
+}
