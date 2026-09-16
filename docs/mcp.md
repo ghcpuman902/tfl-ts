@@ -57,6 +57,8 @@ Unknown ids, empty queries, no matches, and invalid pagination return a tool err
 
 `get_line_status` requires `lineIds` or `modes` in its schema (`anyOf`). An empty argument object is invalid.
 
+`docs` advertises `anyOf` per operation: `list` needs only `operation`; `read` needs `id`; `find` needs `query`; `grep` needs `pattern`. MCP `serverInfo.version` is `1.4.0`.
+
 ## Response shape (agent-friendly)
 
 Live and static tools return **compact JSON**, not raw TfL payloads. Every response includes:

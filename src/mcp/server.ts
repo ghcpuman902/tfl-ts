@@ -45,7 +45,7 @@ interface ToolDefinition {
     properties: Record<string, unknown>;
     required?: string[];
     additionalProperties: false;
-    anyOf?: Array<{ required: string[] }>;
+    anyOf?: Array<{ required: string[]; properties?: Record<string, unknown> }>;
   };
 }
 
@@ -61,7 +61,7 @@ interface LiveEnvelope<T> {
 }
 
 const SERVER_NAME = 'tfl-ts';
-const SERVER_VERSION = '1.3.0';
+const SERVER_VERSION = '1.4.0';
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
 const SUPPORTED_PROTOCOL_VERSIONS = new Set([
   '2024-11-05',
@@ -152,8 +152,13 @@ const TOOLS: ToolDefinition[] = [
           description: 'For read: max lines (default 80). For grep: max matches (default 50).',
         },
       },
-      required: ['operation'],
       additionalProperties: false,
+      anyOf: [
+        { properties: { operation: { const: 'list' } }, required: ['operation'] },
+        { properties: { operation: { const: 'read' } }, required: ['operation', 'id'] },
+        { properties: { operation: { const: 'find' } }, required: ['operation', 'query'] },
+        { properties: { operation: { const: 'grep' } }, required: ['operation', 'pattern'] },
+      ],
     },
   },
   {

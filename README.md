@@ -258,7 +258,7 @@ stop();
 | `client.journey` | Journey planning |
 | `client.mode` | Mode lists and mode arrivals |
 | `client.search` / `place` / `road` / `vehicle` / `occupancy` / `bikePoint` / `cabwise` / `travelTimes` | Supporting APIs |
-| `client.raw` | All 84 REST endpoints (`pnpm exec tfl list` in a clone) |
+| `client.raw` | All 84 REST endpoints (`pnpm exec tfl list` prints JSON; `--text` is the old line form) |
 | `client.realtime` | Instant-pull polling over REST arrivals |
 
 Zero runtime dependencies (Node, browser, and edge with `fetch`).
@@ -275,6 +275,7 @@ Zero runtime dependencies (Node, browser, and edge with `fetch`).
 | [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md) | v1 → v2 migration |
 | [examples/](examples/) | Library → UI mapping (tube + bus) |
 | [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) | Why `tfl docs` and MCP `docs` exist |
+| [docs/design/evals.md](docs/design/evals.md) | Why `pnpm run eval` is a rate, not a Jest gate |
 
 All of the above ship in the npm package and are readable offline via `npx tfl-ts docs ls|cat|find|grep` or the MCP `docs` tool — no clone required.
 

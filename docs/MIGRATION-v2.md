@@ -43,6 +43,8 @@ Browse operations:
 ```bash
 pnpm exec tfl list
 pnpm exec tfl list --tag line
+pnpm exec tfl list --text
+pnpm exec tfl check --line central,Central
 pnpm exec tfl raw line.get --modes tube
 ```
 

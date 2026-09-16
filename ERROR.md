@@ -23,13 +23,13 @@ The client provides several specialized error classes:
 
 | Code | Meaning | Examples |
 |------|---------|----------|
-| 0 | Success | `tfl docs ls`, `tfl list` |
-| 1 | Command failed | `tfl docs find` / `grep` with no matches, live API errors |
-| 2 | Usage | unknown command, unknown doc id, unknown `tfl raw` operation, missing args |
+| 0 | Success | `tfl docs ls`, `tfl list`, `tfl check --line central` |
+| 1 | Command failed | `tfl docs find` / `grep` with no matches, live API errors, `tfl check` when an id is not a canonical slug |
+| 2 | Usage | unknown command, unknown doc id, unknown `tfl raw` operation, missing args, `tfl check` with no `--line` / `--mode` |
 | 3 | Missing credentials | `TflConfigError` / no `TFL_APP_KEY` |
 | 4 | Missing shipped file | a `DOC_MANIFEST` path is listed but absent on disk |
 
-`tfl raw line.notAMethod` exits 2 without requiring a key. A valid operation without `TFL_APP_KEY` exits 3.
+`tfl raw line.notAMethod` exits 2 without requiring a key. A valid operation without `TFL_APP_KEY` exits 3. `tfl check` never reads `TFL_APP_KEY`. `tfl list` prints JSON unless you pass `--text`.
 
 ### Basic Error Handling
 

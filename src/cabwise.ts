@@ -225,7 +225,7 @@ export interface CabwiseInfo {
       /** Distance from search point */
       Distance?: number;
       /** Additional operator information */
-      [key: string]: any;
+      [key: string]: unknown;
     }>;
   };
   /** Header information */
@@ -266,10 +266,10 @@ export interface CabwiseInfo {
       Logo?: string;
     };
     /** Additional header information */
-    [key: string]: any;
+    [key: string]: unknown;
   };
   /** Additional cabwise information */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -406,7 +406,7 @@ export class Cabwise {
     return this.raw.cabwise.get({
       ...searchParams,
       keepTflTypes,
-    });
+    }) as Promise<CabwiseInfo>;
   }
 
   /**

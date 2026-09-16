@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.15.0 — 2026-09-16
+
+### Offline `tfl check`, JSON `tfl list`, tighter public types, use-case evals
+
+An agent can type-check `'Central'` and only learn it is wrong after a live call. `tfl check --line` / `--mode` now validates against bundled `Lines` and `Modes` with no `TflClient` and no key. Display-case `'Central'` exits 1 and suggests `central`. The same helpers are on `tfl-ts/meta` (`checkLineIds`, `checkModeNames`).
+
+`tfl list` prints a JSON array of `{ tag, method, httpMethod, path }` by default. `--json` is honoured. `--text` restores the old `tag.method -> GET /path` lines. Scripts that grepped the arrow form need `--text`.
+
+Public extra-field bags (`LineInfo`, stop-point, road, cabwise, air quality, accident stats) and `TflValidationError.value` are `unknown` instead of `any`. `TflErrorHandler.handleApiError` takes `unknown`. Callers that read extra keys need a narrow. MCP `docs` now advertises `anyOf` per operation (`read` needs `id`, `find` needs `query`, `grep` needs `pattern`). `serverInfo.version` is `1.4.0`.
+
+`pnpm run eval` is a second runner, not a Jest gate. Offline scenarios always run. `--live` adds tube status, Oxford Circus arrivals, and an Oxford Circus–Bond Street journey, scored as rates over repeated trials. Empty arrivals and 429s skip. Default exit is 0. `--fail-under` is opt-in. A green eval does not prove a coding agent will choose these calls. See [docs/design/evals.md](docs/design/evals.md).
+
 ## 2.14.0 — 2026-08-28
 
 ### Docs catalogue root, CLI exit codes, MCP tool errors

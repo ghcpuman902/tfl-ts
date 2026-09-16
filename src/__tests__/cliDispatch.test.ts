@@ -70,11 +70,48 @@ describe('CLI dispatch', () => {
     log.mockRestore();
   });
 
-  test('list --tag line still routes', async () => {
+  test('list --tag line prints JSON by default', async () => {
     const log = jest.spyOn(console, 'log').mockImplementation(() => undefined);
     await dispatchCli(['list', '--tag', 'line']);
     const output = log.mock.calls.map((call) => String(call[0])).join('\n');
-    expect(output).toContain('line.');
+    const parsed = JSON.parse(output) as Array<{ tag: string; method: string }>;
+    expect(parsed.some((row) => row.tag === 'line' && row.method === 'statusByIds')).toBe(true);
     log.mockRestore();
+  });
+
+  test('list --text keeps the prose inventory', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    await dispatchCli(['list', '--tag', 'line', '--text']);
+    const output = log.mock.calls.map((call) => String(call[0])).join('\n');
+    expect(output).toContain('line.');
+    expect(output).toContain('->');
+    log.mockRestore();
+  });
+
+  test('check --line Central fails without asking for a key', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    await expect(dispatchCli(['check', '--line', 'Central'])).rejects.toThrow(/lowercase/);
+    try {
+      await dispatchCli(['check', '--line', 'Central']);
+    } catch (error) {
+      expect(getCliExitCode(error)).toBe(CLI_EXIT.ERROR);
+      expect(String(error)).not.toMatch(/Missing TFL_APP_KEY/);
+    }
+    const printed = JSON.parse(String(log.mock.calls[0]?.[0])) as {
+      ok: boolean;
+      lines: Array<{ suggestion?: string }>;
+    };
+    expect(printed.ok).toBe(false);
+    expect(printed.lines[0]?.suggestion).toBe('central');
+    log.mockRestore();
+  });
+
+  test('check with no flags is usage', async () => {
+    await expect(dispatchCli(['check'])).rejects.toThrow(/--line/);
+    try {
+      await dispatchCli(['check']);
+    } catch (error) {
+      expect(getCliExitCode(error)).toBe(CLI_EXIT.USAGE);
+    }
   });
 });

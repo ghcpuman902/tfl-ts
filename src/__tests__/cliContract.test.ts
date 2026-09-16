@@ -88,6 +88,34 @@ describe('compiled tfl binary (run pnpm run build before pnpm test)', () => {
     expect(unknownRaw.stderr).not.toMatch(/Missing TFL_APP_KEY/);
   });
 
+  test('list is JSON by default; --text is the prose form', () => {
+    const json = runTfl(['list', '--tag', 'line']);
+    expect(json.status).toBe(0);
+    const parsed = JSON.parse(json.stdout) as Array<{ tag: string; method: string; path: string }>;
+    expect(parsed.some((row) => row.tag === 'line' && row.method === 'arrivals')).toBe(true);
+
+    const text = runTfl(['list', '--tag', 'line', '--text']);
+    expect(text.status).toBe(0);
+    expect(text.stdout).toMatch(/line\.arrivals -> GET /);
+  });
+
+  test('check --line central,Central exits 1 without a key and suggests the slug', () => {
+    const result = runTfl(['check', '--line', 'central,Central']);
+    expect(result.status).toBe(CLI_EXIT.ERROR);
+    expect(result.stderr).not.toMatch(/Missing TFL_APP_KEY/);
+    const parsed = JSON.parse(result.stdout) as {
+      ok: boolean;
+      lines: Array<{ input: string; ok: boolean; suggestion?: string }>;
+    };
+    expect(parsed.ok).toBe(false);
+    expect(parsed.lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ input: 'central', ok: true }),
+        expect.objectContaining({ input: 'Central', ok: false, suggestion: 'central' }),
+      ]),
+    );
+  });
+
   test('unknown doc id is usage (2); find miss is error (1)', () => {
     const unknownId = runTfl(['docs', 'cat', 'does-not-exist.md']);
     expect(unknownId.status).toBe(CLI_EXIT.USAGE);

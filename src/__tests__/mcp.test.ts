@@ -50,7 +50,7 @@ describe('TflMcpServer', () => {
       result: {
         protocolVersion: '2025-06-18',
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'tfl-ts', version: '1.3.0' },
+        serverInfo: { name: 'tfl-ts', version: '1.4.0' },
       },
     });
     const instructions = (response?.result as { instructions?: string }).instructions ?? '';
@@ -78,6 +78,13 @@ describe('TflMcpServer', () => {
     expect(status?.inputSchema?.anyOf).toEqual([
       { required: ['lineIds'] },
       { required: ['modes'] },
+    ]);
+    const docs = result.tools.find((tool) => tool.name === 'docs');
+    expect(docs?.inputSchema?.anyOf).toEqual([
+      { properties: { operation: { const: 'list' } }, required: ['operation'] },
+      { properties: { operation: { const: 'read' } }, required: ['operation', 'id'] },
+      { properties: { operation: { const: 'find' } }, required: ['operation', 'query'] },
+      { properties: { operation: { const: 'grep' } }, required: ['operation', 'pattern'] },
     ]);
   });
 

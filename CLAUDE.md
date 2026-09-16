@@ -28,7 +28,8 @@ This file and the shipped docs below are readable offline once the package is in
 | [docs/agent.md](docs/agent.md) | AI agents | Full module reference, caching, Next.js patterns |
 | [docs/mcp.md](docs/mcp.md) | MCP users | Local server setup, compact responses, caching, rate limits |
 | [docs/design/agent-friendly-cli.md](docs/design/agent-friendly-cli.md) | Maintainers | Why `tfl docs`, `AGENTS.md`, and MCP `docs` exist |
-| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.14.0 docs root + CLI exit codes; 2.13.1 native ESM load; 2.13.0 tree-shake `tfl-ts/ui` + `tfl-ts/meta`; 2.12.0 offline `tfl docs` + MCP `docs`) |
+| [docs/design/evals.md](docs/design/evals.md) | Maintainers | Why `pnpm run eval` is a rate, not a Jest gate |
+| [CHANGELOG.md](CHANGELOG.md) | Everyone | Release notes (2.15.0 offline `tfl check` + JSON `tfl list`; 2.14.0 docs root + CLI exit codes; 2.13.1 native ESM load; 2.13.0 tree-shake `tfl-ts/ui` + `tfl-ts/meta`) |
 | [examples/README.md](examples/README.md) | AI agents / UI | Library → UI mapping (tube status + bus arrivals); React/Tailwind optional |
 | [ERROR.md](ERROR.md) | Anyone handling failures | Error shapes |
 | [docs/REALTIME.md](docs/REALTIME.md) | Agents building live boards | Polling vs deferred push |
@@ -78,7 +79,7 @@ resolveArrivalsStopId(hub, 'elizabeth'); // '910GLIVST' — the id that actually
 await client.raw.line.statusByIds({ ids: ['central'] });
 ```
 
-List all raw endpoints: `pnpm exec tfl list`
+List all raw endpoints as JSON: `pnpm exec tfl list`. Prose form: `tfl list --text`. Validate slugs offline (no key): `pnpm exec tfl check --line central,Central`.
 
 Read a shipped doc offline: `pnpm exec tfl docs cat <id>` (e.g. `docs/mcp.md`). Search with `pnpm exec tfl docs find <query>` / `docs grep <pattern>`. The MCP `docs` tool is the same catalogue.
 

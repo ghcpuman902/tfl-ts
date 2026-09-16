@@ -166,7 +166,7 @@ export class TflValidationError extends TflError {
   constructor(
     message: string,
     public readonly field?: string,
-    public readonly value?: any,
+    public readonly value?: unknown,
     originalError?: Error,
     requestId?: string
   ) {
@@ -229,72 +229,85 @@ export class TflErrorHandler {
   /**
    * Handle API errors and convert them to appropriate TflError types
    */
-  static handleApiError(error: any, url?: string, requestId?: string): TflError {
-    // If it's already a TflError, return it
+  static handleApiError(error: unknown, url?: string, requestId?: string): TflError {
     if (error instanceof TflError) {
       return error;
     }
 
-    // Handle fetch errors (network issues)
     if (error instanceof TypeError && error.message.includes('fetch')) {
       return new TflNetworkError(
         `Network error: ${error.message}`,
         'NETWORK_ERROR',
         url,
         error,
-        requestId
+        requestId,
       );
     }
 
-    // Handle timeout errors
-    if (error.name === 'AbortError' || error.message.includes('timeout')) {
+    const asRecord =
+      typeof error === 'object' && error !== null
+        ? (error as { status?: unknown; statusCode?: unknown; statusText?: unknown; data?: unknown; body?: unknown; message?: unknown; name?: unknown })
+        : undefined;
+    const message = error instanceof Error ? error.message : typeof asRecord?.message === 'string' ? asRecord.message : '';
+
+    if (
+      (error instanceof Error && error.name === 'AbortError') ||
+      message.includes('timeout')
+    ) {
       return new TflTimeoutError(
-        `Request timeout: ${error.message}`,
-        30000, // Default timeout
+        `Request timeout: ${message || 'timed out'}`,
+        30000,
         url,
-        error,
-        requestId
+        error instanceof Error ? error : undefined,
+        requestId,
       );
     }
 
-    // Handle HTTP response errors
-    if (error.status || error.statusCode) {
-      const statusCode = error.status || error.statusCode;
-      const statusText = error.statusText || 'Unknown Error';
-      const responseBody = error.data || error.body || error.message;
-      
+    const statusCode =
+      typeof asRecord?.status === 'number'
+        ? asRecord.status
+        : typeof asRecord?.statusCode === 'number'
+          ? asRecord.statusCode
+          : undefined;
+    if (statusCode !== undefined) {
+      const statusText = typeof asRecord?.statusText === 'string' ? asRecord.statusText : 'Unknown Error';
+      const responseBody =
+        typeof asRecord?.data === 'string'
+          ? asRecord.data
+          : typeof asRecord?.body === 'string'
+            ? asRecord.body
+            : message;
+
       return new TflHttpError(
         `HTTP ${statusCode}: ${statusText}`,
         statusCode,
         statusText,
         responseBody,
         url,
-        error,
-        requestId
+        error instanceof Error ? error : undefined,
+        requestId,
       );
     }
 
-    // Handle validation errors
-    if (error.message && (
-      error.message.includes('validation') ||
-      error.message.includes('invalid') ||
-      error.message.includes('required')
-    )) {
+    if (
+      message.includes('validation') ||
+      message.includes('invalid') ||
+      message.includes('required')
+    ) {
       return new TflValidationError(
-        `Validation error: ${error.message}`,
+        `Validation error: ${message}`,
         undefined,
         undefined,
-        error,
-        requestId
+        error instanceof Error ? error : undefined,
+        requestId,
       );
     }
 
-    // Generic error fallback
     return new TflError(
-      `Unexpected error: ${error.message || 'Unknown error occurred'}`,
+      `Unexpected error: ${message || 'Unknown error occurred'}`,
       undefined,
-      error,
-      requestId
+      error instanceof Error ? error : undefined,
+      requestId,
     );
   }
 

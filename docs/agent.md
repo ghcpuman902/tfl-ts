@@ -449,6 +449,7 @@ When a wrapper does not exist or you need exact OpenAPI parameter names:
 // List all endpoints
 import { ENDPOINTS, ENDPOINT_COUNT } from 'tfl-ts';
 // Or CLI: npx tfl list --tag journey
+// JSON by default; --text for the old tag.method -> lines
 ```
 
 Raw naming: swagger `Line_StatusByIds` → `client.raw.line.statusByIds()`.

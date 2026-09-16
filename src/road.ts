@@ -138,7 +138,7 @@ export interface RoadCorridorInfo {
   /** Description of the status severity */
   statusSeverityDescription: string;
   /** Additional road information */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -325,7 +325,7 @@ export class Road {
    *   endDate: new Date().toISOString()
    * });
    */
-  async getDisruptedStreets(options: RoadStreetDisruptionQuery): Promise<any> {
+  async getDisruptedStreets(options: RoadStreetDisruptionQuery): Promise<unknown> {
     const { startDate, endDate, keepTflTypes } = options;
     return this.raw.road.disruptedStreets({
       startDate,

@@ -10,6 +10,14 @@ export {
 } from './generated/meta/StationHubs';
 export type { StationHubInfo, StationHubMember } from './generated/meta/StationHubs';
 export { resolveArrivalsStopId, resolveArrivalsStopIds } from './utils/stopHierarchy';
+export {
+  checkIds,
+  checkLineId,
+  checkLineIds,
+  checkModeName,
+  checkModeNames,
+} from './checkIds';
+export type { IdCheckReport, LineIdCheck, ModeNameCheck } from './checkIds';
 export { Lines } from './generated/meta/Line';
 export {
   LINE_IDS,

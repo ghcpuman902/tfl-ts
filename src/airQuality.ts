@@ -45,7 +45,7 @@ export interface AirQualityInfo {
   /** Current forecast information */
   currentForecast?: AirQualityForecast[];
   /** Additional air quality information */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -227,7 +227,7 @@ export class AirQuality {
   async get(options: { keepTflTypes?: boolean } = {}): Promise<AirQualityInfo> {
     return this.raw.airQuality.get({
       keepTflTypes: options.keepTflTypes,
-    });
+    }) as Promise<AirQualityInfo>;
   }
 
 

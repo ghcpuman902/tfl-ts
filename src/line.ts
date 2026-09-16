@@ -319,7 +319,7 @@ export interface LineInfo {
   /** Current status information */
   lineStatuses?: TflLineStatus[];
   /** Additional line information */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

@@ -87,7 +87,7 @@ export interface ExtendedSearchMatch {
     id: string;
     name: string;
   }>;
-  [key: string]: any; // Allow for additional properties
+  [key: string]: unknown;
 }
 
 /**
@@ -448,7 +448,7 @@ export interface StopPointInfo {
     name: string;
   }>;
   /** Additional stop point information */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "tfl-ts",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "description": "Typed TypeScript client for the Transport for London API: friendly wrappers, full raw coverage, static station sequences, and UI helpers for official line colours.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -86,6 +86,7 @@
     "generate": "ts-node script/generate.ts",
     "check": "ts-node script/check.ts",
     "demo": "ts-node script/demo.ts",
+    "eval": "ts-node evals/run.ts",
     "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build && pnpm run test && pnpm run check"
   },

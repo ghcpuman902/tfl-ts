@@ -318,7 +318,7 @@ When no friendly wrapper exists, use `client.raw.*`:
 // Raw:      client.raw.line.statusByIds({ ids: ['central'] })
 ```
 
-Discover endpoints: `npx tfl list` or `npx tfl list --tag line`
+Discover endpoints: `npx tfl list` or `npx tfl list --tag line` (JSON by default; `--text` for the old lines). Validate slugs offline: `npx tfl-ts check --line Central`.
 
 ## Offline docs from the CLI
 

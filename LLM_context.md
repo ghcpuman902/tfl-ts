@@ -25,7 +25,7 @@ src/index.ts → TflClient { raw, realtime, line, stopPoint, … }
 
 **Raw client naming:** swagger `Line_Get` → `client.raw.line.get()`, `Line_StatusByIds` → `client.raw.line.statusByIds()`.
 
-**CLI:** `pnpm exec tfl list`, `pnpm exec tfl raw line.get --modes tube`, `pnpm exec tfl smoke`.
+**CLI:** `pnpm exec tfl list` (JSON; `--text` for the old lines), `pnpm exec tfl check --line central,Central`, `pnpm exec tfl raw line.get --modes tube`, `pnpm exec tfl smoke`.
 
 See [docs/MIGRATION-v2.md](../docs/MIGRATION-v2.md) for v1 → v2 migration.
 

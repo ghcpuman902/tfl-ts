@@ -54,7 +54,7 @@ export interface AccidentStatsInfo {
   /** Borough where the accident occurred */
   borough: string;
   /** Additional accident information */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

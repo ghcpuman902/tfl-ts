@@ -121,6 +121,12 @@ export const DOC_MANIFEST: DocEntry[] = [
     audience: 'Maintainers',
   },
   {
+    id: 'docs/design/evals.md',
+    path: 'docs/design/evals.md',
+    title: 'Why use-case evals are rates, not Jest gates',
+    audience: 'Maintainers',
+  },
+  {
     id: 'examples/README.md',
     path: 'examples/README.md',
     title: 'Library to UI mapping',

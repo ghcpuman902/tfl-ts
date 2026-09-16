@@ -32,7 +32,7 @@ await client.stopPoint.getArrivals({ stopPointIds: ['940GZZLUOXC'] });
 await client.raw.line.statusByIds({ ids: ['central'] });
 ```
 
-Line IDs are lowercase slugs (`central`, not `Central`). Stop IDs look like `940GZZLUOXC`.
+Line IDs are lowercase slugs (`central`, not `Central`). Stop IDs look like `940GZZLUOXC`. Check a slug without a key: `npx tfl-ts check --line Central` (suggests `central`). `tfl list` is JSON; `tfl list --text` is the old line-oriented inventory.
 
 ## Offline docs (no clone, no API key)
 

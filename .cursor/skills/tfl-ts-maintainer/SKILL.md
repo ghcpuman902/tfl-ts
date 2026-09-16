@@ -44,6 +44,8 @@ src/ui.ts / src/meta.ts               # tfl-ts/ui and tfl-ts/meta entrypoints
 | `pnpm run check -- --only=generated` | Regenerate types/raw/jsdoc; git-diff gate only |
 | `pnpm run test` | Jest (raw reachability, transport mocks) |
 | `pnpm exec tfl smoke` | Live API smoke (needs `.env`) |
+| `pnpm exec tfl check --line <id>` | Offline line/mode slug check (no key) |
+| `pnpm run eval` | Use-case rates (offline). `--live` needs `.env`. Not a publish gate |
 | `pnpm exec tfl docs ls\|cat\|find\|grep` | Offline lookup over the agent-facing docs catalogue (`src/docs.ts`) |
 | `pnpm run demo` | Console tour (`playground/demo.ts`) |
 | `pnpm run demo -- realtime` | Realtime polling demo |

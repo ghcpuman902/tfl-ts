@@ -1,16 +1,25 @@
 #!/usr/bin/env node
 import TflClient from '../index';
+import { checkIds } from '../checkIds';
 import { ENDPOINTS } from '../generated/endpoints';
 import { startTflMcpServer } from '../mcp/server';
 import { CliError, CLI_EXIT, getCliExitCode, printCliError } from './cliExit';
 import { runDocsCommand } from './docs';
+
+type ListedEndpoint = {
+  tag: string;
+  method: string;
+  httpMethod: string;
+  path: string;
+};
 
 const printHelp = (): void => {
   console.log(`tfl-ts CLI
 
 Usage:
   tfl raw <tag>.<method> [--key value ...]
-  tfl list [--tag <tag>]
+  tfl list [--tag <tag>] [--text]
+  tfl check [--line <id>[,<id>]] [--mode <mode>[,<mode>]] [--text]
   tfl docs <ls|cat|find|grep> [args]
   tfl smoke
   tfl mcp
@@ -19,6 +28,7 @@ Examples:
   tfl raw line.get --ids central
   tfl raw stopPoint.arrivals --id 940GZZLUOXC
   tfl list --tag line
+  tfl check --line central,Central
   tfl docs cat CLAUDE.md
   tfl mcp
 
@@ -44,7 +54,15 @@ export const parseCliArgs = (argv: string[]): Record<string, string | string[]> 
       continue;
     }
 
-    if (key.endsWith('s') || key === 'ids' || key === 'modes' || key === 'lineIds' || key === 'types') {
+    if (
+      key.endsWith('s') ||
+      key === 'ids' ||
+      key === 'modes' ||
+      key === 'lineIds' ||
+      key === 'types' ||
+      key === 'line' ||
+      key === 'mode'
+    ) {
       result[key] = next.split(',').map((value) => value.trim()).filter(Boolean);
     } else {
       result[key] = next;
@@ -92,14 +110,89 @@ const runRaw = async (target: string, args: Record<string, string | string[]>): 
   console.log(JSON.stringify(result, null, 2));
 };
 
-const listEndpoints = (tagFilter?: string): void => {
+const formatEndpointPath = (pathTemplate: string): string =>
+  pathTemplate.replace(/\$\{formatPathParam\(args\.([^)]+)\)\}/g, '{$1}');
+
+const listedEndpoints = (tagFilter?: string): ListedEndpoint[] => {
   const filtered = tagFilter
     ? ENDPOINTS.filter((endpoint) => endpoint.tagKey === tagFilter)
     : ENDPOINTS;
 
-  filtered.forEach((endpoint) => {
-    console.log(`${endpoint.tagKey}.${endpoint.methodName} -> ${endpoint.httpMethod} ${endpoint.pathTemplate.replace(/\$\{formatPathParam\(args\.([^)]+)\)\}/g, '{$1}')}`);
+  return filtered.map((endpoint) => ({
+    tag: endpoint.tagKey,
+    method: endpoint.methodName,
+    httpMethod: endpoint.httpMethod,
+    path: formatEndpointPath(endpoint.pathTemplate),
+  }));
+};
+
+const printEndpointsText = (endpoints: ListedEndpoint[]): void => {
+  endpoints.forEach((endpoint) => {
+    console.log(`${endpoint.tag}.${endpoint.method} -> ${endpoint.httpMethod} ${endpoint.path}`);
   });
+};
+
+const wantsJsonOutput = (argv: string[]): boolean =>
+  argv.includes('--json') || !argv.includes('--text');
+
+const findFlagValue = (argv: string[], flag: string): string | undefined => {
+  const index = argv.indexOf(flag);
+  if (index === -1) {
+    return undefined;
+  }
+  return argv[index + 1];
+};
+
+const runList = (argv: string[]): void => {
+  const tag = findFlagValue(argv, '--tag');
+  const endpoints = listedEndpoints(tag);
+  if (wantsJsonOutput(argv)) {
+    console.log(JSON.stringify(endpoints, null, 2));
+    return;
+  }
+  printEndpointsText(endpoints);
+};
+
+const commaValues = (value: string | string[] | undefined): string[] => {
+  if (value === undefined) {
+    return [];
+  }
+  const parts = Array.isArray(value) ? value : value.split(',');
+  return parts.map((part) => part.trim()).filter(Boolean);
+};
+
+const runCheck = (argv: string[]): void => {
+  const args = parseCliArgs(argv);
+  const lines = commaValues(args.line);
+  const modes = commaValues(args.mode);
+
+  if (lines.length === 0 && modes.length === 0) {
+    throw new CliError(
+      CLI_EXIT.USAGE,
+      'tfl check needs --line and/or --mode. Example: tfl check --line central,Central',
+      'No API key. Checks bundled Lines and Modes only.',
+    );
+  }
+
+  const report = checkIds({ lines, modes });
+  if (wantsJsonOutput(argv)) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    [...report.lines, ...report.modes].forEach((row) => {
+      const label = 'id' in row && row.id ? row.id : row.suggestion ?? row.input;
+      const mark = row.ok ? 'ok' : 'fail';
+      const extra = row.ok ? '' : `  ${row.fix ?? ''}`;
+      console.log(`${row.input} ${mark} ${label}${extra}`);
+    });
+  }
+
+  if (!report.ok) {
+    throw new CliError(
+      CLI_EXIT.ERROR,
+      report.lines.concat(report.modes).find((row) => !row.ok)?.fix ?? 'One or more ids are invalid.',
+      'Use the suggestion field. Line and mode ids are lowercase slugs.',
+    );
+  }
 };
 
 const runSmoke = async (): Promise<void> => {
@@ -117,14 +210,6 @@ const runSmoke = async (): Promise<void> => {
   console.log('Smoke checks passed.');
 };
 
-const findFlagValue = (argv: string[], flag: string): string | undefined => {
-  const index = argv.indexOf(flag);
-  if (index === -1) {
-    return undefined;
-  }
-  return argv[index + 1];
-};
-
 // Deliberately avoids Node's util.parseArgs for dispatch: its default strict mode
 // rejects any `--flag` it wasn't told about ahead of time, which breaks `raw`'s
 // whole point (forwarding arbitrary `--key value` pairs straight to any of the 84
@@ -139,7 +224,12 @@ export const dispatchCli = async (argv: string[]): Promise<void> => {
   const [command, ...rest] = argv;
 
   if (command === 'list') {
-    listEndpoints(findFlagValue(rest, '--tag'));
+    runList(rest);
+    return;
+  }
+
+  if (command === 'check') {
+    runCheck(rest);
     return;
   }
 
@@ -175,7 +265,7 @@ export const dispatchCli = async (argv: string[]): Promise<void> => {
   throw new CliError(
     CLI_EXIT.USAGE,
     `Unknown command: ${command}\nRun "tfl --help" for usage.`,
-    'Valid commands: raw, list, docs, smoke, mcp.',
+    'Valid commands: raw, list, check, docs, smoke, mcp.',
   );
 };
 
