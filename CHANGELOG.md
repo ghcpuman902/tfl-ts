@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.15.1 — 2026-10-16
+
+Docs: README hero, comparison table; homepage now https://tfl.manglekuo.com
+
 ## 2.15.0 — 2026-09-16
 
 ### Offline `tfl check`, JSON `tfl list`, tighter public types, use-case evals

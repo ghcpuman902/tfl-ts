@@ -8,9 +8,9 @@
 
 > Typed TfL client: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
 
-<img src="assets/tfl-cli.gif" alt="tfl CLI checking central and victoria, then listing the journey endpoints" width="640">
+<img src="https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/assets/tfl-cli.gif" alt="tfl CLI checking central and victoria, then listing the journey endpoints" width="640">
 
-<img src="assets/board.png" alt="Board at tfl.manglekuo.com, with line status and live arrivals" width="640">
+<img src="https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/assets/board.png" alt="Board at tfl.manglekuo.com, with line status and live arrivals" width="640">
 
 Built with tfl-ts → [Board](https://tfl.manglekuo.com)
 
