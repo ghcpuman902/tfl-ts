@@ -124,7 +124,7 @@ The roundel ships a placeholder unless `NEXT_PUBLIC_ALLOW_TFL_ROUNDEL=true` (you
 
 ### Agent / MCP
 
-Read-only MCP (`npx tfl-ts mcp`), cached and rate-limited. Static tools never call TfL. Setup: [docs/mcp.md](docs/mcp.md).
+Read-only MCP (`npx tfl-ts mcp`), cached and rate-limited. Static tools never call TfL. The npm bin is `tfl` (`dist/cjs/bin/tfl.js`); `mcp` is the stdio subcommand. Setup: [docs/mcp.md](docs/mcp.md).
 
 ```json
 {
