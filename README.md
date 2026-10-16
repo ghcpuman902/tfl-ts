@@ -8,6 +8,36 @@
 
 > Typed TfL client: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
 
+<img src="assets/tfl-cli.gif" alt="tfl CLI checking central and victoria, then listing the journey endpoints" width="640">
+
+<img src="assets/board.png" alt="Board at tfl.manglekuo.com, with line status and live arrivals" width="640">
+
+Built with tfl-ts → [Board](https://tfl.manglekuo.com)
+
+## How this compares
+
+| | tfl-ts | [tfl-unified-api](https://github.com/CarbonCollins/tfl-unified-api-nodejs) | [tfl-journey-planner](https://github.com/Lissy93/node-tfl-journey-planner) | [tfl-mcp](https://github.com/daanrongen/tfl-mcp) | [mcp-tfl](https://github.com/pipeworx-io/mcp-tfl) |
+| --- | --- | --- | --- | --- | --- |
+| TypeScript types | Yes | No | No | Source only | Yes (`src/index.ts`) |
+| Zero dependencies | Yes | No | No | No | No |
+| Raw endpoint coverage | 84 | 10 of 84 | 1 of 84 | 59 of 84 | 8 of 84 |
+| Offline station data | Yes | No | No | No | No |
+| MCP support | Yes | No | No | Yes | Yes |
+
+Counts use the 84 operations in the committed OpenAPI snapshot (`ENDPOINT_COUNT` in `src/generated/endpoints.ts`, `pathCount` in `src/generated/openapi/spec.meta.json`). Checked against each repo's source and the `package.json` published to npm on 16 October 2026.
+
+tfl-ts publishes `.d.ts` files. Runtime dependencies: none. `typescript` is a peer dependency, for people compiling against the types. Station order and hubs ship in `tfl-ts/meta`, with no network call. `tfl mcp` is the local MCP server.
+
+[tfl-unified-api](https://www.npmjs.com/package/tfl-unified-api) 2.0.2 is JavaScript, with no `types` field. It depends on `moment`, `request`, and `request-promise-native`. The Line module calls ten of the 84 paths: meta modes, severity, disruption categories, service types, route sequence, route by id, lines by mode, status by id, status over a date range, and status by mode. `getRoutesByServiceType` builds `/Line/Route/{types}`, which sits outside those 84 paths. `db/lineColors.json` is line colours, not stations.
+
+[tfl-journey-planner](https://www.npmjs.com/package/tfl-journey-planner) 1.1.2 is LiveScript compiled to JavaScript, with no `types` field. It depends on `request` and `querystring`. The module calls `GET /Journey/JourneyResults/{from}/to/{to}` only.
+
+[@daanrongen/tfl-mcp](https://www.npmjs.com/package/@daanrongen/tfl-mcp) 1.4.3 is written in TypeScript. The published tarball is `dist/main.js`, `package.json`, and `README.md`, and `package.json` has no `types` field. It depends on `@modelcontextprotocol/sdk`, `effect`, and `zod`. Its tools call 59 of the 84 paths. They also call `/Road/all/Disruption` (the snapshot path is `/Road/all/Disruption/{disruptionIds}`), `/Vehicle/EmissionSurcharge`, and `/Vehicle/UlezCompliance`.
+
+[@pipeworx/mcp-tfl](https://www.npmjs.com/package/@pipeworx/mcp-tfl) 0.1.2 sets `"types": "src/index.ts"`, and that file is in the tarball. It depends on `@modelcontextprotocol/sdk` and `tsx`. Six tools call 8 of the 84 paths.
+
+Station order ships with tfl-ts, in `tfl-ts/meta`.
+
 ## Install and first call
 
 Get a Primary key from the [TfL API Portal](https://api-portal.tfl.gov.uk/). Subscribe to "500 Requests per min", then Profile → Show.

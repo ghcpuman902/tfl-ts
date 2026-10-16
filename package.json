@@ -116,7 +116,7 @@
   "bugs": {
     "url": "https://github.com/ghcpuman902/tfl-ts/issues"
   },
-  "homepage": "https://github.com/ghcpuman902/tfl-ts#readme",
+  "homepage": "https://tfl.manglekuo.com",
   "engines": {
     "node": ">=18.0.0"
   },
