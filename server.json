@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ghcpuman902/tfl-ts",
+  "title": "tfl-ts",
+  "description": "Read-only Transport for London data: line status, arrivals, journeys, stop lookup.",
+  "version": "2.15.2",
+  "repository": {
+    "url": "https://github.com/ghcpuman902/tfl-ts",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "tfl-ts",
+      "version": "2.15.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "TFL_APP_KEY",
+          "description": "TfL API primary key. Live tools need it. Static tools (docs, resolve_line_id, get_supported_modes) do not.",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "TFL_MCP_MIN_INTERVAL_MS",
+          "description": "Minimum milliseconds between outbound TfL requests. Default 250. Cache hits do not count.",
+          "format": "number",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

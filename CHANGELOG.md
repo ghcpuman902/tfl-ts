@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.15.2 — 2026-10-16
+
+### Official MCP Registry manifest
+
+`package.json` now sets `mcpName` to `io.github.ghcpuman902/tfl-ts`. Root `server.json` follows the current registry schema (`2025-12-11`): npm package `tfl-ts`, stdio transport, positional argument `mcp`.
+
+The npm bin is `tfl` (`dist/cjs/bin/tfl.js`, compiled from `src/bin/tfl.ts`). `npx -y tfl-ts mcp` runs that binary with the `mcp` subcommand, which calls `startTflMcpServer()` and speaks JSON-RPC on stdin/stdout. Live tools need `TFL_APP_KEY`. `TFL_MCP_MIN_INTERVAL_MS` overrides the default 250ms gap between outbound TfL requests. `TFL_APP_ID` is still ignored. See [docs/mcp.md](docs/mcp.md).
+
 ## 2.15.1 — 2026-10-16
 
 Docs: README hero, comparison table; homepage now https://tfl.manglekuo.com

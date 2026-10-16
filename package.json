@@ -1,6 +1,7 @@
 {
   "name": "tfl-ts",
-  "version": "2.15.1",
+  "mcpName": "io.github.ghcpuman902/tfl-ts",
+  "version": "2.15.2",
   "description": "Typed TypeScript client for the Transport for London API: friendly wrappers, full raw coverage, static station sequences, and UI helpers for official line colours.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -71,6 +72,7 @@
     "examples/",
     "CHANGELOG.md",
     "CLAUDE.md",
+    "server.json",
     "AGENTS.md",
     "ERROR.md",
     ".claude/"

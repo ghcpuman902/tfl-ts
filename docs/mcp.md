@@ -22,6 +22,22 @@ Register at [api-portal.tfl.gov.uk](https://api-portal.tfl.gov.uk/), subscribe t
 
 The process communicates over stdio. It does not open a network port or send credentials anywhere except the official TfL API.
 
+## How the process starts
+
+The package publishes one binary, `tfl`, at `./dist/cjs/bin/tfl.js` (the compile of `src/bin/tfl.ts`). `npx -y tfl-ts@latest mcp` installs the package and runs that binary with the argument `mcp`.
+
+`dispatchCli` treats `mcp` as a subcommand and calls `startTflMcpServer()` in `src/mcp/server.ts`. The process reads one JSON-RPC message per line from stdin and writes one JSON response per line to stdout.
+
+The official MCP Registry reads root `server.json`. Its `name` is `io.github.ghcpuman902/tfl-ts`, the same string as `package.json` `mcpName`. The packages entry is registry type `npm`, identifier `tfl-ts`, this package's version, transport `stdio`, and a positional argument `mcp` (the subcommand above). `registryBaseUrl` is `https://registry.npmjs.org`.
+
+Environment variables the running server actually reads:
+
+| Variable | Required | Role |
+|----------|----------|------|
+| `TFL_APP_KEY` | For live tools | TfL primary key. `TflClient` throws `TflConfigError` when it is missing. Static tools (`docs`, `resolve_line_id`, `get_supported_modes`) never construct a client. |
+| `TFL_MCP_MIN_INTERVAL_MS` | No | Minimum milliseconds between outbound TfL requests. Default `250`. A non-numeric value falls through to that default (`Number(value) || 250`). Cache hits do not wait. |
+| `TFL_APP_ID` | No | `TflClient` still reads it, then warns and ignores it. TfL has not required an app id since January 2021. Leave it unset. |
+
 ## Tools
 
 | Tool | Network call | Local cache |
