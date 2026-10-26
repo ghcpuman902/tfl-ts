@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.15.3 — unreleased
+
+### MCP tool annotations, empty resources and prompts
+
+Every MCP tool now has a `title` and annotations: `readOnlyHint: true`, `destructiveHint: false`, `idempotentHint: true`. `openWorldHint` is `false` for `get_supported_modes`, `resolve_line_id` and `docs`, which read bundled data, and `true` for `resolve_stop_id`, `get_line_status`, `get_arrivals` and `plan_journey`, which call TfL. Clients that auto-approve read-only tools can now tell these apart from tools that change state.
+
+`resources/list`, `resources/templates/list` and `prompts/list` returned `-32601 Method not found`. `initialize` now declares `resources` and `prompts`, and those three methods return empty arrays. `resources/read` returns `-32002` and `prompts/get` returns `-32602`, since nothing is listed. MCP `serverInfo.version` is `1.4.1`.
+
+A new Jest test spawns the compiled `tfl mcp` over stdio with no `TFL_APP_KEY` and checks the handshake, tool list, empty lists, an offline call and the missing-key error. Like the other compiled-binary tests, it needs `pnpm run build` before `pnpm test`.
+
+The repo also has a `Dockerfile` and `glama.json` that run `tfl mcp` in a container, with `TFL_APP_KEY` optional. Neither ships in the npm package.
+
 ## 2.15.2 — 2026-10-16
 
 ### Official MCP Registry manifest

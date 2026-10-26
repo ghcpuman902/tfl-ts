@@ -50,6 +50,10 @@ Environment variables the running server actually reads:
 | `get_arrivals` | Yes | 15 seconds |
 | `plan_journey` | Yes | 2 minutes |
 
+Every tool has a `title` and annotations `readOnlyHint: true`, `destructiveHint: false`, `idempotentHint: true`. `openWorldHint` is `false` for the three offline tools and `true` for the four that call TfL.
+
+The server has no resources or prompts. `resources/list`, `resources/templates/list` and `prompts/list` return empty arrays.
+
 The server intentionally exposes a small tool set instead of all raw TfL endpoints. This reduces tool-selection noise and discourages broad, accidental API requests.
 
 ### Offline `docs` tool
@@ -73,7 +77,7 @@ Unknown ids, empty queries, no matches, and invalid pagination return a tool err
 
 `get_line_status` requires `lineIds` or `modes` in its schema (`anyOf`). An empty argument object is invalid.
 
-`docs` advertises `anyOf` per operation: `list` needs only `operation`; `read` needs `id`; `find` needs `query`; `grep` needs `pattern`. MCP `serverInfo.version` is `1.4.0`.
+`docs` advertises `anyOf` per operation: `list` needs only `operation`; `read` needs `id`; `find` needs `query`; `grep` needs `pattern`. MCP `serverInfo.version` is `1.4.1`.
 
 ## Response shape (agent-friendly)
 
