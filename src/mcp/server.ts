@@ -37,9 +37,19 @@ interface JsonRpcResponse {
   };
 }
 
+interface ToolAnnotations {
+  title: string;
+  readOnlyHint: true;
+  destructiveHint: false;
+  idempotentHint: true;
+  openWorldHint: boolean;
+}
+
 interface ToolDefinition {
   name: string;
+  title: string;
   description: string;
+  annotations: ToolAnnotations;
   inputSchema: {
     type: 'object';
     properties: Record<string, unknown>;
@@ -77,9 +87,22 @@ const CACHE_TTLS = {
   journey: 2 * 60 * 1000,
 } as const;
 
+// Every tool only reads. Offline tools answer from bundled data; live tools read the TfL API.
+const annotate = (title: string, openWorldHint: boolean): Pick<ToolDefinition, 'title' | 'annotations'> => ({
+  title,
+  annotations: {
+    title,
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint,
+  },
+});
+
 const TOOLS: ToolDefinition[] = [
   {
     name: 'get_supported_modes',
+    ...annotate('Supported transport modes', false),
     description:
       'List transport modes bundled with tfl-ts. Static metadata only — no TfL API call.',
     inputSchema: {
@@ -90,6 +113,7 @@ const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'resolve_line_id',
+    ...annotate('Resolve line ID', false),
     description:
       'Resolve a line name to canonical lowercase TfL line IDs. Exact matches rank first. Static metadata only — no TfL API call. Prefer this before get_line_status.',
     inputSchema: {
@@ -112,6 +136,7 @@ const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'docs',
+    ...annotate('Read tfl-ts docs', false),
     description:
       'Read tfl-ts bundled agent docs offline (same catalogue as `tfl docs`). No TfL API call, no credentials. Prefer list → find → read; use grep to locate symbols across docs. Large files are paginated by line.',
     inputSchema: {
@@ -163,6 +188,7 @@ const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'resolve_stop_id',
+    ...annotate('Resolve stop ID', true),
     description:
       'Search TfL for a stop name or NaPTAN / SMS code and return compact stop matches. Cached 24h. For modes: ["bus"] this expands 490G… hubs so a street name returns boarding stops, not two raw search hits. Use the returned id with get_arrivals.',
     inputSchema: {
@@ -191,6 +217,7 @@ const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_line_status',
+    ...annotate('Line status', true),
     description:
       'Get compact live line status (id, name, status, optional reason). Provide lineIds or modes (at least one). Set issuesOnly=true to hide Good Service lines. Cached 60s.',
     inputSchema: {
@@ -220,6 +247,7 @@ const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_arrivals',
+    ...annotate('Live arrivals', true),
     description:
       'Get compact live arrivals for one stop ID: line, towards, minutes, platform. Optional lineIds filter. Cached 15s.',
     inputSchema: {
@@ -248,6 +276,7 @@ const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'plan_journey',
+    ...annotate('Plan a journey', true),
     description:
       'Plan a journey and return a compact summary (duration, fare, natural-language legs). Cached 2 minutes.',
     inputSchema: {
