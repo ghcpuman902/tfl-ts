@@ -71,7 +71,7 @@ interface LiveEnvelope<T> {
 }
 
 const SERVER_NAME = 'tfl-ts';
-const SERVER_VERSION = '1.4.0';
+const SERVER_VERSION = '1.4.1';
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
 const SUPPORTED_PROTOCOL_VERSIONS = new Set([
   '2024-11-05',
@@ -552,7 +552,11 @@ export class TflMcpServer {
 
         return this.success(message.id, {
           protocolVersion,
-          capabilities: { tools: { listChanged: false } },
+          capabilities: {
+            tools: { listChanged: false },
+            resources: { listChanged: false },
+            prompts: { listChanged: false },
+          },
           serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
           instructions:
             'Prefer static tools (docs, resolve_line_id, get_supported_modes) before live tools. docs reads the same bundled catalogue as `tfl docs` and needs no API key. Live tools return compact JSON with a human-readable "summary" field. Use the user’s local TfL credentials; responses are cached and rate-limited.',
@@ -569,6 +573,27 @@ export class TflMcpServer {
 
       if (message.method === 'tools/call') {
         return this.success(message.id, await this.callTool(message.params));
+      }
+
+      // No resources or prompts yet; answer with empty lists so clients that probe them get no error.
+      if (message.method === 'resources/list') {
+        return this.success(message.id, { resources: [] });
+      }
+
+      if (message.method === 'resources/templates/list') {
+        return this.success(message.id, { resourceTemplates: [] });
+      }
+
+      if (message.method === 'prompts/list') {
+        return this.success(message.id, { prompts: [] });
+      }
+
+      if (message.method === 'resources/read') {
+        return this.failure(message.id, -32002, 'Resource not found.');
+      }
+
+      if (message.method === 'prompts/get') {
+        return this.failure(message.id, -32602, 'Unknown prompt.');
       }
 
       return this.failure(message.id, -32601, `Method not found: ${message.method}`);
