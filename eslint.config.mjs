@@ -30,6 +30,21 @@ export default defineConfig(
     },
   },
   {
+    files: ['**/*.cjs', '**/*.mjs'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+  {
     files: ['src/bin/**/*.ts'],
     rules: {
       'no-console': 'off',

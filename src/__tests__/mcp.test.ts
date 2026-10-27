@@ -49,8 +49,12 @@ describe('TflMcpServer', () => {
       id: 1,
       result: {
         protocolVersion: '2025-06-18',
-        capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'tfl-ts', version: '1.4.0' },
+        capabilities: {
+          tools: { listChanged: false },
+          resources: { listChanged: false },
+          prompts: { listChanged: false },
+        },
+        serverInfo: { name: 'tfl-ts', version: '1.4.1' },
       },
     });
     const instructions = (response?.result as { instructions?: string }).instructions ?? '';
