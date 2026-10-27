@@ -3,7 +3,7 @@
   "name": "io.github.ghcpuman902/tfl-ts",
   "title": "tfl-ts",
   "description": "Read-only Transport for London data: line status, arrivals, journeys, stop lookup.",
-  "version": "2.15.2",
+  "version": "2.15.3",
   "repository": {
     "url": "https://github.com/ghcpuman902/tfl-ts",
     "source": "github"
@@ -13,7 +13,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "tfl-ts",
-      "version": "2.15.2",
+      "version": "2.15.3",
       "transport": {
         "type": "stdio"
       },

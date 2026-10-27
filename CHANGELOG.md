@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.15.3 — unreleased
+## 2.15.3 — 2026-10-27
 
 ### MCP tool annotations, empty resources and prompts
 
