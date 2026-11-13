@@ -3,15 +3,16 @@ import path from 'path';
 
 const ROOT = path.join(__dirname, '..');
 
-const TARGETS = ['generated', 'station-sequences', 'station-hubs', 'bundle', 'drift'] as const;
+const TARGETS = ['generated', 'station-sequences', 'station-hubs', 'stops', 'bundle', 'drift'] as const;
 type Target = (typeof TARGETS)[number];
 
-const DEFAULT_TARGETS: Target[] = ['generated', 'station-sequences', 'station-hubs', 'bundle'];
+const DEFAULT_TARGETS: Target[] = ['generated', 'station-sequences', 'station-hubs', 'stops', 'bundle'];
 
 const TARGET_SCRIPTS: Record<Target, string> = {
   generated: 'script/checkGenerated.ts',
   'station-sequences': 'script/checkStationSequences.ts',
   'station-hubs': 'script/checkStationHubs.ts',
+  stops: 'script/checkStops.ts',
   bundle: 'script/checkBundle.ts',
   drift: 'script/checkDrift.ts',
 };

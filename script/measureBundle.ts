@@ -26,6 +26,7 @@ type FixtureResult = {
   containsStationSequences?: boolean;
   containsRawClient?: boolean;
   containsProcessEnv?: boolean;
+  containsStopIndex?: boolean;
 };
 
 const parsePhase = (): Phase => {
@@ -45,6 +46,7 @@ const distLayout = () => {
   const esmUi = path.join(ROOT, 'dist/esm/ui.js');
   const esmMeta = path.join(ROOT, 'dist/esm/meta.js');
   const esmIndex = path.join(ROOT, 'dist/esm/index.js');
+  const esmStops = path.join(ROOT, 'dist/esm/stops/index.js');
   const legacyIndex = path.join(ROOT, 'dist/index.js');
   if (existsSync(esmIndex)) {
     return {
@@ -52,6 +54,7 @@ const distLayout = () => {
       main: esmIndex,
       ui: existsSync(esmUi) ? esmUi : null,
       meta: existsSync(esmMeta) ? esmMeta : null,
+      stops: existsSync(esmStops) ? esmStops : null,
       cjsIndex: path.join(ROOT, 'dist/cjs/index.js'),
       cjsClient: path.join(ROOT, 'dist/cjs/client.js'),
     };
@@ -65,6 +68,7 @@ const distLayout = () => {
     main: legacyIndex,
     ui: null,
     meta: null,
+    stops: null,
     cjsIndex: legacyIndex,
     cjsClient: legacyIndex,
   };
@@ -91,6 +95,8 @@ const bundleFixture = async (opts: {
     contents = `export { LINE_STATION_SEQUENCES } from ${JSON.stringify('./' + toImportSpecifier(opts.importPath))};\n`;
   } else if (opts.id.startsWith('hubs')) {
     contents = `export { STATION_HUBS, resolveArrivalsStopId } from ${JSON.stringify('./' + toImportSpecifier(opts.importPath))};\n`;
+  } else if (opts.id.startsWith('stops')) {
+    contents = `export { STOP_INDEX, searchStops, mergeLiveResults } from ${JSON.stringify('./' + toImportSpecifier(opts.importPath))};\n`;
   } else {
     throw new Error(`Unknown fixture ${opts.id}`);
   }
@@ -136,6 +142,8 @@ const bundleFixture = async (opts: {
     containsStationSequences: js.includes('940GZZLUQPS'),
     containsRawClient: js.includes('statusByIds'),
     containsProcessEnv: js.includes('TFL_APP_KEY'),
+    // STOP_INDEX_FORMAT is embedded in the generated data; it only ships with tfl-ts/meta/stops.
+    containsStopIndex: js.includes('tfl-stop-index/'),
   };
 };
 
@@ -271,6 +279,24 @@ const main = async (): Promise<void> => {
       platform: 'browser',
     }),
   );
+
+  if (layout.stops) {
+    fixtures.push(
+      await bundleFixture({
+        id: 'stopsIndex',
+        label: 'Stop index + search + merge via tfl-ts/meta/stops',
+        importPath: layout.stops,
+        platform: 'browser',
+      }),
+    );
+  } else {
+    fixtures.push({
+      id: 'stopsIndex',
+      label: 'Stop index via tfl-ts/meta/stops',
+      importPath: null,
+      skipped: 'tfl-ts/meta/stops does not exist in this emit',
+    });
+  }
 
   fixtures.push(
     await bundleFixture({

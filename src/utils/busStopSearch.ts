@@ -89,7 +89,7 @@ export type SearchBusStopsOptions = {
   hubRadius?: number;
 };
 
-const usableText = (value?: string | null): string | undefined => {
+export const usableText = (value?: string | null): string | undefined => {
   const trimmed = value?.trim();
   if (!trimmed || /^(null|undefined)$/i.test(trimmed)) return undefined;
   return trimmed;
@@ -98,7 +98,7 @@ const usableText = (value?: string | null): string | undefined => {
 const normalizeSearchText = (value: string): string =>
   value.trim().toLowerCase().replace(/['’]/g, '');
 
-const normalizeStopLetter = (raw?: string | null): string | undefined => {
+export const normalizeStopLetter = (raw?: string | null): string | undefined => {
   const stripped = raw
     ?.replace(/^stop\s+/i, '')
     .trim()
@@ -107,14 +107,14 @@ const normalizeStopLetter = (raw?: string | null): string | undefined => {
   return stripped;
 };
 
-const readStopLetter = (
+export const readStopLetter = (
   stopLetter?: string | null,
   indicator?: string | null,
 ): string | undefined =>
   normalizeStopLetter(stopLetter) ?? normalizeStopLetter(indicator);
 
-const readAdditionalProperty = (
-  properties: BusStopPointLike['additionalProperties'],
+export const readAdditionalProperty = (
+  properties: ReadonlyArray<{ key?: string; value?: string }> | undefined,
   key: string,
 ): string | undefined =>
   usableText(

@@ -16,6 +16,8 @@ describe('package exports', () => {
     expect(pkg.exports['.']).toBeDefined();
     expect(pkg.exports['./ui']).toBeDefined();
     expect(pkg.exports['./meta']).toBeDefined();
+    expect(pkg.exports['./meta/stops']).toBeDefined();
+    expect(pkg.exports['./meta/stops/build']).toBeDefined();
     expect(pkg.exports['./utils/ui']).toBeDefined();
     expect(pkg.exports['./dist/generated/meta/Line.js']).toBeDefined();
     expect(pkg.exports['./dist/generated/raw.js']).toBeDefined();

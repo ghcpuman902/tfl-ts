@@ -1,0 +1,581 @@
+{
+ "id": "HUBKGX",
+ "naptanId": "HUBKGX",
+ "commonName": "King's Cross & St Pancras International",
+ "stopType": "TransportInterchange",
+ "hubNaptanCode": "HUBKGX",
+ "modes": [
+  "bus",
+  "international-rail",
+  "national-rail",
+  "tube"
+ ],
+ "children": [
+  {
+   "id": "490G00005909",
+   "naptanId": "490G00005909",
+   "commonName": "King's Cross / Caledonian Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "bus"
+   ],
+   "children": [
+    {
+     "id": "490001172X",
+     "naptanId": "490001172X",
+     "commonName": "King's Cross / Caledonian Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "bus"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "490G000479",
+   "naptanId": "490G000479",
+   "commonName": "King's Cross Station   / York Way",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "bus"
+   ],
+   "children": [
+    {
+     "id": "490001171G",
+     "naptanId": "490001171G",
+     "commonName": "King's Cross Station   / York Way",
+     "stopType": "NaptanPublicBusCoachTram",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "bus"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "490G000480",
+   "naptanId": "490G000480",
+   "commonName": "King's Cross Stn   / Pentonville Rd",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "bus"
+   ],
+   "children": [
+    {
+     "id": "490001171H",
+     "naptanId": "490001171H",
+     "commonName": "King's Cross Stn   / Pentonville Rd",
+     "stopType": "NaptanPublicBusCoachTram",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "bus"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "490G000760",
+   "naptanId": "490G000760",
+   "commonName": "St Pancras Intern'l & King's X Stns",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "bus"
+   ],
+   "children": [
+    {
+     "id": "490012553B",
+     "naptanId": "490012553B",
+     "commonName": "St Pancras Intern'l & King's X Stns",
+     "stopType": "NaptanPublicBusCoachTram",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "bus"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "910GKNGX",
+   "naptanId": "910GKNGX",
+   "commonName": "London King's Cross Rail Station",
+   "stopType": "NaptanRailStation",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "national-rail"
+   ],
+   "children": [
+    {
+     "id": "4900KNGX1",
+     "naptanId": "4900KNGX1",
+     "commonName": "King's Cross Rail Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900KNGX2",
+     "naptanId": "4900KNGX2",
+     "commonName": "King's Cross Rail Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900KNGX3",
+     "naptanId": "4900KNGX3",
+     "commonName": "King's Cross Rail Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900KNGX4",
+     "naptanId": "4900KNGX4",
+     "commonName": "King's Cross Rail Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "9100KNGX",
+     "naptanId": "9100KNGX",
+     "commonName": "London Kings Cross Rail Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "9100KNGX1",
+     "naptanId": "9100KNGX1",
+     "commonName": "King's Cross Rail Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "national-rail"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "910GSTPADOM",
+   "naptanId": "910GSTPADOM",
+   "commonName": "London St Pancras International Rail Station",
+   "stopType": "NaptanRailStation",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "national-rail"
+   ],
+   "children": [
+    {
+     "id": "4900STPXBOX0",
+     "naptanId": "4900STPXBOX0",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900STPXBOX1",
+     "naptanId": "4900STPXBOX1",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900STPXBOX2",
+     "naptanId": "4900STPXBOX2",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900STPXBOX3",
+     "naptanId": "4900STPXBOX3",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "9100STPADOM",
+     "naptanId": "9100STPADOM",
+     "commonName": "London St Pancras International Rail Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "9100STPADOM1",
+     "naptanId": "9100STPADOM1",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "national-rail"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "910GSTPX",
+   "naptanId": "910GSTPX",
+   "commonName": "London St Pancras International Rail Station",
+   "stopType": "NaptanRailStation",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "national-rail"
+   ],
+   "children": [
+    {
+     "id": "9100STPX",
+     "naptanId": "9100STPX",
+     "commonName": "London St Pancras International Rail Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "9100STPX1",
+     "naptanId": "9100STPX1",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "national-rail"
+     ],
+     "children": []
+    },
+    {
+     "id": "9100STPXBOX1",
+     "naptanId": "9100STPXBOX1",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "national-rail"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "910GSTPXBOX",
+   "naptanId": "910GSTPXBOX",
+   "commonName": "London St Pancras International LL Rail Station",
+   "stopType": "NaptanRailStation",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "national-rail"
+   ],
+   "children": [
+    {
+     "id": "9100STPXBOX",
+     "naptanId": "9100STPXBOX",
+     "commonName": "London St Pancras International LL Rail Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "9100STPXBOX2",
+     "naptanId": "9100STPXBOX2",
+     "commonName": "St Pancras International Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "national-rail"
+     ],
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "940GZZLUKSX",
+   "naptanId": "940GZZLUKSX",
+   "commonName": "King's Cross St. Pancras Underground Station",
+   "stopType": "NaptanMetroStation",
+   "hubNaptanCode": "HUBKGX",
+   "modes": [
+    "tube"
+   ],
+   "children": [
+    {
+     "id": "4900KNSXMCL0",
+     "naptanId": "4900KNSXMCL0",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanRailEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX1",
+     "naptanId": "4900ZZLUKSX1",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX2",
+     "naptanId": "4900ZZLUKSX2",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX3",
+     "naptanId": "4900ZZLUKSX3",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX4",
+     "naptanId": "4900ZZLUKSX4",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX5",
+     "naptanId": "4900ZZLUKSX5",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX6",
+     "naptanId": "4900ZZLUKSX6",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX7",
+     "naptanId": "4900ZZLUKSX7",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX8",
+     "naptanId": "4900ZZLUKSX8",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSX9",
+     "naptanId": "4900ZZLUKSX9",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSXA",
+     "naptanId": "4900ZZLUKSXA",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSXB",
+     "naptanId": "4900ZZLUKSXB",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSXC",
+     "naptanId": "4900ZZLUKSXC",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "4900ZZLUKSXD",
+     "naptanId": "4900ZZLUKSXD",
+     "commonName": "King's Cross Station",
+     "stopType": "NaptanMetroEntrance",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX",
+     "naptanId": "9400ZZLUKSX",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX1",
+     "naptanId": "9400ZZLUKSX1",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX2",
+     "naptanId": "9400ZZLUKSX2",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX3",
+     "naptanId": "9400ZZLUKSX3",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX4",
+     "naptanId": "9400ZZLUKSX4",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX5",
+     "naptanId": "9400ZZLUKSX5",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX6",
+     "naptanId": "9400ZZLUKSX6",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX7",
+     "naptanId": "9400ZZLUKSX7",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanMetroPlatform",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    },
+    {
+     "id": "9400ZZLUKSX8",
+     "naptanId": "9400ZZLUKSX8",
+     "commonName": "King's Cross St. Pancras Underground Station",
+     "stopType": "NaptanRailAccessArea",
+     "hubNaptanCode": "HUBKGX",
+     "modes": [
+      "tube"
+     ],
+     "children": []
+    }
+   ]
+  }
+ ]
+}

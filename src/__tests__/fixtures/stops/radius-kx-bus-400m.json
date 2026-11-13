@@ -1,0 +1,797 @@
+{
+ "centrePoint": [
+  51.53,
+  -0.123
+ ],
+ "stopPoints": [
+  {
+   "id": "490000129D",
+   "naptanId": "490000129D",
+   "commonName": "King's Cross Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop D",
+   "stopLetter": "D",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53045,
+   "lon": -0.12328,
+   "distance": 53.701948397958944,
+   "lines": [
+    {
+     "id": "46",
+     "name": "46"
+    },
+    {
+     "id": "63",
+     "name": "63"
+    },
+    {
+     "id": "n63",
+     "name": "N63"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "E"
+    },
+    {
+     "key": "Towards",
+     "value": "Farringdon Or Holborn Circus"
+    }
+   ]
+  },
+  {
+   "id": "490000129E",
+   "naptanId": "490000129E",
+   "commonName": "King's Cross Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop E",
+   "stopLetter": "E",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.5305,
+   "lon": -0.12307,
+   "distance": 55.85610765184832,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "E"
+    },
+    {
+     "key": "Towards",
+     "value": "Angel Islington"
+    }
+   ]
+  },
+  {
+   "id": "490000129R",
+   "naptanId": "490000129R",
+   "commonName": "King's Cross Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop R",
+   "stopLetter": "R",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53047,
+   "lon": -0.12169,
+   "distance": 104.69917550388648,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "W"
+    },
+    {
+     "key": "Towards",
+     "value": "Euston"
+    }
+   ]
+  },
+  {
+   "id": "490004722M",
+   "naptanId": "490004722M",
+   "commonName": "St Pancras International Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop M",
+   "stopLetter": "M",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52976,
+   "lon": -0.12485,
+   "distance": 130.83967588600547,
+   "lines": [
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "E"
+    },
+    {
+     "key": "Towards",
+     "value": "Holloway Or Tufnell Park"
+    }
+   ]
+  },
+  {
+   "id": "490012553B",
+   "naptanId": "490012553B",
+   "commonName": "St Pancras Intern'l & King's X Stns",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop T",
+   "stopLetter": "T",
+   "modes": [
+    "bus"
+   ],
+   "hubNaptanCode": "HUBKGX",
+   "lat": 51.53055,
+   "lon": -0.12473,
+   "distance": 134.50930468502645,
+   "lines": [
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "46",
+     "name": "46"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "N"
+    },
+    {
+     "key": "Towards",
+     "value": "Camden Town Or Camden Road Station"
+    }
+   ]
+  },
+  {
+   "id": "490001171G",
+   "naptanId": "490001171G",
+   "commonName": "King's Cross Station   / York Way",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop G",
+   "stopLetter": "G",
+   "modes": [
+    "bus"
+   ],
+   "hubNaptanCode": "HUBKGX",
+   "lat": 51.53128,
+   "lon": -0.12268,
+   "distance": 144.1648826626568,
+   "lines": [
+    {
+     "id": "17",
+     "name": "17"
+    },
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "63",
+     "name": "63"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n63",
+     "name": "N63"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "N"
+    },
+    {
+     "key": "Towards",
+     "value": "Archway Or Holloway"
+    }
+   ]
+  },
+  {
+   "id": "490004722A",
+   "naptanId": "490004722A",
+   "commonName": "St Pancras International Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop A",
+   "stopLetter": "A",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52946,
+   "lon": -0.12499,
+   "distance": 150.31418698577266,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "W"
+    },
+    {
+     "key": "Towards",
+     "value": "Tottenham Court Road, Russell Square Or Baker St"
+    }
+   ]
+  },
+  {
+   "id": "490001172X",
+   "naptanId": "490001172X",
+   "commonName": "King's Cross / Caledonian Road",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop X",
+   "stopLetter": "X",
+   "modes": [
+    "bus"
+   ],
+   "hubNaptanCode": "HUBKGX",
+   "lat": 51.53084,
+   "lon": -0.12052,
+   "distance": 195.50014295042934,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "W"
+    },
+    {
+     "key": "Towards",
+     "value": "Camden Town Or Euston"
+    }
+   ]
+  },
+  {
+   "id": "490004354N",
+   "naptanId": "490004354N",
+   "commonName": "Swinton Street",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop N",
+   "stopLetter": "N",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52924,
+   "lon": -0.12014,
+   "distance": 215.32062199031145,
+   "lines": [
+    {
+     "id": "17",
+     "name": "17"
+    },
+    {
+     "id": "46",
+     "name": "46"
+    },
+    {
+     "id": "63",
+     "name": "63"
+    },
+    {
+     "id": "n63",
+     "name": "N63"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "N"
+    },
+    {
+     "key": "Towards",
+     "value": "Camden Town Or Holloway"
+    }
+   ]
+  },
+  {
+   "id": "490001171H",
+   "naptanId": "490001171H",
+   "commonName": "King's Cross Stn   / Pentonville Rd",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop H",
+   "stopLetter": "H",
+   "modes": [
+    "bus"
+   ],
+   "hubNaptanCode": "HUBKGX",
+   "lat": 51.53147,
+   "lon": -0.12088,
+   "distance": 219.78875146777395,
+   "lines": [
+    {
+     "id": "17",
+     "name": "17"
+    },
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "S"
+    },
+    {
+     "key": "Towards",
+     "value": "Euston Or Holborn"
+    }
+   ]
+  },
+  {
+   "id": "490015700C",
+   "naptanId": "490015700C",
+   "commonName": "British Library",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop C",
+   "stopLetter": "C",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52903,
+   "lon": -0.12661,
+   "distance": 272.2562895366419,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "E"
+    },
+    {
+     "key": "Towards",
+     "value": "Angel Islington, Tufnell Park Or Holloway"
+    }
+   ]
+  },
+  {
+   "id": "490013117O",
+   "naptanId": "490013117O",
+   "commonName": "Swinton Street",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop O",
+   "stopLetter": "O",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52877,
+   "lon": -0.11866,
+   "distance": 330.193698589661,
+   "lines": [],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "W"
+    }
+   ]
+  },
+  {
+   "id": "490001172K",
+   "naptanId": "490001172K",
+   "commonName": "King's Cross Road",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop K",
+   "stopLetter": "K",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53111,
+   "lon": -0.11856,
+   "distance": 331.29122004067284,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "E"
+    },
+    {
+     "key": "Towards",
+     "value": "Angel Islington"
+    }
+   ]
+  },
+  {
+   "id": "490001276S",
+   "naptanId": "490001276S",
+   "commonName": "St Pancras International Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop S",
+   "stopLetter": "S",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.5316,
+   "lon": -0.12718,
+   "distance": 339.7898226998919,
+   "lines": [
+    {
+     "id": "1",
+     "name": "1"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "46",
+     "name": "46"
+    },
+    {
+     "id": "63",
+     "name": "63"
+    },
+    {
+     "id": "n63",
+     "name": "N63"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "S"
+    },
+    {
+     "key": "Towards",
+     "value": "Farringdon, Holborn Circus Or Angel"
+    }
+   ]
+  },
+  {
+   "id": "490010929L",
+   "naptanId": "490010929L",
+   "commonName": "King's Cross Road / Pentonville Road",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop L",
+   "stopLetter": "L",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53055,
+   "lon": -0.11791,
+   "distance": 357.6784458732043,
+   "lines": [
+    {
+     "id": "17",
+     "name": "17"
+    },
+    {
+     "id": "46",
+     "name": "46"
+    },
+    {
+     "id": "63",
+     "name": "63"
+    },
+    {
+     "id": "n63",
+     "name": "N63"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "E"
+    },
+    {
+     "key": "Towards",
+     "value": "Chancery Lane Or Farringdon Station"
+    }
+   ]
+  },
+  {
+   "id": "490001276Z",
+   "naptanId": "490001276Z",
+   "commonName": "St Pancras International Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop Z",
+   "stopLetter": "Z",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53188,
+   "lon": -0.12737,
+   "distance": 367.84753950691476,
+   "lines": [],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "S"
+    }
+   ]
+  },
+  {
+   "id": "490003087W1",
+   "naptanId": "490003087W1",
+   "commonName": "Acton Street",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop HA",
+   "stopLetter": "HA",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52835,
+   "lon": -0.11809,
+   "distance": 386.3737837708681,
+   "lines": [
+    {
+     "id": "17",
+     "name": "17"
+    },
+    {
+     "id": "46",
+     "name": "46"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "W"
+    },
+    {
+     "key": "Towards",
+     "value": "Holborn Circus"
+    }
+   ]
+  },
+  {
+   "id": "490012149N",
+   "naptanId": "490012149N",
+   "commonName": "Acton Street",
+   "stopType": "NaptanPublicBusCoachTram",
+   "indicator": "Stop HF",
+   "stopLetter": "HF",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52761,
+   "lon": -0.11872,
+   "distance": 398.19691933960667,
+   "lines": [
+    {
+     "id": "17",
+     "name": "17"
+    },
+    {
+     "id": "46",
+     "name": "46"
+    }
+   ],
+   "additionalProperties": [
+    {
+     "key": "CompassPoint",
+     "value": "N"
+    },
+    {
+     "key": "Towards",
+     "value": "Camden Town Or Holloway"
+    }
+   ]
+  }
+ ],
+ "pageSize": 0,
+ "total": 0,
+ "page": 0
+}
