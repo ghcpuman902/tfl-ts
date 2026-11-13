@@ -3,7 +3,7 @@ import type { ExtendedSearchResponse } from '../stopPoint';
 import type { LiveStopHit, StopRow } from '../stops/types';
 import { findHighlightedIndex, mergeLiveResults } from '../utils/stopMerge';
 import { searchStops } from '../utils/stopSearch';
-import { buildTestIndex } from './helpers/stopFixtures';
+import { buildTestIndex, loadStopFixture } from './helpers/stopFixtures';
 
 const index = buildTestIndex();
 const deepFreeze = <T>(rows: T[]): T[] => {
@@ -113,6 +113,25 @@ describe('mergeLiveResults', () => {
     expect(only.map((row) => row.id)).toEqual(['490000254T2', '940GZZLUKSX', '490777001Q', '940GZZLUTWH-X']);
     expect(only.every((row) => row.liveOnly)).toBe(true);
     expect(mergeLiveResults(only, liveHits)).toBe(only);
+  });
+});
+
+describe('against a recorded TfL search response', () => {
+  const recorded = loadStopFixture<{ matches: LiveStopHit[] }>('search-tow.json');
+  const instant = instantFor('tow');
+
+  test('the live "tow" results enrich Tower Hill and Tower Gateway in place and append the rest', () => {
+    const merged = mergeLiveResults(instant, recorded.matches);
+    expect(merged.slice(0, instant.length).map((row) => row.id)).toEqual(instant.map((row) => row.id));
+
+    const gateway = merged.find((row) => row.id === 'HUBTOG') as StopRow;
+    expect(gateway.name).toBe('Tower Gateway');
+    expect(gateway.modes).toEqual(expect.arrayContaining(['bus', 'dlr'])); // live added "bus"
+    expect(merged.length).toBeGreaterThan(instant.length); // live-only hits were appended
+    expect(merged.slice(instant.length).every((row) => row.liveOnly)).toBe(true);
+
+    expect(mergeLiveResults(merged, recorded.matches)).toBe(merged);
+    expect(new Set(merged.map((row) => row.id)).size).toBe(merged.length);
   });
 });
 

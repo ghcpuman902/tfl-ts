@@ -2,6 +2,7 @@ import { STATION_HUBS } from '../generated/meta/StationHubs';
 import {
   StopIndexBuildError,
   buildStopIndex,
+  busRowFromStopPoint,
   busStopIdsUnder,
   redactKey,
   stationRowsFromSeeds,
@@ -115,6 +116,31 @@ describe('buildStopIndex: bus listing', () => {
     );
     const { stats } = await buildStopIndex({ appKey: APP_KEY, stations: [], fetch: stub.fetch, hubBusStops: false, sleep: stub.sleep, now: stub.now });
     expect(stats.busStops).toBe(stops.length);
+  });
+});
+
+describe('busRowFromStopPoint', () => {
+  test('reads a recorded StopPoint: letter, towards (additionalProperties), lines, position', () => {
+    const row = busRowFromStopPoint(loadStopFixture<RawStopPoint>('stoppoint-490000129E.json'));
+    expect(row).toEqual({
+      id: '490000129E',
+      name: "King's Cross Station",
+      kind: 'bus',
+      letter: 'E',
+      indicator: 'Stop E',
+      towards: 'Angel Islington',
+      lat: 51.5305,
+      lon: -0.12307,
+      lines: ['205', '214', '30', '73', 'n205', 'n73'],
+      modes: ['bus'],
+    });
+  });
+
+  test('refuses what is not a boarding bus stop', () => {
+    expect(busRowFromStopPoint({ id: '940GZZLUKSX', commonName: 'KX', modes: ['tube'], lat: 51.5, lon: -0.1 })).toBeUndefined();
+    expect(busRowFromStopPoint({ id: '4900KNGX1', commonName: 'Entrance', stopType: 'NaptanRailEntrance', modes: ['bus'], lat: 51.5, lon: -0.1 })).toBeUndefined();
+    // No stopType on a route-sequence-style entry: the 490 + digit id decides.
+    expect(busRowFromStopPoint({ id: '490000129E', name: 'KX', modes: ['bus'], lat: 51.5, lon: -0.1 })?.id).toBe('490000129E');
   });
 });
 
