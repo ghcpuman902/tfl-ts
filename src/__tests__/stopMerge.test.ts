@@ -1,4 +1,5 @@
 import { STATION_HUBS } from '../generated/meta/StationHubs';
+import type { ExtendedSearchResponse } from '../stopPoint';
 import type { LiveStopHit, StopRow } from '../stops/types';
 import { findHighlightedIndex, mergeLiveResults } from '../utils/stopMerge';
 import { searchStops } from '../utils/stopSearch';
@@ -112,6 +113,33 @@ describe('mergeLiveResults', () => {
     expect(only.map((row) => row.id)).toEqual(['490000254T2', '940GZZLUKSX', '490777001Q', '940GZZLUTWH-X']);
     expect(only.every((row) => row.liveOnly)).toBe(true);
     expect(mergeLiveResults(only, liveHits)).toBe(only);
+  });
+});
+
+describe('live hit types', () => {
+  test('the matches of client.stopPoint.search() go straight in', () => {
+    const response: ExtendedSearchResponse = {
+      matches: [{ id: '490000129E', name: "King's Cross Station", modes: ['bus'], lines: [{ id: '73', name: '73' }], lat: 51.5, lon: -0.1 }],
+    };
+    const rows = mergeLiveResults(instantFor('kings cross'), response.matches ?? []);
+    expect(rows.find((row) => row.id === '490000129E')?.lines).toEqual(expect.arrayContaining(['73']));
+  });
+
+  test('a full StopPoint payload (additionalProperties Towards, hubNaptanCode) is understood too', () => {
+    const rows = mergeLiveResults([], [
+      {
+        id: '490000129E',
+        commonName: "King's Cross Station",
+        modes: ['bus'],
+        stopLetter: 'E',
+        indicator: 'Stop E',
+        additionalProperties: [{ key: 'Towards', value: 'Angel Islington' }],
+        hubNaptanCode: 'HUBKGX',
+        lat: 51.5305,
+        lon: -0.12307,
+      },
+    ]);
+    expect(rows[0]).toMatchObject({ letter: 'E', towards: 'Angel Islington', hubId: 'HUBKGX', kind: 'bus' });
   });
 });
 

@@ -1,7 +1,38 @@
 import { STOP_INDEX_FORMAT } from './types';
-import type { StopIndex, StopIndexData, StopRow } from './types';
+import type { StopIndex, StopIndexColumns, StopIndexData, StopRow } from './types';
 
 const COORD_SCALE = 1e5;
+
+/** Undo first-seen coding: `coded = highestSoFar + 1 - index`. */
+const decodeFirstSeen = (coded: readonly number[]): Int32Array => {
+  const decoded = new Int32Array(coded.length);
+  let highest = -1;
+  for (let i = 0; i < coded.length; i++) {
+    const index = highest + 1 - coded[i];
+    decoded[i] = index;
+    if (index > highest) highest = index;
+  }
+  return decoded;
+};
+
+/** Undo delta coding. */
+const decodeDeltas = (coded: readonly number[]): Int32Array => {
+  const decoded = new Int32Array(coded.length);
+  let running = 0;
+  for (let i = 0; i < coded.length; i++) {
+    running += coded[i];
+    decoded[i] = running;
+  }
+  return decoded;
+};
+
+/** Decode the relative columns of `data` to absolute values. */
+export const decodeStopIndexColumns = (data: StopIndexData): StopIndexColumns => ({
+  name: decodeFirstSeen(data.name),
+  lineSet: decodeFirstSeen(data.lineSet),
+  lat: decodeDeltas(data.dlat),
+  lon: decodeDeltas(data.dlon),
+});
 
 /** Problems with a `StopIndexData` payload, empty when it is well formed. */
 export const validateStopIndexData = (data: StopIndexData): string[] => {
@@ -10,25 +41,28 @@ export const validateStopIndexData = (data: StopIndexData): string[] => {
     problems.push(`format is ${String(data.format)}, expected ${STOP_INDEX_FORMAT}`);
   }
   const size = data.id.length;
-  const columns = ['name', 'letter', 'towards', 'lat', 'lon', 'lineSet', 'modeMask', 'hub'] as const;
+  const columns = ['name', 'letter', 'towards', 'dlat', 'dlon', 'lineSet', 'modeMask', 'hub'] as const;
   for (const column of columns) {
     if (data[column].length !== size) {
       problems.push(`column ${column} has ${data[column].length} rows, expected ${size}`);
     }
   }
+  if (problems.length > 0) return problems;
   if (data.stationCount < 0 || data.stationCount > size) {
     problems.push(`stationCount ${data.stationCount} is outside 0..${size}`);
   }
   if (data.towardsText[0] !== '') problems.push('towardsText[0] must be the empty string');
   if (data.hubs[0] !== '') problems.push('hubs[0] must be the empty string');
   if (data.modes.length > 30) problems.push('more than 30 modes does not fit the bitmask');
+
+  const decoded = decodeStopIndexColumns(data);
   const seen = new Set<string>();
   for (let row = 0; row < size; row++) {
     const id = data.id[row];
     if (!id) problems.push(`row ${row} has no id`);
     else if (seen.has(id)) problems.push(`duplicate id ${id}`);
     seen.add(id);
-    if (!(data.name[row] >= 0 && data.name[row] < data.names.length)) {
+    if (!(decoded.name[row] >= 0 && decoded.name[row] < data.names.length)) {
       problems.push(`row ${row} (${id}): name index out of range`);
     }
     if (!(data.towards[row] >= 0 && data.towards[row] < data.towardsText.length)) {
@@ -37,10 +71,10 @@ export const validateStopIndexData = (data: StopIndexData): string[] => {
     if (!(data.hub[row] >= 0 && data.hub[row] < data.hubs.length)) {
       problems.push(`row ${row} (${id}): hub index out of range`);
     }
-    if (!(data.lineSet[row] >= 0 && data.lineSet[row] < data.lineSets.length)) {
+    if (!(decoded.lineSet[row] >= 0 && decoded.lineSet[row] < data.lineSets.length)) {
       problems.push(`row ${row} (${id}): lineSet index out of range`);
     }
-    if (!Number.isInteger(data.lat[row]) || !Number.isInteger(data.lon[row])) {
+    if (!Number.isInteger(data.dlat[row]) || !Number.isInteger(data.dlon[row])) {
       problems.push(`row ${row} (${id}): coordinates must be integers (degrees * 1e5)`);
     }
     if (problems.length > 50) {
@@ -59,11 +93,13 @@ export const validateStopIndexData = (data: StopIndexData): string[] => {
 };
 
 /**
- * Wrap `StopIndexData` in a read-only handle. O(1): rows are materialised on
- * demand, and the id lookup is built on first use.
+ * Wrap `StopIndexData` in a read-only handle. Relative columns are decoded once
+ * (a few thousand integer additions); rows are materialised on demand and the
+ * id lookup is built on first use.
  */
 export const createStopIndex = (data: StopIndexData): StopIndex => {
   const size = data.id.length;
+  const columns = decodeStopIndexColumns(data);
   let positions: Map<string, number> | undefined;
 
   const lookup = (): Map<string, number> => {
@@ -88,11 +124,11 @@ export const createStopIndex = (data: StopIndexData): StopIndex => {
       data.indicators[position] ?? (letter ? `Stop ${letter}` : undefined);
     const row: StopRow = {
       id: data.id[position],
-      name: data.names[data.name[position]],
+      name: data.names[columns.name[position]],
       kind: position < data.stationCount ? 'station' : 'bus',
-      lat: data.lat[position] / COORD_SCALE,
-      lon: data.lon[position] / COORD_SCALE,
-      lines: data.lineSets[data.lineSet[position]].map((ix) => data.lineIds[ix]),
+      lat: columns.lat[position] / COORD_SCALE,
+      lon: columns.lon[position] / COORD_SCALE,
+      lines: data.lineSets[columns.lineSet[position]].map((ix) => data.lineIds[ix]),
       modes,
     };
     if (letter) row.letter = letter;
@@ -117,5 +153,6 @@ export const createStopIndex = (data: StopIndexData): StopIndex => {
       for (let i = 0; i < size; i++) yield at(i) as StopRow;
     },
     data,
+    columns,
   };
 };

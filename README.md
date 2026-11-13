@@ -218,6 +218,22 @@ arrivals[0]?.platform.label;
 
 `getArrivals()` and `client.raw.*` are unchanged.
 
+## Stop index: search every station and bus stop offline
+
+`tfl-ts/meta/stops` bundles one index of the stations and the London bus stops: id, name, painted stop letter, `towards`, position, lines, modes and hub. Search and merge are pure functions, so a search box can answer on the first keystroke and add TfL's live results afterwards without moving the rows the user is looking at. It is a separate import: the main entry and `tfl-ts/meta` do not include it.
+
+```typescript
+import { STOP_INDEX, searchStops, mergeLiveResults } from 'tfl-ts/meta/stops';
+
+const instant = searchStops(STOP_INDEX, 'kings cross E', { near: { lat: 51.53, lon: -0.12 } });
+// stop E first, then the King's Cross hub and other stops; stations rank above bus stops on a tie
+
+const live = await client.stopPoint.search({ query: 'kings cross', modes: ['bus', 'tube'] });
+const rows = mergeLiveResults(instant, live.matches ?? []); // same order, live-only hits appended
+```
+
+Search folds case, accents, `King's`/`Kings`, `&`/`and`, `St`/`Saint` and abbreviations such as `Rd`. See [docs/agent.md](docs/agent.md#stop-index-tfl-tsmetastops) for the ranking, the merge rules and how to refresh the snapshot.
+
 `client.stopPoint.get` and `getByGeoPoint` lift Direction additional properties onto the stop: `towards`, `compassPoint`, and `compassBearingDegrees`. `smsCode` is filled from the first-class field or bag `SmsCode`. Facility keys stay in `additionalProperties` as TfL strings. `parseAdditionalPropertyValue` turns a bag `value` into `null` / boolean / number / date / text (`"yes"`, `"null"`, unix ms `InstallDate`). `client.raw.stopPoint.*` is unlifted. Do not use Prediction `bearing` (vehicle heading) as the stop flag; a painted `stopLetter` of `W` is Stop W, not west.
 
 ```typescript

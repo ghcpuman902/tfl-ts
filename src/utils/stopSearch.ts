@@ -175,6 +175,7 @@ export const searchStops = (
   if (limit === 0) return [];
 
   const data = index.data;
+  const columns = index.columns;
   const names = foldedNames(index);
   const wholeClass = new Int8Array(names.length).fill(NO_MATCH);
   const letteredClass = new Int8Array(names.length).fill(NO_MATCH);
@@ -195,7 +196,7 @@ export const searchStops = (
   for (let position = 0; position < index.size; position++) {
     const isStation = position < data.stationCount;
     if (isStation ? !wantStation : !wantBus) continue;
-    const nameAt = data.name[position];
+    const nameAt = columns.name[position];
 
     let matchClass = NO_MATCH;
     let pinned = false;
@@ -222,8 +223,8 @@ export const searchStops = (
     let distance = 0;
     if (near) {
       distance = distanceMeters(near, {
-        lat: data.lat[position] / 1e5,
-        lon: data.lon[position] / 1e5,
+        lat: columns.lat[position] / 1e5,
+        lon: columns.lon[position] / 1e5,
       });
     }
     candidates.push({ position, pinned, matchClass, distance });
@@ -236,8 +237,8 @@ export const searchStops = (
     const bStation = b.position < data.stationCount;
     if (aStation !== bStation) return aStation ? -1 : 1;
     if (near && a.distance !== b.distance) return a.distance - b.distance;
-    const aName = names[data.name[a.position]];
-    const bName = names[data.name[b.position]];
+    const aName = names[columns.name[a.position]];
+    const bName = names[columns.name[b.position]];
     if (aName !== bName) return aName < bName ? -1 : 1;
     const aLetter = data.letter[a.position];
     const bLetter = data.letter[b.position];

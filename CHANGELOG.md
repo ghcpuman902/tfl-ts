@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.16.0 — unreleased
+
+### Static stop index: `tfl-ts/meta/stops`
+
+One bundled index of every station and London bus stop (id, name, painted stop letter, `towards`, position, lines, modes, hub), so a search box can answer synchronously and add TfL's live results afterwards.
+
+- `tfl-ts/meta/stops` (cjs, esm, types): `STOP_INDEX`, `searchStops`, `mergeLiveResults`, `findHighlightedIndex`, `createStopIndex`, the folding helpers and the types. `searchStops` folds case, accents, `King's`/`Kings`, `&`/`and`, `St`/`Saint` and abbreviations, understands `kings cross E` / `(Stop E)` / `stop E`, and ranks exact < prefix < word-prefix < contains, stations above bus stops, then distance to an optional `near`, then A–Z. `mergeLiveResults` keeps every instant row and its position, enriches matching rows in place (same id, or hub and member through `STATION_HUBS`), appends live-only hits below, and a second merge of the same payload returns the same array.
+- `tfl-ts/meta/stops/build`: `buildStopIndex({ appKey, stations, fetch })` rebuilds the index from `/StopPoint/Mode/bus` pages (and route sequences or hub payloads when needed). It paces under 500 requests a minute, retries with backoff, and never logs the key or a URL carrying it. `pnpm run generate -- --only=stops` writes `src/generated/stops/StopIndex.ts`; `pnpm run check` validates it.
+- The 456 stations that tfl-components kept in `data/geography/all-stations.json` now live in the same index (`script/data/all-stations.geojson` is the seed).
+- The main entry, `tfl-ts/meta` and `tfl-ts/ui` are unchanged and do not include the index. A Jest test walks their import graph, and `script/bundleCeilings.json` now fails the bundle check if the index reaches them, with a 400 KB gzip ceiling on `tfl-ts/meta/stops` itself.
+- `busStopSearch.ts` now exports `readStopLetter`, `normalizeStopLetter`, `readAdditionalProperty` and `usableText` for the builder. The main entry does not re-export them.
+
 ## 2.15.3 — 2026-10-27
 
 ### MCP tool annotations, empty resources and prompts

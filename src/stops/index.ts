@@ -35,4 +35,4 @@ export { findHighlightedIndex, mergeLiveResults } from '../utils/stopMerge';
 export type { MergeLiveOptions } from '../utils/stopMerge';
 
 /** The bundled index: stations and bus stops, as of `STOP_INDEX.generatedAt`. */
-export const STOP_INDEX = createStopIndex(STOP_INDEX_DATA);
+export const STOP_INDEX = /* @__PURE__ */ createStopIndex(STOP_INDEX_DATA);

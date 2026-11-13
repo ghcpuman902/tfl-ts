@@ -72,21 +72,34 @@ export const encodeStopIndex = (
     name: [],
     letter: [],
     towards: [],
-    lat: [],
-    lon: [],
+    dlat: [],
+    dlon: [],
     lineSet: [],
     modeMask: [],
     hub: [],
     indicators: {},
   };
 
+  // First-seen coding: entries are numbered in row order, so a row is either a
+  // new entry (coded 0) or a repeat (coded by how far back it was last created).
+  let highestName = -1;
+  let highestLineSet = -1;
+  let previousLat = 0;
+  let previousLon = 0;
+
   ordered.forEach((row, position) => {
     data.id.push(row.id);
-    data.name.push(intern(names, row.name));
+    const nameAt = intern(names, row.name);
+    data.name.push(highestName + 1 - nameAt);
+    if (nameAt > highestName) highestName = nameAt;
     data.letter.push(row.letter ?? '');
     data.towards.push(row.towards ? intern(towardsText, row.towards) : 0);
-    data.lat.push(Math.round((row.lat as number) * COORD_SCALE));
-    data.lon.push(Math.round((row.lon as number) * COORD_SCALE));
+    const lat = Math.round((row.lat as number) * COORD_SCALE);
+    const lon = Math.round((row.lon as number) * COORD_SCALE);
+    data.dlat.push(lat - previousLat);
+    data.dlon.push(lon - previousLon);
+    previousLat = lat;
+    previousLon = lon;
 
     const lineSetIndexes = [
       ...new Set(row.lines.map((line) => lineIx.get(line) as number)),
@@ -98,7 +111,8 @@ export const encodeStopIndex = (
       lineSets.set(key, lineSetAt);
       lineSetList.push(lineSetIndexes);
     }
-    data.lineSet.push(lineSetAt);
+    data.lineSet.push(highestLineSet + 1 - lineSetAt);
+    if (lineSetAt > highestLineSet) highestLineSet = lineSetAt;
 
     let mask = 0;
     for (const mode of row.modes) mask |= 1 << (modeBit.get(mode) as number);

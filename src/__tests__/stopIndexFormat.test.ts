@@ -54,8 +54,8 @@ describe('stop index format', () => {
       [{ id: 'X1', name: 'X', kind: 'bus', lat: 51.5304512345, lon: -0.123287654, lines: [], modes: ['bus'] }],
       { generatedAt },
     );
-    expect(data.lat).toEqual([5153045]);
-    expect(data.lon).toEqual([-12329]);
+    expect(data.dlat).toEqual([5153045]);
+    expect(data.dlon).toEqual([-12329]);
     const row = createStopIndex(data).at(0);
     expect(row?.lat).toBe(51.53045);
     expect(row?.lon).toBe(-0.12329);
@@ -76,7 +76,40 @@ describe('stop index format', () => {
     expect(data.hubs).toEqual(['', 'HUBX']);
     expect(data.lineIds).toEqual(['30', '73']);
     expect(data.lineSets).toEqual([[0, 1], [1]]);
-    expect(data.lineSet).toEqual([0, 0, 1]);
+    // First-seen coded: new entry = 0, the latest entry again = 1.
+    expect(data.lineSet).toEqual([0, 1, 0]);
+    expect(data.name).toEqual([0, 1, 0]);
+    const index = createStopIndex(data);
+    expect(index.columns.lineSet).toEqual(Int32Array.from([0, 0, 1]));
+    expect(index.columns.name).toEqual(Int32Array.from([0, 0, 1]));
+  });
+
+  test('delta and first-seen columns round-trip across many rows, including far-back repeats', () => {
+    const many: StopRow[] = [];
+    for (let i = 0; i < 400; i++) {
+      many.push({
+        id: `4900${String(i).padStart(5, '0')}A`,
+        name: `Street ${i % 37}`, // names come back in a cycle, so repeats are far behind the latest
+        kind: 'bus',
+        letter: 'A',
+        indicator: 'Stop A',
+        lat: 51 + ((i * 7919) % 10000) / 20000,
+        lon: -0.5 + ((i * 104729) % 10000) / 20000,
+        lines: [String(i % 11), String((i * 3) % 13)],
+        modes: ['bus'],
+      });
+    }
+    const data = encodeStopIndex(many, { generatedAt });
+    expect(validateStopIndexData(data)).toEqual([]);
+    const index = createStopIndex(data);
+    many.forEach((original, position) => {
+      const row = index.at(position) as StopRow;
+      expect(row.id).toBe(original.id);
+      expect(row.name).toBe(original.name);
+      expect(row.lat).toBeCloseTo(original.lat as number, 5);
+      expect(row.lon).toBeCloseTo(original.lon as number, 5);
+      expect(row.lines).toEqual([...new Set(original.lines)].sort());
+    });
   });
 
   test('keeps the painted letter apart from the NaPTAN suffix and stores odd indicators sparsely', () => {
@@ -115,8 +148,8 @@ describe('stop index format', () => {
     const good = encodeStopIndex(rows, { generatedAt });
     expect(validateStopIndexData(good)).toEqual([]);
 
-    const short = { ...good, lat: good.lat.slice(1) };
-    expect(validateStopIndexData(short).join('\n')).toMatch(/column lat has/);
+    const short = { ...good, dlat: good.dlat.slice(1) };
+    expect(validateStopIndexData(short).join('\n')).toMatch(/column dlat has/);
 
     const badName = { ...good, name: good.name.map(() => 9999) };
     expect(validateStopIndexData(badName).join('\n')).toMatch(/name index out of range/);

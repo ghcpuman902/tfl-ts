@@ -16,14 +16,24 @@
  * places, about a metre). Rows are sorted by `id`, stations first, so the output
  * is deterministic and diffs stay small.
  *
+ * Because rows sorted by NaPTAN id sit next to the other stops of the same
+ * place, three columns are stored relative to their neighbours, which keeps the
+ * numbers short and gzip does the rest:
+ *
+ * - `name` and `lineSet` are *first-seen coded*: the table is filled in row
+ *   order, so a row either re-uses an entry or takes the next free one. The
+ *   stored value is `highestIndexSoFar + 1 - index`: `0` = a new entry, `1` = the
+ *   most recent entry again, and so on.
+ * - `dlat` and `dlon` are *deltas* from the previous row (the first row from 0).
+ *
  * | column      | type       | meaning                                                         |
  * |-------------|------------|-----------------------------------------------------------------|
  * | `id`        | string[]   | NaPTAN / hub id, e.g. `490000129E`, `940GZZLUKSX`, `HUBKGX`      |
- * | `name`      | number[]   | index into `names`                                              |
+ * | `name`      | number[]   | first-seen coded index into `names`                             |
  * | `letter`    | string[]   | painted stop letter (`'E'`, `'HA'`), `''` for none              |
  * | `towards`   | number[]   | index into `towardsText`, `0` = none (`towardsText[0] === ''`)  |
- * | `lat`,`lon` | number[]   | degrees * 1e5                                                   |
- * | `lineSet`   | number[]   | index into `lineSets` (each a sorted list of indexes `lineIds`) |
+ * | `dlat`,`dlon` | number[] | degrees * 1e5, delta-coded                                      |
+ * | `lineSet`   | number[]   | first-seen coded index into `lineSets` (each a sorted list of indexes into `lineIds`) |
  * | `modeMask`  | number[]   | bitmask over `modes` (bit i = `modes[i]`)                       |
  * | `hub`       | number[]   | index into `hubs`, `0` = none (`hubs[0] === ''`)                |
  * | `indicators`| object     | sparse: row index → raw TfL indicator when it is not `Stop <letter>` |
@@ -79,15 +89,29 @@ export interface StopIndexData {
   hubs: string[];
   lineSets: number[][];
   id: string[];
+  /** First-seen coded; see the format notes. */
   name: number[];
   letter: string[];
   towards: number[];
-  lat: number[];
-  lon: number[];
+  /** Delta-coded degrees * 1e5. */
+  dlat: number[];
+  dlon: number[];
+  /** First-seen coded; see the format notes. */
   lineSet: number[];
   modeMask: number[];
   hub: number[];
   indicators: Record<string, string>;
+}
+
+/** `StopIndexData` columns decoded to absolute values, built once per index. */
+export interface StopIndexColumns {
+  /** Index into `data.names`. */
+  name: Int32Array;
+  /** Index into `data.lineSets`. */
+  lineSet: Int32Array;
+  /** Degrees * 1e5. */
+  lat: Int32Array;
+  lon: Int32Array;
 }
 
 /** Read-only handle over `StopIndexData`. Rows are materialised on demand. */
@@ -103,8 +127,10 @@ export interface StopIndex {
   byId(id: string): StopRow | undefined;
   /** Iterate every row in index order. */
   [Symbol.iterator](): IterableIterator<StopRow>;
-  /** @internal Search internals: raw columns and lazily folded names. */
+  /** The encoded snapshot this handle reads. */
   readonly data: StopIndexData;
+  /** Absolute, decoded columns for fast scans (used by search). */
+  readonly columns: StopIndexColumns;
 }
 
 /** A station to seed the index with. The builder does not fetch stations. */

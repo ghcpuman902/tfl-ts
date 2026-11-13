@@ -8,7 +8,7 @@ Claude Code also loads [CLAUDE.md](./CLAUDE.md), which is the longer form of thi
 
 TfL mixes stable reference data with real-time data. tfl-ts splits them:
 
-- **Static (no network):** `LINE_STATION_SEQUENCES`, `STATION_HUBS` from `tfl-ts/meta`; colours from `tfl-ts/ui`; `client.line.LINE_NAMES`, `client.line.LINE_INFO`, `client.stopPoint.MODE_NAMES`, severity tables. Import these when you only need names, order, or ID checks.
+- **Static (no network):** `LINE_STATION_SEQUENCES`, `STATION_HUBS` from `tfl-ts/meta`; `STOP_INDEX` + `searchStops` / `mergeLiveResults` (every station and bus stop, opt-in) from `tfl-ts/meta/stops`; colours from `tfl-ts/ui`; `client.line.LINE_NAMES`, `client.line.LINE_INFO`, `client.stopPoint.MODE_NAMES`, severity tables. Import these when you only need names, order, or ID checks.
 - **Live (network):** `line.getStatus()`, `stopPoint.getArrivals()`, `journey.plan()`, and the rest of the wrappers. These need `TFL_APP_KEY`.
 
 Check static metadata before you call the API.
