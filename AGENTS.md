@@ -52,6 +52,7 @@ npx tfl-ts docs grep -i STATION_HUBS
 - **`pnpm run build`** compiles TypeScript only (CJS + ESM). Never wire generation into `build`.
 - Wrappers call `this.raw.<tag>.<method>()`. Keep every REST endpoint on `client.raw`.
 - Use `lineIds` / `stopPointIds` in public wrappers, not generic `ids`.
+- Before finishing, check every line in _agent/COMPLAINTS.md still holds.
 
 ## Deeper docs
 
