@@ -1,0 +1,4 @@
+# Bot verify gate is repo-only; keep it out of the npm package.
+hooks/
+settings.json
+settings.local.json
