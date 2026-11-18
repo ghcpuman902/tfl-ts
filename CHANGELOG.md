@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Package metadata
+
+The npm description now starts with the package name, and `keywords` add `tfl-ts`, `tfl-api`, `tfl-unified-api` and `tfl-client`. The README heading is now "tfl-ts: TypeScript client for the TfL API", and the intro names tfl-ts and links the docs at [tfl.manglekuo.com/docs](https://tfl.manglekuo.com/docs) and the npm page. `homepage` is unchanged.
+
 ## 2.15.3 — 2026-10-27
 
 ### MCP tool annotations, empty resources and prompts

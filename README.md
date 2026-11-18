@@ -1,4 +1,4 @@
-# TfL API TypeScript Client
+# tfl-ts: TypeScript client for the TfL API
 
 [![npm version](https://badge.fury.io/js/tfl-ts.svg)](https://badge.fury.io/js/tfl-ts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,7 +6,9 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml)
 
-> Typed TfL client: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
+> **tfl-ts** is a typed TypeScript client for the Transport for London (TfL) Unified API: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
+>
+> Docs and examples: [tfl.manglekuo.com/docs](https://tfl.manglekuo.com/docs) · npm: [tfl-ts](https://www.npmjs.com/package/tfl-ts)
 
 <img src="https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/assets/tfl-cli.gif" alt="tfl CLI checking central and victoria, then listing the journey endpoints" width="640">
 
