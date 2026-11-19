@@ -16,6 +16,13 @@ One bundled index of every station and London bus stop (id, name, painted stop l
 
 The npm description now starts with the package name, and `keywords` add `tfl-ts`, `tfl-api`, `tfl-unified-api` and `tfl-client`. The README heading is now "tfl-ts: TypeScript client for the TfL API", and the intro names tfl-ts and links the docs at [tfl.manglekuo.com/docs](https://tfl.manglekuo.com/docs) and the npm page. `homepage` is unchanged.
 
+### River-bus route changes (RB1, RB6)
+
+`LINE_STATION_SEQUENCES` is regenerated from TfL (19 Nov 2026). RB1 outbound loses its 14-pier "via Blackfriars" route and gains a plain 12-pier Battersea Power Station ↔ Barking Riverside route. RB6 loses the inbound Blackfriars ↔ Battersea Power Station short working; "via Blackfriars" calls at Bankside instead of Westminster inbound and skips Tower outbound; "via Chelsea Harbour" skips Tower and adds Wandsworth Riverside Quarter, Cadogan and Vauxhall St George Wharf. TfL also re-split two Weaver outbound branches (same ordered routes). Line ids are unchanged (`rb1`, `rb4`, `rb6`, `woolwich-ferry`).
+
+- Tests for the new shapes, and that `rb1`/`rb6` pass `checkLineId` while `br1`/`br6` do not.
+- `src/__tests__/riverBusDrift.test.ts`: an online drift guard comparing the river-bus snapshot with live ordered routes. Skipped unless `TFL_LIVE_DRIFT=1` and `TFL_APP_KEY` are set.
+
 ## 2.15.3 — 2026-10-27
 
 ### MCP tool annotations, empty resources and prompts

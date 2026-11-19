@@ -2,7 +2,7 @@
 // Static topology only: station identity, order, and branches; no operational state.
 // Regenerate with: pnpm run generate -- --only=station-sequences
 
-export const STATION_SEQUENCES_GENERATED_AT = "2026-08-17T18:15:50.841Z";
+export const STATION_SEQUENCES_GENERATED_AT = "2026-11-19T08:53:08.815Z";
 
 export const LINE_STATION_SEQUENCES = {
   "bakerloo": {
@@ -8272,8 +8272,38 @@ export const LINE_STATION_SEQUENCES = {
           "930GWAS",
           "930GWRF",
           "930GMIL",
+          "930GGNW"
+        ]
+      },
+      {
+        "id": 1,
+        "direction": "inbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          8
+        ],
+        "previousBranchIds": [
+          0
+        ],
+        "stationIds": [
           "930GGNW",
           "930GMHT",
+          "930GGLP"
+        ]
+      },
+      {
+        "id": 8,
+        "direction": "inbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          3,
+          4
+        ],
+        "previousBranchIds": [
+          1,
+          2
+        ],
+        "stationIds": [
           "930GGLP",
           "930GCAW",
           "930GTMP",
@@ -8282,14 +8312,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 1,
+        "id": 3,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          6
+          9
         ],
         "previousBranchIds": [
-          0
+          8
         ],
         "stationIds": [
           "930GSWK",
@@ -8298,17 +8328,17 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 6,
+        "id": 9,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          3,
-          4,
-          5
+          5,
+          6,
+          7
         ],
         "previousBranchIds": [
-          1,
-          2
+          3,
+          4
         ],
         "stationIds": [
           "930GEMB",
@@ -8316,14 +8346,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 3,
+        "id": 5,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          7
+          10
         ],
         "previousBranchIds": [
-          6
+          9
         ],
         "stationIds": [
           "930GWMR",
@@ -8332,12 +8362,12 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 7,
+        "id": 10,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [],
         "previousBranchIds": [
-          3
+          5
         ],
         "stationIds": [
           "930GSGW",
@@ -8345,12 +8375,12 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 8,
+        "id": 11,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          12,
-          13
+          19,
+          20
         ],
         "previousBranchIds": [],
         "stationIds": [
@@ -8359,32 +8389,46 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 12,
+        "id": 19,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          14
+          30
         ],
         "previousBranchIds": [
-          8
+          11
         ],
         "stationIds": [
           "930GSGW",
+          "930GMBK"
+        ]
+      },
+      {
+        "id": 30,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          21
+        ],
+        "previousBranchIds": [
+          19
+        ],
+        "stationIds": [
           "930GMBK",
           "930GWMR"
         ]
       },
       {
-        "id": 14,
+        "id": 21,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          16,
-          17
+          23,
+          24
         ],
         "previousBranchIds": [
-          12,
-          13
+          30,
+          20
         ],
         "stationIds": [
           "930GWMR",
@@ -8393,48 +8437,94 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 19,
+        "id": 31,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          10,
-          11
+          26
         ],
         "previousBranchIds": [
-          16,
-          17
+          23,
+          24
         ],
         "stationIds": [
           "930GSWK",
+          "930GLBR"
+        ]
+      },
+      {
+        "id": 26,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          14,
+          15,
+          16
+        ],
+        "previousBranchIds": [
+          31
+        ],
+        "stationIds": [
           "930GLBR",
           "930GTMP",
+          "930GCAW"
+        ]
+      },
+      {
+        "id": 14,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          17,
+          18
+        ],
+        "previousBranchIds": [
+          26,
+          27
+        ],
+        "stationIds": [
           "930GCAW",
           "930GGLP"
         ]
       },
       {
-        "id": 10,
+        "id": 17,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          18
+          28
         ],
         "previousBranchIds": [
-          19
+          14
         ],
         "stationIds": [
           "930GGLP",
+          "930GMHT"
+        ]
+      },
+      {
+        "id": 28,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          29
+        ],
+        "previousBranchIds": [
+          17,
+          15
+        ],
+        "stationIds": [
           "930GMHT",
           "930GGNW"
         ]
       },
       {
-        "id": 18,
+        "id": 29,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [],
         "previousBranchIds": [
-          10
+          28
         ],
         "stationIds": [
           "930GGNW",
@@ -8445,15 +8535,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 17,
+        "id": 24,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          19
+          31
         ],
         "previousBranchIds": [
-          14,
-          9
+          21
         ],
         "stationIds": [
           "930GEMB",
@@ -8462,16 +8551,61 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 9,
+        "id": 12,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          17
+          22
         ],
         "previousBranchIds": [],
         "stationIds": [
           "930GBSP",
+          "930GWMR"
+        ]
+      },
+      {
+        "id": 22,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          25
+        ],
+        "previousBranchIds": [
+          12
+        ],
+        "stationIds": [
+          "930GWMR",
           "930GEMB"
+        ]
+      },
+      {
+        "id": 25,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          27
+        ],
+        "previousBranchIds": [
+          22
+        ],
+        "stationIds": [
+          "930GEMB",
+          "930GLBR"
+        ]
+      },
+      {
+        "id": 27,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          14
+        ],
+        "previousBranchIds": [
+          25
+        ],
+        "stationIds": [
+          "930GLBR",
+          "930GCAW"
         ]
       }
     ],
@@ -8501,11 +8635,15 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "name": "Battersea Power Station  &harr;  Barking Riverside  via Blackfriars ",
+        "name": "Battersea Power Station  &harr;  Barking Riverside  via Bankside ",
         "direction": "outbound",
         "serviceType": "Regular",
         "stationIds": [
           "930GBSP",
+          "930GSGW",
+          "930GMBK",
+          "930GWMR",
+          "930GWMP",
           "930GEMB",
           "930GBFR",
           "930GSWK",
@@ -8522,20 +8660,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "name": "Battersea Power Station  &harr;  Barking Riverside  via Bankside ",
+        "name": "Battersea Power Station  &harr;  Barking Riverside ",
         "direction": "outbound",
         "serviceType": "Regular",
         "stationIds": [
           "930GBSP",
-          "930GSGW",
-          "930GMBK",
           "930GWMR",
-          "930GWMP",
           "930GEMB",
-          "930GBFR",
-          "930GSWK",
           "930GLBR",
-          "930GTMP",
           "930GCAW",
           "930GGLP",
           "930GMHT",
@@ -8707,13 +8839,13 @@ export const LINE_STATION_SEQUENCES = {
     ],
     "branches": [
       {
-        "id": 1,
+        "id": 0,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
+          1,
           2,
-          3,
-          4
+          3
         ],
         "previousBranchIds": [],
         "stationIds": [
@@ -8725,14 +8857,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 2,
+        "id": 1,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          30
+          26
         ],
         "previousBranchIds": [
-          1
+          0
         ],
         "stationIds": [
           "930GGNW",
@@ -8741,17 +8873,16 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 30,
+        "id": 26,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          5,
-          6,
-          7
+          4,
+          5
         ],
         "previousBranchIds": [
-          2,
-          4
+          1,
+          2
         ],
         "stationIds": [
           "930GGLP",
@@ -8759,15 +8890,15 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 5,
+        "id": 4,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          8,
-          9
+          6,
+          7
         ],
         "previousBranchIds": [
-          30,
+          26,
           3
         ],
         "stationIds": [
@@ -8777,14 +8908,15 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 8,
+        "id": 6,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          11,
-          12
+          8,
+          9
         ],
         "previousBranchIds": [
+          4,
           5
         ],
         "stationIds": [
@@ -8793,17 +8925,50 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 13,
+        "id": 8,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          16,
-          17,
-          18
+          27
         ],
         "previousBranchIds": [
+          6
+        ],
+        "stationIds": [
+          "930GSWK",
+          "930GBFR"
+        ]
+      },
+      {
+        "id": 27,
+        "direction": "inbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          10,
           11,
-          29
+          12,
+          13
+        ],
+        "previousBranchIds": [
+          8,
+          7
+        ],
+        "stationIds": [
+          "930GBFR",
+          "930GEMB"
+        ]
+      },
+      {
+        "id": 10,
+        "direction": "inbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          14,
+          15
+        ],
+        "previousBranchIds": [
+          27,
+          9
         ],
         "stationIds": [
           "930GEMB",
@@ -8811,15 +8976,15 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 16,
+        "id": 14,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          19,
-          20
+          16,
+          17
         ],
         "previousBranchIds": [
-          13
+          10
         ],
         "stationIds": [
           "930GWMR",
@@ -8827,15 +8992,15 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 19,
+        "id": 16,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          31
+          28
         ],
         "previousBranchIds": [
-          16,
-          15
+          14,
+          12
         ],
         "stationIds": [
           "930GMBK",
@@ -8843,19 +9008,17 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 31,
+        "id": 28,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          21,
-          22,
-          23,
-          24
+          18,
+          20
         ],
         "previousBranchIds": [
-          19,
-          18,
-          14
+          16,
+          15,
+          11
         ],
         "stationIds": [
           "930GSGW",
@@ -8863,16 +9026,18 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 21,
+        "id": 18,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          25,
-          26
+          21,
+          22,
+          23
         ],
         "previousBranchIds": [
-          31,
-          20
+          28,
+          13,
+          17
         ],
         "stationIds": [
           "930GBSP",
@@ -8881,16 +9046,16 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 25,
+        "id": 21,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          27,
-          28
+          24,
+          25
         ],
         "previousBranchIds": [
-          21,
-          22
+          18,
+          20
         ],
         "stationIds": [
           "930GCHP",
@@ -8898,14 +9063,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 27,
+        "id": 24,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          32
+          29
         ],
         "previousBranchIds": [
-          25
+          21
         ],
         "stationIds": [
           "930GPLW",
@@ -8913,12 +9078,12 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 32,
+        "id": 29,
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [],
         "previousBranchIds": [
-          27
+          24
         ],
         "stationIds": [
           "930GWRQ",
@@ -8930,69 +9095,23 @@ export const LINE_STATION_SEQUENCES = {
         "direction": "inbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          29
+          16
         ],
         "previousBranchIds": [
-          8
+          27
         ],
         "stationIds": [
-          "930GSWK",
-          "930GBFR"
+          "930GEMB",
+          "930GMBK"
         ]
       },
       {
-        "id": 29,
-        "direction": "inbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          13,
-          14,
-          15
-        ],
-        "previousBranchIds": [
-          12,
-          9,
-          7
-        ],
-        "stationIds": [
-          "930GBFR",
-          "930GEMB"
-        ]
-      },
-      {
-        "id": 9,
-        "direction": "inbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          29
-        ],
-        "previousBranchIds": [
-          5,
-          6
-        ],
-        "stationIds": [
-          "930GLBR",
-          "930GBFR"
-        ]
-      },
-      {
-        "id": 0,
-        "direction": "inbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [],
-        "previousBranchIds": [],
-        "stationIds": [
-          "930GBFR",
-          "930GBSP"
-        ]
-      },
-      {
-        "id": 33,
+        "id": 30,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          35,
-          36
+          32,
+          33
         ],
         "previousBranchIds": [],
         "stationIds": [
@@ -9001,14 +9120,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 35,
+        "id": 32,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          60
+          56
         ],
         "previousBranchIds": [
-          33
+          30
         ],
         "stationIds": [
           "930GWRQ",
@@ -9016,16 +9135,15 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 60,
+        "id": 56,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          37,
-          38
+          34,
+          35
         ],
         "previousBranchIds": [
-          35,
-          34
+          32
         ],
         "stationIds": [
           "930GPLW",
@@ -9033,16 +9151,14 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 37,
+        "id": 34,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          39,
-          41
+          36
         ],
         "previousBranchIds": [
-          60,
-          36
+          56
         ],
         "stationIds": [
           "930GCHP",
@@ -9051,17 +9167,17 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 39,
+        "id": 36,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          42,
-          43,
-          44
+          38,
+          39,
+          40
         ],
         "previousBranchIds": [
-          37,
-          38
+          34,
+          35
         ],
         "stationIds": [
           "930GBSP",
@@ -9069,139 +9185,23 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 45,
+        "id": 41,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          48,
-          49
+          44,
+          45
         ],
         "previousBranchIds": [
-          42,
-          55,
-          53,
-          54,
-          40
+          38,
+          37,
+          50,
+          51,
+          49
         ],
         "stationIds": [
           "930GEMB",
           "930GBFR"
-        ]
-      },
-      {
-        "id": 56,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          58,
-          59
-        ],
-        "previousBranchIds": [
-          50,
-          51
-        ],
-        "stationIds": [
-          "930GCAW",
-          "930GGLP"
-        ]
-      },
-      {
-        "id": 58,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          62
-        ],
-        "previousBranchIds": [
-          56
-        ],
-        "stationIds": [
-          "930GGLP",
-          "930GMHT",
-          "930GGNW"
-        ]
-      },
-      {
-        "id": 62,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [],
-        "previousBranchIds": [
-          58
-        ],
-        "stationIds": [
-          "930GGNW",
-          "930GMIL",
-          "930GWRF",
-          "930GWAS",
-          "930GBRVS"
-        ]
-      },
-      {
-        "id": 51,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          56,
-          57
-        ],
-        "previousBranchIds": [
-          48,
-          61,
-          47
-        ],
-        "stationIds": [
-          "930GLBR",
-          "930GTMP",
-          "930GCAW"
-        ]
-      },
-      {
-        "id": 49,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          61
-        ],
-        "previousBranchIds": [
-          45
-        ],
-        "stationIds": [
-          "930GBFR",
-          "930GSWK"
-        ]
-      },
-      {
-        "id": 61,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          51,
-          50
-        ],
-        "previousBranchIds": [
-          49,
-          46
-        ],
-        "stationIds": [
-          "930GSWK",
-          "930GLBR"
-        ]
-      },
-      {
-        "id": 43,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          52,
-          53
-        ],
-        "previousBranchIds": [
-          39
-        ],
-        "stationIds": [
-          "930GSGW",
-          "930GMBK"
         ]
       },
       {
@@ -9213,12 +9213,12 @@ export const LINE_STATION_SEQUENCES = {
           55
         ],
         "previousBranchIds": [
-          43,
-          41
+          46,
+          47
         ],
         "stationIds": [
-          "930GMBK",
-          "930GWMR"
+          "930GCAW",
+          "930GGLP"
         ]
       },
       {
@@ -9226,17 +9226,95 @@ export const LINE_STATION_SEQUENCES = {
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          45,
-          46
+          58
         ],
         "previousBranchIds": [
-          52,
-          44
+          52
         ],
         "stationIds": [
-          "930GWMR",
-          "930GWMP",
-          "930GEMB"
+          "930GGLP",
+          "930GMHT",
+          "930GGNW"
+        ]
+      },
+      {
+        "id": 58,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [],
+        "previousBranchIds": [
+          54
+        ],
+        "stationIds": [
+          "930GGNW",
+          "930GMIL",
+          "930GWRF",
+          "930GWAS",
+          "930GBRVS"
+        ]
+      },
+      {
+        "id": 45,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          57
+        ],
+        "previousBranchIds": [
+          41
+        ],
+        "stationIds": [
+          "930GBFR",
+          "930GSWK"
+        ]
+      },
+      {
+        "id": 57,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          47
+        ],
+        "previousBranchIds": [
+          45,
+          42
+        ],
+        "stationIds": [
+          "930GSWK",
+          "930GLBR"
+        ]
+      },
+      {
+        "id": 47,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          52,
+          53
+        ],
+        "previousBranchIds": [
+          57
+        ],
+        "stationIds": [
+          "930GLBR",
+          "930GTMP",
+          "930GCAW"
+        ]
+      },
+      {
+        "id": 39,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          48,
+          49
+        ],
+        "previousBranchIds": [
+          36
+        ],
+        "stationIds": [
+          "930GSGW",
+          "930GMBK"
         ]
       },
       {
@@ -9248,7 +9326,40 @@ export const LINE_STATION_SEQUENCES = {
           51
         ],
         "previousBranchIds": [
-          45
+          39
+        ],
+        "stationIds": [
+          "930GMBK",
+          "930GWMR"
+        ]
+      },
+      {
+        "id": 50,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          41,
+          42
+        ],
+        "previousBranchIds": [
+          48,
+          40
+        ],
+        "stationIds": [
+          "930GWMR",
+          "930GWMP",
+          "930GEMB"
+        ]
+      },
+      {
+        "id": 44,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          46
+        ],
+        "previousBranchIds": [
+          41
         ],
         "stationIds": [
           "930GBFR",
@@ -9256,67 +9367,83 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
+        "id": 46,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          52,
+          53
+        ],
+        "previousBranchIds": [
+          44,
+          43
+        ],
+        "stationIds": [
+          "930GLBR",
+          "930GCAW"
+        ]
+      },
+      {
         "id": 38,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          39,
-          40
+          41,
+          43
         ],
         "previousBranchIds": [
-          60
+          36
         ],
         "stationIds": [
-          "930GCHP",
-          "930GBSP"
+          "930GSGW",
+          "930GEMB"
         ]
       },
       {
-        "id": 40,
+        "id": 43,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          45,
-          47
+          46
         ],
         "previousBranchIds": [
           38
         ],
         "stationIds": [
-          "930GBSP",
-          "930GEMB"
-        ]
-      },
-      {
-        "id": 47,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          51
-        ],
-        "previousBranchIds": [
-          40
-        ],
-        "stationIds": [
           "930GEMB",
           "930GLBR"
-        ]
-      },
-      {
-        "id": 34,
-        "direction": "outbound",
-        "serviceType": "Regular",
-        "nextBranchIds": [
-          60
-        ],
-        "previousBranchIds": [],
-        "stationIds": [
-          "930GPUT",
-          "930GPLW"
         ]
       }
     ],
     "orderedRoutes": [
+      {
+        "name": "Barking Riverside  &harr;  Putney  via Blackfriars ",
+        "direction": "inbound",
+        "serviceType": "Regular",
+        "stationIds": [
+          "930GBRVS",
+          "930GWAS",
+          "930GWRF",
+          "930GMIL",
+          "930GGNW",
+          "930GMHT",
+          "930GGLP",
+          "930GCAW",
+          "930GTMP",
+          "930GLBR",
+          "930GSWK",
+          "930GBFR",
+          "930GEMB",
+          "930GMBK",
+          "930GSGW",
+          "930GBSP",
+          "930GBSE",
+          "930GCHP",
+          "930GPLW",
+          "930GWRQ",
+          "930GPUT"
+        ]
+      },
       {
         "name": "Barking Riverside  &harr;  Putney  via Bankside ",
         "direction": "inbound",
@@ -9347,54 +9474,19 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "name": "Barking Riverside  &harr;  Putney  via Blackfriars ",
-        "direction": "inbound",
-        "serviceType": "Regular",
-        "stationIds": [
-          "930GBRVS",
-          "930GWAS",
-          "930GWRF",
-          "930GMIL",
-          "930GGNW",
-          "930GMHT",
-          "930GGLP",
-          "930GCAW",
-          "930GTMP",
-          "930GLBR",
-          "930GBFR",
-          "930GEMB",
-          "930GWMR",
-          "930GMBK",
-          "930GSGW",
-          "930GBSP",
-          "930GBSE",
-          "930GCHP",
-          "930GPLW",
-          "930GWRQ",
-          "930GPUT"
-        ]
-      },
-      {
-        "name": "Blackfriars  &harr;  Battersea Power Station ",
-        "direction": "inbound",
-        "serviceType": "Regular",
-        "stationIds": [
-          "930GBFR",
-          "930GBSP"
-        ]
-      },
-      {
         "name": "Putney  &harr;  Barking Riverside  via Chelsea Harbour ",
         "direction": "outbound",
         "serviceType": "Regular",
         "stationIds": [
           "930GPUT",
+          "930GWRQ",
           "930GPLW",
           "930GCHP",
+          "930GBSE",
           "930GBSP",
+          "930GSGW",
           "930GEMB",
           "930GLBR",
-          "930GTMP",
           "930GCAW",
           "930GGLP",
           "930GMHT",
@@ -9453,7 +9545,6 @@ export const LINE_STATION_SEQUENCES = {
           "930GEMB",
           "930GBFR",
           "930GLBR",
-          "930GTMP",
           "930GCAW",
           "930GGLP",
           "930GMHT",
@@ -10622,8 +10713,8 @@ export const LINE_STATION_SEQUENCES = {
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          6,
-          7
+          7,
+          8
         ],
         "previousBranchIds": [],
         "stationIds": [
@@ -10635,12 +10726,11 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 6,
+        "id": 7,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [
-          8,
-          9
+          11
         ],
         "previousBranchIds": [
           5
@@ -10650,6 +10740,21 @@ export const LINE_STATION_SEQUENCES = {
           "910GRCTRYRD",
           "910GSTKNWNG",
           "910GSTMFDHL",
+          "910GSEVNSIS"
+        ]
+      },
+      {
+        "id": 11,
+        "direction": "outbound",
+        "serviceType": "Regular",
+        "nextBranchIds": [
+          9,
+          10
+        ],
+        "previousBranchIds": [
+          7
+        ],
+        "stationIds": [
           "910GSEVNSIS",
           "910GBRUCGRV",
           "910GWHHRTLA",
@@ -10658,12 +10763,12 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 8,
+        "id": 9,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [],
         "previousBranchIds": [
-          6
+          11
         ],
         "stationIds": [
           "910GEDMNGRN",
@@ -10674,12 +10779,12 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 9,
+        "id": 10,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [],
         "previousBranchIds": [
-          6
+          11
         ],
         "stationIds": [
           "910GEDMNGRN",
@@ -10688,7 +10793,7 @@ export const LINE_STATION_SEQUENCES = {
         ]
       },
       {
-        "id": 7,
+        "id": 8,
         "direction": "outbound",
         "serviceType": "Regular",
         "nextBranchIds": [],
