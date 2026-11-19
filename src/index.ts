@@ -109,6 +109,14 @@ export type { TflApiErrorBody } from './errors';
 export { RawClient } from './generated/rawClient';
 export { ENDPOINTS, ENDPOINT_COUNT } from './generated/endpoints';
 export type { EndpointDefinition } from './generated/endpoints';
+export {
+  COUNTDOWN_DEFAULTS,
+  COUNTDOWN_PRESETS,
+  createCountdownTracker,
+  countdownLabel,
+  predictionArrivalMs,
+} from './realtime/countdown';
+export type { CountdownOptions, CountdownRow, CountdownLabel } from './realtime/countdown';
 export { Realtime, pollArrivals, pollLineArrivals, pollVehicleArrivals } from './realtime';
 export type {
   PollMeta,
