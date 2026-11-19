@@ -31,4 +31,10 @@ docs/internal/
 .claude/skills/imlaf-audit
 skills-lock.json
 
-*/.DS_Store
+**/.DS_Store
+
+# Local agent working files
+_agent/
+.claude/hooks/
+.claude/.cc-writes/
+.claude/.npmignore
