@@ -71,12 +71,12 @@ describe('static station sequences', () => {
 
   describe('river-bus routes (TfL change seen 19 Nov 2026)', () => {
     type Route = { name?: string; direction: string; stationIds: readonly string[] };
-    const pier = (code: string) => `930G${code}`;
+    const pier = (code: string): string => `930G${code}`;
     const routes = (lineId: 'rb1' | 'rb6', direction: string): Route[] =>
       (LINE_STATION_SEQUENCES[lineId].orderedRoutes as readonly Route[]).filter(
         (route) => route.direction === direction,
       );
-    const named = (lineId: 'rb1' | 'rb6', direction: string, via: string | null) =>
+    const named = (lineId: 'rb1' | 'rb6', direction: string, via: string | null): Route[] =>
       routes(lineId, direction).filter((route) => {
         const name = (route.name ?? '').trim();
         return via === null ? !/\bvia\b/.test(name) : name.endsWith(`via ${via}`);
