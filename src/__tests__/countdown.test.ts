@@ -73,6 +73,18 @@ describe('createCountdownTracker', () => {
     expect(t.view(T0 + 71_000)).toHaveLength(0);
   });
 
+  it('does not bring a dropped vehicle back while the feed still lists it as due', () => {
+    const t = createCountdownTracker({ projectionOffsetMs: 0 });
+    t.ingest([pred(60, 0)], T0, T0);
+    expect(t.view(T0 + 71_000)).toHaveLength(0);
+    // The feed keeps the bus, clamped to "now", on later polls.
+    t.ingest([pred(80, 80)], T0 + 80_000, T0 + 80_000);
+    expect(t.view(T0 + 81_000)).toHaveLength(0);
+    // A real new prediction (more than a minute out) brings it back.
+    t.ingest([pred(260, 100)], T0 + 100_000, T0 + 100_000);
+    expect(t.view(T0 + 101_000)).toHaveLength(1);
+  });
+
   it('starts early with the bus preset', () => {
     const t = createCountdownTracker(COUNTDOWN_PRESETS.bus);
     t.ingest([pred(130, 0)], T0, T0);

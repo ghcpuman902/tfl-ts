@@ -116,6 +116,8 @@ export function createCountdownTracker(options?: CountdownOptions): {
 } {
   const o = resolve(options);
   const entries = new Map<string, Entry>();
+  /** Rows dropped after their Due grace: a feed that still lists the vehicle must not bring it back. */
+  const gone = new Set<string>();
   let clockOffset: number | undefined;
 
   const advance = (e: Entry, now: number): void => {
@@ -144,6 +146,11 @@ export function createCountdownTracker(options?: CountdownOptions): {
         const stampMs = Number.isFinite(stamp) ? stamp : serverNowMs;
         const e = entries.get(key);
         if (!e) {
+          // A gone vehicle returns only with a real new prediction, not a row still claiming it is due.
+          if (gone.has(key)) {
+            if (arrival > serverNowMs + o.dueThresholdMs) gone.delete(key);
+            else continue;
+          }
           entries.set(key, {
             shown: arrival,
             target: arrival,
@@ -180,6 +187,7 @@ export function createCountdownTracker(options?: CountdownOptions): {
         advance(e, now);
         if (now > e.shown + o.dueGraceMs) {
           entries.delete(key);
+          gone.add(key);
           continue;
         }
         const arrivalMs = e.shown + o.projectionOffsetMs;
