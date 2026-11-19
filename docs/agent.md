@@ -39,6 +39,7 @@ These are available synchronously on the client instance after construction:
 | `STOP_POINT_CATEGORIES` | `stopPoint` | Stop category enums |
 | `STOP_POINT_TYPES` | `stopPoint` | Stop type enums |
 | `LINE_IDS` | package export | Mode-grouped line name → ID maps |
+| `STOP_INDEX` | `tfl-ts/meta/stops` only | Every station and London bus stop, with letter, towards, position, lines, modes. Opt-in subpath; see [Stop index](#stop-index-tfl-tsmetastops) |
 
 **Use static metadata for:** input validation, dropdowns, display labels, station diagrams, severity styling, mode filtering — anything that does not need current operational state. Import `LINE_STATION_SEQUENCES` from `tfl-ts/meta` when credentials are unavailable. The same data is still on `client.line.STATION_SEQUENCES` (loaded on first access). Client Components should import colours from `tfl-ts/ui`.
 
@@ -367,6 +368,57 @@ export const ArrivalBoard = ({ stopId }: { stopId: string }) => {
   // render arrivals…
 };
 ```
+
+## Stop index (`tfl-ts/meta/stops`)
+
+One static index of every station (tube, DLR, Overground, Elizabeth line, tram, hubs) and every London bus stop. No network, no key. It is a separate subpath so nobody pays the bytes unless they import it: the main entry, `tfl-ts/meta` and `tfl-ts/ui` never include it (a Jest test walks the import graph, and `pnpm run check` fails if the marker string reaches those bundles).
+
+```typescript
+import { STOP_INDEX, searchStops, mergeLiveResults, findHighlightedIndex } from 'tfl-ts/meta/stops';
+```
+
+Each row (`StopRow`): `id` (NaPTAN, or a hub id like `HUBKGX`), `name`, `kind` (`'station'` or `'bus'`), `letter` and `indicator` (the painted letter TfL reports, e.g. `E` / `Stop E`), `towards`, `lat`, `lon`, `lines` (line or route ids), `modes`, `hubId`. The letter is never read from the NaPTAN suffix (`490003087W1` is painted `HA`) and is not a compass point. Station names are the short display label (`Tower Hill`).
+
+### `searchStops(index, query, options?)`
+
+Pure and deterministic. Order: stop-letter pin → match class (exact < prefix < word-prefix < contains < all words) → stations before bus stops → distance to `options.near` → name A–Z → letter → id.
+
+- `searchStops(STOP_INDEX, 'tow')` → Tower Gateway and Tower Hill first.
+- `'kings cross'` → the King's Cross & St Pancras hub, then the King's Cross bus stops. With a `near` point they are ordered by distance.
+- `'kings cross E'`, `'kings cross stop E'`, `"King's Cross (Stop E)"` pin stop E first and keep the rest. `'stop E'` alone lists only stops painted E.
+- A bare trailing letter is also tried as part of the name, so `'oxford c'` still finds Oxford Circus.
+- Folding: case, accents, apostrophes, `&`/`and`, `St`/`Saint`/`Street`, `Rd`/`Road`, `Stn`/`Station` and similar. A half-typed `str` still matches `St`.
+- Options: `limit` (default 20), `near` (adds `distance` in metres), `kinds`. An empty query returns `[]`, or the nearest rows when `near` is set.
+
+### `mergeLiveResults(instant, live, options?)`
+
+Lays live TfL hits (StopPoint search matches or StopPoint objects) over the instant list so the UI does not jump:
+
+1. Every instant row keeps its `id` and position.
+2. A live hit with the same id, or a station hub and one of its members (`STATION_HUBS`), enriches that row in place: missing fields are filled, `lines` and `modes` are unioned, nothing is overwritten and `name` never changes. A bus hit only matches by exact id.
+3. Live-only hits are appended below in the order TfL gave them, marked `liveOnly: true`.
+4. Merging the same payload again changes nothing and returns the same array, so a UI can skip the re-render.
+
+`findHighlightedIndex(rows, highlightedId, fallback?)` returns the highlighted row's position after a merge. Because rows never move, an id that was in the instant list keeps its index.
+
+### Format, size and refresh
+
+The data is columnar (`tfl-stop-index/1`; see `src/stops/types.ts`): interned names, towards text, line ids and line sets, 5 dp coordinates, rows sorted by id with stations first. `createStopIndex(data)` wraps any `StopIndexData`, for example a copy served from a cache.
+
+Refresh the bundled snapshot with `pnpm run generate -- --only=stops` (needs `TFL_APP_KEY`; about 25 requests: `/StopPoint/Mode/bus` pages plus one fetch per `HUB…`). To refresh a served copy from a server or cron, import the builder from `tfl-ts/meta/stops/build`:
+
+```typescript
+import { buildStopIndex, stationSeedsFromIndex } from 'tfl-ts/meta/stops/build';
+import { STOP_INDEX, createStopIndex } from 'tfl-ts/meta/stops';
+
+const { data, stats } = await buildStopIndex({
+  appKey: process.env.TFL_APP_KEY!, // sent as app_key, never logged
+  stations: stationSeedsFromIndex(STOP_INDEX),
+});
+const fresh = createStopIndex(data); // or JSON.stringify(data) to store it
+```
+
+`buildStopIndex` paces itself under 500 requests a minute, retries 408/429/5xx with backoff, and takes an injectable `fetch`. It does not read the environment. If the paged bus listing carries no `lines`, it walks every bus route sequence to fill them (about 1,400 more requests, set `routeSequences: false` to forbid it).
 
 ## UI helpers (no API calls)
 

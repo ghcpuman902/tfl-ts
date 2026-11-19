@@ -3,7 +3,7 @@ import path from 'path';
 
 const ROOT = path.join(__dirname, '..');
 
-const TARGETS = ['types', 'raw', 'meta', 'station-sequences', 'station-hubs', 'jsdoc'] as const;
+const TARGETS = ['types', 'raw', 'meta', 'station-sequences', 'station-hubs', 'stops', 'jsdoc'] as const;
 type Target = (typeof TARGETS)[number];
 
 const TARGET_SCRIPTS: Record<Target, string> = {
@@ -12,6 +12,7 @@ const TARGET_SCRIPTS: Record<Target, string> = {
   meta: 'script/generateMeta.ts',
   'station-sequences': 'script/generateStationSequences.ts',
   'station-hubs': 'script/generateStationHubs.ts',
+  stops: 'script/generateStops.ts',
   jsdoc: 'script/generateJsdoc.ts',
 };
 

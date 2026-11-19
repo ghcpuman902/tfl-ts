@@ -1,0 +1,49 @@
+{
+ "id": "490000129E",
+ "naptanId": "490000129E",
+ "commonName": "King's Cross Station",
+ "stopType": "NaptanPublicBusCoachTram",
+ "indicator": "Stop E",
+ "stopLetter": "E",
+ "modes": [
+  "bus"
+ ],
+ "lat": 51.5305,
+ "lon": -0.12307,
+ "lines": [
+  {
+   "id": "205",
+   "name": "205"
+  },
+  {
+   "id": "214",
+   "name": "214"
+  },
+  {
+   "id": "30",
+   "name": "30"
+  },
+  {
+   "id": "73",
+   "name": "73"
+  },
+  {
+   "id": "n205",
+   "name": "N205"
+  },
+  {
+   "id": "n73",
+   "name": "N73"
+  }
+ ],
+ "additionalProperties": [
+  {
+   "key": "CompassPoint",
+   "value": "E"
+  },
+  {
+   "key": "Towards",
+   "value": "Angel Islington"
+  }
+ ]
+}

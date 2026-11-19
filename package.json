@@ -26,6 +26,16 @@
       "import": "./dist/esm/meta.js",
       "require": "./dist/cjs/meta.js"
     },
+    "./meta/stops": {
+      "types": "./dist/cjs/stops/index.d.ts",
+      "import": "./dist/esm/stops/index.js",
+      "require": "./dist/cjs/stops/index.js"
+    },
+    "./meta/stops/build": {
+      "types": "./dist/cjs/stops/build.d.ts",
+      "import": "./dist/esm/stops/build.js",
+      "require": "./dist/cjs/stops/build.js"
+    },
     "./utils/ui": {
       "types": "./dist/cjs/utils/ui.d.ts",
       "import": "./dist/esm/utils/ui.js",

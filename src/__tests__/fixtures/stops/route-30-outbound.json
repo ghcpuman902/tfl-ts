@@ -1,0 +1,2133 @@
+{
+ "lineId": "30",
+ "direction": "outbound",
+ "stopPointSequences": [
+  {
+   "branchId": 1,
+   "stopPoint": [
+    {
+     "id": "490000077D",
+     "name": "Euston Station",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "D",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.52772,
+     "lon": -0.13231,
+     "lines": [
+      {
+       "id": "205",
+       "name": "205"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n205",
+       "name": "N205"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490015700C",
+     "name": "British Library",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "C",
+     "towards": "Angel Islington, Tufnell Park Or Holloway",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.52903,
+     "lon": -0.12661,
+     "lines": [
+      {
+       "id": "205",
+       "name": "205"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "390",
+       "name": "390"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "91",
+       "name": "91"
+      },
+      {
+       "id": "n205",
+       "name": "N205"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      },
+      {
+       "id": "n91",
+       "name": "N91"
+      }
+     ]
+    },
+    {
+     "id": "490000129E",
+     "name": "King's Cross Station",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "E",
+     "towards": "Angel Islington",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.5305,
+     "lon": -0.12307,
+     "lines": [
+      {
+       "id": "205",
+       "name": "205"
+      },
+      {
+       "id": "214",
+       "name": "214"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n205",
+       "name": "N205"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490001172K",
+     "name": "King's Cross Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "K",
+     "towards": "Angel Islington",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.53111,
+     "lon": -0.11856,
+     "lines": [
+      {
+       "id": "205",
+       "name": "205"
+      },
+      {
+       "id": "214",
+       "name": "214"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "476",
+       "name": "476"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n205",
+       "name": "N205"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490005904E",
+     "name": "Penton Rise",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "PG",
+     "towards": "Highbury Corner, Old Street Or Essex Road",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.53131,
+     "lon": -0.11577,
+     "lines": [
+      {
+       "id": "205",
+       "name": "205"
+      },
+      {
+       "id": "214",
+       "name": "214"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "476",
+       "name": "476"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n205",
+       "name": "N205"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490010928E",
+     "name": "Penton Street",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "PK",
+     "towards": "Highbury Corner, Old Street Or Essex Road",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.53164,
+     "lon": -0.11175,
+     "lines": [
+      {
+       "id": "205",
+       "name": "205"
+      },
+      {
+       "id": "214",
+       "name": "214"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "476",
+       "name": "476"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n205",
+       "name": "N205"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490003650T",
+     "name": "Baron Street / Chapel Market",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "T",
+     "towards": "Highbury Corner Or Newington Green",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.53228,
+     "lon": -0.10929,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "476",
+       "name": "476"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490014603U",
+     "name": "White Lion Street",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "U",
+     "towards": "Highbury Corner Or Newington Green",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.53285,
+     "lon": -0.10717,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "476",
+       "name": "476"
+      },
+      {
+       "id": "73",
+       "name": "73"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n73",
+       "name": "N73"
+      }
+     ]
+    },
+    {
+     "id": "490000007Y",
+     "name": "Angel Station",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "Y",
+     "towards": "Highbury and Islington Station",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.5343,
+     "lon": -0.10537,
+     "lines": [
+      {
+       "id": "19",
+       "name": "19"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "4",
+       "name": "4"
+      },
+      {
+       "id": "43",
+       "name": "43"
+      },
+      {
+       "id": "n19",
+       "name": "N19"
+      },
+      {
+       "id": "n41",
+       "name": "N41"
+      }
+     ]
+    },
+    {
+     "id": "490013261Z",
+     "name": "Theberton Street",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "Z",
+     "towards": "Highbury Corner",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.537,
+     "lon": -0.10335,
+     "lines": [
+      {
+       "id": "19",
+       "name": "19"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "4",
+       "name": "4"
+      },
+      {
+       "id": "43",
+       "name": "43"
+      },
+      {
+       "id": "n19",
+       "name": "N19"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n41",
+       "name": "N41"
+      }
+     ]
+    },
+    {
+     "id": "490008514N2",
+     "name": "St Mary's Church",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "P",
+     "towards": "Highbury Corner",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.53928,
+     "lon": -0.10249,
+     "lines": [
+      {
+       "id": "19",
+       "name": "19"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "4",
+       "name": "4"
+      },
+      {
+       "id": "43",
+       "name": "43"
+      },
+      {
+       "id": "n19",
+       "name": "N19"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n41",
+       "name": "N41"
+      }
+     ]
+    },
+    {
+     "id": "490008517N1",
+     "name": "Islington Town Hall",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "R",
+     "towards": "Holloway, Dalston Or Finsbury Park",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54221,
+     "lon": -0.10316,
+     "lines": [
+      {
+       "id": "19",
+       "name": "19"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "4",
+       "name": "4"
+      },
+      {
+       "id": "43",
+       "name": "43"
+      },
+      {
+       "id": "n19",
+       "name": "N19"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n41",
+       "name": "N41"
+      }
+     ]
+    },
+    {
+     "id": "490000108F",
+     "name": "Highbury Corner",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "F",
+     "towards": "Dalston Or Finsbury Park",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54498,
+     "lon": -0.1034,
+     "lines": [
+      {
+       "id": "19",
+       "name": "19"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "4",
+       "name": "4"
+      },
+      {
+       "id": "43",
+       "name": "43"
+      },
+      {
+       "id": "n19",
+       "name": "N19"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n41",
+       "name": "N41"
+      }
+     ]
+    },
+    {
+     "id": "490008143C",
+     "name": "St Paul's Road / Highbury Corner",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "C",
+     "towards": "Stoke Newington, Dalston Or Finsbury Park",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54629,
+     "lon": -0.10087,
+     "lines": [
+      {
+       "id": "19",
+       "name": "19"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "393",
+       "name": "393"
+      },
+      {
+       "id": "n19",
+       "name": "N19"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      }
+     ]
+    },
+    {
+     "id": "490008146E",
+     "name": "Highbury Grove",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "CU",
+     "towards": "Dalston Junction",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54702,
+     "lon": -0.09787,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      }
+     ]
+    },
+    {
+     "id": "490005390E",
+     "name": "Clephane Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "CV",
+     "towards": "Dalston Junction",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54704,
+     "lon": -0.09031,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      }
+     ]
+    },
+    {
+     "id": "490012875E",
+     "name": "Newington Green Road / Essex Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "CH",
+     "towards": "Dalston Junction",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54678,
+     "lon": -0.08773,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      }
+     ]
+    },
+    {
+     "id": "490009871E",
+     "name": "Mildmay Park / Southgate Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "CC",
+     "towards": "Dalston Junction",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54665,
+     "lon": -0.08442,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "38",
+       "name": "38"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n38",
+       "name": "N38"
+      }
+     ]
+    },
+    {
+     "id": "490005894E",
+     "name": "Culford Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "BE",
+     "towards": "Hackney Central Or Hackney Downs",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54649,
+     "lon": -0.08131,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "38",
+       "name": "38"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n38",
+       "name": "N38"
+      }
+     ]
+    },
+    {
+     "id": "490006090E",
+     "name": "Kingsland High Street",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "E",
+     "towards": "Hackney Central Or Hackney Downs",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54616,
+     "lon": -0.07622,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "38",
+       "name": "38"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n38",
+       "name": "N38"
+      }
+     ]
+    },
+    {
+     "id": "490005945K",
+     "name": "Dalston Lane / Dalston Junction Stn",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "K",
+     "towards": "Hackney Central Or Hackney Downs",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54629,
+     "lon": -0.07311,
+     "lines": [
+      {
+       "id": "242",
+       "name": "242"
+      },
+      {
+       "id": "277",
+       "name": "277"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "38",
+       "name": "38"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      },
+      {
+       "id": "n242",
+       "name": "N242"
+      },
+      {
+       "id": "n277",
+       "name": "N277"
+      },
+      {
+       "id": "n38",
+       "name": "N38"
+      }
+     ]
+    },
+    {
+     "id": "490005944N",
+     "name": "Graham Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "M",
+     "towards": "Newington Green, Hackney Wick Or Clapton",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54688,
+     "lon": -0.06945,
+     "lines": [
+      {
+       "id": "236",
+       "name": "236"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      }
+     ]
+    },
+    {
+     "id": "490007432E",
+     "name": "Cecilia Road / Greenacre Court",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "R",
+     "towards": "Clapton Pond Or Hackney Wick",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54836,
+     "lon": -0.06653,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      }
+     ]
+    },
+    {
+     "id": "490001128N",
+     "name": "Hackney Downs Station",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "N",
+     "towards": "Clapton Pond Or Hackney Wick",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54893,
+     "lon": -0.06143,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "56",
+       "name": "56"
+      }
+     ]
+    },
+    {
+     "id": "490001127E",
+     "name": "Hackney Central Station",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "T",
+     "towards": "Cambridge Heath, Dalston Or Hackney Wick (from 23/05/25)",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54747,
+     "lon": -0.05567,
+     "lines": [
+      {
+       "id": "106",
+       "name": "106"
+      },
+      {
+       "id": "242",
+       "name": "242"
+      },
+      {
+       "id": "253",
+       "name": "253"
+      },
+      {
+       "id": "254",
+       "name": "254"
+      },
+      {
+       "id": "276",
+       "name": "276"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "38",
+       "name": "38"
+      },
+      {
+       "id": "55",
+       "name": "55"
+      },
+      {
+       "id": "n242",
+       "name": "N242"
+      },
+      {
+       "id": "n253",
+       "name": "N253"
+      },
+      {
+       "id": "n38",
+       "name": "N38"
+      },
+      {
+       "id": "n55",
+       "name": "N55"
+      }
+     ]
+    },
+    {
+     "id": "490007618D",
+     "name": "Morning Lane / Trelawney Estate",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "D",
+     "towards": "Hackney Wick Or Leyton",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.5466,
+     "lon": -0.05299,
+     "lines": [
+      {
+       "id": "236",
+       "name": "236"
+      },
+      {
+       "id": "276",
+       "name": "276"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "394",
+       "name": "394"
+      },
+      {
+       "id": "w15",
+       "name": "W15"
+      }
+     ]
+    },
+    {
+     "id": "490008329S",
+     "name": "Homerton Terrace",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "S",
+     "towards": "Hackney Wick Or Leyton",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54698,
+     "lon": -0.04895,
+     "lines": [
+      {
+       "id": "236",
+       "name": "236"
+      },
+      {
+       "id": "276",
+       "name": "276"
+      },
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "394",
+       "name": "394"
+      },
+      {
+       "id": "w15",
+       "name": "W15"
+      }
+     ]
+    },
+    {
+     "id": "490010039S",
+     "name": "Ponsford Street",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "A",
+     "towards": "Mile End Or Hackney Wick",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.5466,
+     "lon": -0.04692,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "425",
+       "name": "425"
+      }
+     ]
+    },
+    {
+     "id": "49002154Z",
+     "name": "Flanders Way",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "->E",
+     "towards": "Hackney Wick",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54504,
+     "lon": -0.04402,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      }
+     ]
+    },
+    {
+     "id": "49003622ZZ",
+     "name": "Barnabas Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "->E",
+     "towards": "Hackney Wick",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.5453,
+     "lon": -0.04062,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      }
+     ]
+    },
+    {
+     "id": "490019925Z",
+     "name": "Wick Road / Kenworthy Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "->E",
+     "towards": "Hackney Wick",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54529,
+     "lon": -0.03718,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      }
+     ]
+    },
+    {
+     "id": "490014662S",
+     "name": "Hackney Wick / Trowbridge Road",
+     "stopType": "NaptanPublicBusCoachTram",
+     "stopLetter": "K",
+     "towards": "Old Ford",
+     "modes": [
+      "bus"
+     ],
+     "lat": 51.54453,
+     "lon": -0.02949,
+     "lines": [
+      {
+       "id": "30",
+       "name": "30"
+      },
+      {
+       "id": "488",
+       "name": "488"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "stations": [
+  {
+   "id": "490000007Y",
+   "name": "Angel Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "stopLetter": "Y",
+   "towards": "Highbury and Islington Station",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.5343,
+   "lon": -0.10537,
+   "lines": [
+    {
+     "id": "19",
+     "name": "19"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "4",
+     "name": "4"
+    },
+    {
+     "id": "43",
+     "name": "43"
+    },
+    {
+     "id": "n19",
+     "name": "N19"
+    },
+    {
+     "id": "n41",
+     "name": "N41"
+    }
+   ]
+  },
+  {
+   "id": "490000077D",
+   "name": "Euston Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "stopLetter": "D",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52772,
+   "lon": -0.13231,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490000129E",
+   "name": "King's Cross Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "stopLetter": "E",
+   "towards": "Angel Islington",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.5305,
+   "lon": -0.12307,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490001127E",
+   "name": "Hackney Central Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "stopLetter": "T",
+   "towards": "Cambridge Heath, Dalston Or Hackney Wick (from 23/05/25)",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54747,
+   "lon": -0.05567,
+   "lines": [
+    {
+     "id": "106",
+     "name": "106"
+    },
+    {
+     "id": "242",
+     "name": "242"
+    },
+    {
+     "id": "253",
+     "name": "253"
+    },
+    {
+     "id": "254",
+     "name": "254"
+    },
+    {
+     "id": "276",
+     "name": "276"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "38",
+     "name": "38"
+    },
+    {
+     "id": "55",
+     "name": "55"
+    },
+    {
+     "id": "n242",
+     "name": "N242"
+    },
+    {
+     "id": "n253",
+     "name": "N253"
+    },
+    {
+     "id": "n38",
+     "name": "N38"
+    },
+    {
+     "id": "n55",
+     "name": "N55"
+    }
+   ]
+  },
+  {
+   "id": "490001128N",
+   "name": "Hackney Downs Station",
+   "stopType": "NaptanPublicBusCoachTram",
+   "stopLetter": "N",
+   "towards": "Clapton Pond Or Hackney Wick",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54893,
+   "lon": -0.06143,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    }
+   ]
+  },
+  {
+   "id": "490G00003622",
+   "name": "Barnabas Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.5453,
+   "lon": -0.04062,
+   "lines": [
+    {
+     "id": "26",
+     "name": "26"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "n26",
+     "name": "N26"
+    }
+   ]
+  },
+  {
+   "id": "490G00003650",
+   "name": "Baron Street / Chapel Market",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53228,
+   "lon": -0.10929,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490G00005390",
+   "name": "Clephane Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54693,
+   "lon": -0.09056,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    }
+   ]
+  },
+  {
+   "id": "490G00005894",
+   "name": "Culford Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54649,
+   "lon": -0.08131,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "38",
+     "name": "38"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n38",
+     "name": "N38"
+    }
+   ]
+  },
+  {
+   "id": "490G00005904",
+   "name": "Penton Rise",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53063,
+   "lon": -0.11476,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490G00005944",
+   "name": "Graham Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54697,
+   "lon": -0.06926,
+   "lines": [
+    {
+     "id": "236",
+     "name": "236"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    }
+   ]
+  },
+  {
+   "id": "490G00005947",
+   "name": "Kingsland High Street",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54616,
+   "lon": -0.07622,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "38",
+     "name": "38"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n38",
+     "name": "N38"
+    }
+   ]
+  },
+  {
+   "id": "490G00007432",
+   "name": "Cecilia Road / Greenacre Court",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54836,
+   "lon": -0.06653,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    }
+   ]
+  },
+  {
+   "id": "490G00007618",
+   "name": "Morning Lane / Trelawney Estate",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.5466,
+   "lon": -0.05299,
+   "lines": [
+    {
+     "id": "236",
+     "name": "236"
+    },
+    {
+     "id": "276",
+     "name": "276"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "394",
+     "name": "394"
+    },
+    {
+     "id": "w15",
+     "name": "W15"
+    }
+   ]
+  },
+  {
+   "id": "490G00008143",
+   "name": "Highbury Corner",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54498,
+   "lon": -0.1034,
+   "lines": [
+    {
+     "id": "19",
+     "name": "19"
+    },
+    {
+     "id": "21",
+     "name": "21"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "393",
+     "name": "393"
+    },
+    {
+     "id": "4",
+     "name": "4"
+    },
+    {
+     "id": "43",
+     "name": "43"
+    },
+    {
+     "id": "n19",
+     "name": "N19"
+    },
+    {
+     "id": "n263",
+     "name": "N263"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n41",
+     "name": "N41"
+    }
+   ]
+  },
+  {
+   "id": "490G00008149",
+   "name": "St Paul's Road / Highbury Corner",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54629,
+   "lon": -0.10087,
+   "lines": [
+    {
+     "id": "19",
+     "name": "19"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "393",
+     "name": "393"
+    },
+    {
+     "id": "n19",
+     "name": "N19"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    }
+   ]
+  },
+  {
+   "id": "490G00008329",
+   "name": "Homerton Terrace",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54698,
+   "lon": -0.04895,
+   "lines": [
+    {
+     "id": "236",
+     "name": "236"
+    },
+    {
+     "id": "276",
+     "name": "276"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "394",
+     "name": "394"
+    },
+    {
+     "id": "w15",
+     "name": "W15"
+    }
+   ]
+  },
+  {
+   "id": "490G00008514",
+   "name": "St Mary's Church",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53928,
+   "lon": -0.10249,
+   "lines": [
+    {
+     "id": "19",
+     "name": "19"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "4",
+     "name": "4"
+    },
+    {
+     "id": "43",
+     "name": "43"
+    },
+    {
+     "id": "n19",
+     "name": "N19"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n41",
+     "name": "N41"
+    }
+   ]
+  },
+  {
+   "id": "490G00008517",
+   "name": "Islington Town Hall",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54221,
+   "lon": -0.10316,
+   "lines": [
+    {
+     "id": "19",
+     "name": "19"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "4",
+     "name": "4"
+    },
+    {
+     "id": "43",
+     "name": "43"
+    },
+    {
+     "id": "n19",
+     "name": "N19"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n41",
+     "name": "N41"
+    }
+   ]
+  },
+  {
+   "id": "490G00009498",
+   "name": "British Library",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.52903,
+   "lon": -0.12661,
+   "lines": [
+    {
+     "id": "1",
+     "name": "1"
+    },
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "390",
+     "name": "390"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "91",
+     "name": "91"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    },
+    {
+     "id": "n91",
+     "name": "N91"
+    }
+   ]
+  },
+  {
+   "id": "490G00009871",
+   "name": "Mildmay Park / Southgate Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54665,
+   "lon": -0.08442,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "38",
+     "name": "38"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n38",
+     "name": "N38"
+    }
+   ]
+  },
+  {
+   "id": "490G00010039",
+   "name": "Ponsford Street",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54692,
+   "lon": -0.04917,
+   "lines": [
+    {
+     "id": "236",
+     "name": "236"
+    },
+    {
+     "id": "276",
+     "name": "276"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "394",
+     "name": "394"
+    },
+    {
+     "id": "425",
+     "name": "425"
+    },
+    {
+     "id": "w15",
+     "name": "W15"
+    }
+   ]
+  },
+  {
+   "id": "490G00010942",
+   "name": "Penton Street",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53164,
+   "lon": -0.11175,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490G00012875",
+   "name": "Newington Green Road / Essex Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54678,
+   "lon": -0.08773,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    }
+   ]
+  },
+  {
+   "id": "490G00013261",
+   "name": "Theberton Street",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.537,
+   "lon": -0.10335,
+   "lines": [
+    {
+     "id": "19",
+     "name": "19"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "4",
+     "name": "4"
+    },
+    {
+     "id": "43",
+     "name": "43"
+    },
+    {
+     "id": "n19",
+     "name": "N19"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n41",
+     "name": "N41"
+    }
+   ]
+  },
+  {
+   "id": "490G00014603",
+   "name": "White Lion Street",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53285,
+   "lon": -0.10717,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490G00014662",
+   "name": "Hackney Wick / Trowbridge Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54453,
+   "lon": -0.02949,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "488",
+     "name": "488"
+    }
+   ]
+  },
+  {
+   "id": "490G00015544",
+   "name": "Highbury Grove",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54702,
+   "lon": -0.09787,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    }
+   ]
+  },
+  {
+   "id": "490G00019925",
+   "name": "Wick Road / Kenworthy Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54513,
+   "lon": -0.03653,
+   "lines": [
+    {
+     "id": "26",
+     "name": "26"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "n26",
+     "name": "N26"
+    }
+   ]
+  },
+  {
+   "id": "490G00019931",
+   "name": "King's Cross Road",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.53111,
+   "lon": -0.11856,
+   "lines": [
+    {
+     "id": "205",
+     "name": "205"
+    },
+    {
+     "id": "214",
+     "name": "214"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "476",
+     "name": "476"
+    },
+    {
+     "id": "73",
+     "name": "73"
+    },
+    {
+     "id": "n205",
+     "name": "N205"
+    },
+    {
+     "id": "n73",
+     "name": "N73"
+    }
+   ]
+  },
+  {
+   "id": "490G000375",
+   "name": "Flanders Way",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54504,
+   "lon": -0.04402,
+   "lines": [
+    {
+     "id": "30",
+     "name": "30"
+    }
+   ]
+  },
+  {
+   "id": "490G000481",
+   "name": "Dalston Lane / Dalston Junction Stn",
+   "stopType": "NaptanOnstreetBusCoachStopPair",
+   "modes": [
+    "bus"
+   ],
+   "lat": 51.54629,
+   "lon": -0.07311,
+   "lines": [
+    {
+     "id": "242",
+     "name": "242"
+    },
+    {
+     "id": "277",
+     "name": "277"
+    },
+    {
+     "id": "30",
+     "name": "30"
+    },
+    {
+     "id": "38",
+     "name": "38"
+    },
+    {
+     "id": "56",
+     "name": "56"
+    },
+    {
+     "id": "n242",
+     "name": "N242"
+    },
+    {
+     "id": "n277",
+     "name": "N277"
+    },
+    {
+     "id": "n38",
+     "name": "N38"
+    }
+   ]
+  }
+ ]
+}

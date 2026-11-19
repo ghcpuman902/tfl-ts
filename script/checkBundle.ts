@@ -9,6 +9,8 @@ type Ceiling = {
   mustNotContainStationSequences?: boolean;
   mustNotContainRawClient?: boolean;
   mustNotContainProcessEnv?: boolean;
+  /** The stop index ships only with tfl-ts/meta/stops. */
+  mustNotContainStopIndex?: boolean;
 };
 
 type MeasureReport = {
@@ -19,6 +21,7 @@ type MeasureReport = {
     containsStationSequences?: boolean;
     containsRawClient?: boolean;
     containsProcessEnv?: boolean;
+    containsStopIndex?: boolean;
   }>;
 };
 
@@ -28,7 +31,15 @@ const assertExports = (): void => {
     sideEffects?: boolean;
   };
   const keys = Object.keys(pkg.exports ?? {});
-  for (const key of ['.', './ui', './meta', './dist/generated/meta/Line.js', './dist/*.js']) {
+  for (const key of [
+    '.',
+    './ui',
+    './meta',
+    './meta/stops',
+    './meta/stops/build',
+    './dist/generated/meta/Line.js',
+    './dist/*.js',
+  ]) {
     if (!keys.includes(key)) {
       console.error(`package.json exports missing ${key}`);
       process.exit(1);
@@ -88,6 +99,10 @@ const main = (): void => {
     }
     if (ceiling.mustNotContainProcessEnv && fixture.containsProcessEnv) {
       console.error(`[bundle] ${id} contains TFL_APP_KEY`);
+      failed = true;
+    }
+    if (ceiling.mustNotContainStopIndex && fixture.containsStopIndex) {
+      console.error(`[bundle] ${id} contains the stop index (it belongs to tfl-ts/meta/stops only)`);
       failed = true;
     }
   }
