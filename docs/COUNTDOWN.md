@@ -2,6 +2,8 @@
 
 `createCountdownTracker`, `countdownLabel` and `CountdownOptions` (target: 2.17.0, not yet published). Pure maths: no HTTP, no timers.
 
+API calls in tfl-ts still return raw TfL data. The countdown tracker is opt-in: import it only if you want smoothing and early bias; nothing changes for callers who don't.
+
 ## 1. Why TfL times look a minute behind
 Every prediction carries `timestamp` (when TfL computed it) and `timeToStation`, counted from that timestamp. By the time you render it, 45–150 s have passed: TfL origin (about 52 s), its edge cache (up to 59 s), your own cache and your poll. Measured on 19 Nov 2026 (07:09–07:23 London): about 98 s old at render, typically. Counting `timeToStation` from your fetch time makes every time too generous by that age. Measured buses before the fix: median +68 s late.
 
@@ -50,4 +52,8 @@ const rows = tracker.view(Date.now());      // on every repaint: { key, arrivalM
 Raw TfL, no early bias: `{ projectionOffsetMs: 0, rounding: "nearest", dueGraceMs: 0 }`.
 
 ## 7. Measuring it yourself
-Record the predictions you poll and the feed's last `expectedArrival` for each vehicle once it leaves (the proxy for the true arrival). Replay the polls through a tracker at 1 s steps and compare the shown arrival with the true one: signed error (median, p10, p90), the share within ±15 s, how often the displayed minute rises, and how often "Due" showed after arrival. Target: |median| ≤ 10 s, p90 ≤ +5 s, no late Due, no upward jumps.
+Record the predictions you poll and the feed's last `expectedArrival` for each vehicle once it leaves (the proxy for the true arrival). Replay the polls through a tracker at 1 s steps and compare the shown arrival with the true one: signed error (median, p10, p90), the share within ±15 s, how often the displayed minute rises, and how often "Due" showed after arrival.
+
+**Ship gates** (per ~15 min window): minute shown later than reality ≤5% soft / ≤8% hard; late share ≤20% rail / ≤5% bus; upward minute jumps ≤3 (investigate if more); our projection median within ±2 s of the −10 s rail / −15 s bus presets.
+
+**Diagnostic metrics** (not ship gates): share within ±15 s, and |median| / p90 of total error. TfL's own revision alone makes a tight ±15 s bar unreachable.
