@@ -32,7 +32,6 @@ describe('MCP registry server.json', () => {
     expect(pkg.mcpName).toBe('io.github.ghcpuman902/tfl-ts');
     expect(server.name).toBe(pkg.mcpName);
     expect(server.version).toBe(pkg.version);
-    expect(server.version).toBe('2.16.0');
     expect(server.description.length).toBeGreaterThan(0);
     expect(server.description.length).toBeLessThanOrEqual(100);
     expect(server.$schema).toBe(
