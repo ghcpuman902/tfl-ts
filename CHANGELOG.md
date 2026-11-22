@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.16.0 — unreleased
+## 2.16.0 — 2026-11-19
 
 ### Static stop index: `tfl-ts/meta/stops`
 
