@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.17.0 — unreleased
+
+### Countdown tracker (opt-in)
+
+`createCountdownTracker`, `countdownLabel` and `CountdownOptions` project TfL predictions from their own `timestamp`, smooth revisions, and keep a short Due grace. Presets: bus −15 s, rail −10 s. Default `projectionOffsetMs` is 0 (raw TfL).
+
+- Pure maths: no HTTP and no timers. API calls still return raw TfL data; import the tracker only if you want it.
+- Docs: `docs/COUNTDOWN.md` (why times look late, err-early presets, smoothing, Due grace, customise table, ship gates).
+- Ship gates (per ~15 min window): minute shown later ≤5% soft / ≤8% hard; late share ≤20% rail / ≤5% bus; ≤3 upward minute jumps; projection median within ±2 s of the presets. ±15 s share and |median| are diagnostic only.
+
+
 ## 2.16.0 — 2026-11-19
 
 ### Static stop index: `tfl-ts/meta/stops`
