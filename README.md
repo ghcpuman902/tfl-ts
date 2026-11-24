@@ -5,6 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml)
+[![ghcpuman902/tfl-ts MCP server](https://glama.ai/mcp/servers/ghcpuman902/tfl-ts/badges/score.svg)](https://glama.ai/mcp/servers/ghcpuman902/tfl-ts)
 
 > **tfl-ts** is a typed TypeScript client for the Transport for London (TfL) Unified API: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
 >
