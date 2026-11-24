@@ -2,7 +2,7 @@
   "name": "tfl-ts",
   "mcpName": "io.github.ghcpuman902/tfl-ts",
   "version": "2.17.0",
-  "description": "tfl-ts: typed TypeScript client for the Transport for London (TfL) API: friendly wrappers, full raw coverage, static station sequences, and UI helpers for official line colours.",
+  "description": "tfl-ts: typed TypeScript client for the Transport for London (TfL) API, with offline station data and a read-only MCP server. No runtime dependencies.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts",
@@ -72,12 +72,14 @@
   },
   "files": [
     "dist/",
+    "!dist/**/__tests__",
     "README.md",
     "LICENSE",
     "docs/agent.md",
     "docs/mcp.md",
     "docs/MIGRATION-v2.md",
     "docs/REALTIME.md",
+    "docs/COUNTDOWN.md",
     "docs/design/",
     "examples/",
     "CHANGELOG.md",
@@ -119,6 +121,7 @@
     "journey-planning",
     "openapi",
     "mcp",
+    "mcp-server",
     "zero-dependencies",
     "sdk"
   ],
@@ -132,7 +135,7 @@
   "bugs": {
     "url": "https://github.com/ghcpuman902/tfl-ts/issues"
   },
-  "homepage": "https://tfl.manglekuo.com",
+  "homepage": "https://tfl-ts.dev",
   "engines": {
     "node": ">=18.0.0"
   },

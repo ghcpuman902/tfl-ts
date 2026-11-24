@@ -74,7 +74,7 @@ stop();
 ### Demos
 
 - **CLI:** `pnpm run demo -- realtime`
-- **Web:** [tfl-components explorer](https://tfl.manglekuo.com/docs/explorer)
+- **Web:** [tfl-components explorer](https://tfl-ts.dev/docs/explorer)
 
 ---
 

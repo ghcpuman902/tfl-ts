@@ -2,14 +2,14 @@
 
 How to map **tfl-ts** data into a useful London transport UI. The TypeScript files here are small, stack-agnostic references. They are not compiled by this package and do not pull in React, Next.js, or Tailwind.
 
-**See it working:** [API explorer](https://tfl.manglekuo.com/docs/explorer) — call the same endpoints this package wraps, with live responses.
+**See it working:** [API explorer](https://tfl-ts.dev/docs/explorer) — call the same endpoints this package wraps, with live responses.
 
-Live React boards: [tfl.manglekuo.com](https://tfl.manglekuo.com/) · source in [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
+Live React boards: [tfl-ts.dev](https://tfl-ts.dev/) · source in [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
 
 Install a board into a Next.js app (copies source; installs `tfl-ts` from npm):
 
 ```bash
-pnpm dlx shadcn@latest add https://tfl.manglekuo.com/r/tube-status-board.json
+pnpm dlx shadcn@latest add https://tfl-ts.dev/r/tube-status-board.json
 ```
 
 ## Tube vs bus (do not mix styling)
@@ -19,7 +19,7 @@ pnpm dlx shadcn@latest add https://tfl.manglekuo.com/r/tube-status-board.json
 | **Tube / rail** (tube, Elizabeth, DLR, tram, Overground) | Official brand hex | `getLineInlineStyles`, `getLineCssProps`, severity helpers | Sort → partition disruptions vs good service → colour title + horizontal bar |
 | **Bus** | Route number chip | **Do not** use tube colour helpers | Discover stops → expand `490G…` hubs if search returns them → poll boardable `/^490\d/` IDs → arrivals row: `[chip] [destination] [countdown]` |
 
-For a full React implementation, read [tfl-components](https://github.com/ghcpuman902/tfl-components) or poke the [explorer](https://tfl.manglekuo.com/docs/explorer). The mapping rules below work on any stack; React and Tailwind are optional.
+For a full React implementation, read [tfl-components](https://github.com/ghcpuman902/tfl-components) or poke the [explorer](https://tfl-ts.dev/docs/explorer). The mapping rules below work on any stack; React and Tailwind are optional.
 
 ## Files
 
