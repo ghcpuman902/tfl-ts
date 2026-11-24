@@ -344,6 +344,15 @@ OpenAPI snapshot (committed)
 
 `pnpm run build` compiles TypeScript to CJS and ESM. No network, no OpenAPI regeneration.
 
+## Security
+
+- **No runtime dependencies and no install scripts.** The package defines no `preinstall`, `install` or `postinstall`. Check it yourself: `npm view tfl-ts@latest scripts dependencies`.
+- **Read-only MCP tools.** `tfl mcp` runs over stdio, opens no network port, and only calls the official TfL API. All seven tools are marked `readOnlyHint: true`; the three static tools never call TfL. See [docs/mcp.md](docs/mcp.md).
+- **Independent scans:** [Socket](https://socket.dev/npm/package/tfl-ts) · [deps.dev](https://deps.dev/npm/tfl-ts)
+- **Report a vulnerability privately** through GitHub ("Report a vulnerability" on the [Security tab](https://github.com/ghcpuman902/tfl-ts/security)). See [SECURITY.md](https://github.com/ghcpuman902/tfl-ts/blob/main/SECURITY.md).
+
+This reduces supply-chain risk; it can't prove it is zero. Read the source, pin versions, and use a lockfile.
+
 ## Contributing
 
 ```bash
