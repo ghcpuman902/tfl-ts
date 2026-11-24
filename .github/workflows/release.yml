@@ -1,0 +1,81 @@
+name: Release
+
+# Publishes tfl-ts to npm when a GitHub Release is published.
+#
+# Auth: npm trusted publishing (OIDC). No secret is needed once the trusted
+# publisher is configured on npmjs.com for this repo, workflow file
+# release.yml and environment npm-release. Provenance is generated
+# automatically; --provenance is kept for clarity.
+#
+# Fallback (token auth): create a granular automation token scoped to tfl-ts,
+# add it as the repo secret NPM_TOKEN, and add to the publish step:
+#   env:
+#     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # GitHub-hosted runner required for trusted publishing.
+    runs-on: ubuntu-latest
+    # Environment with a required reviewer, so every publish is approved by hand.
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+
+      # Version comes from packageManager in package.json.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: npm >= 11.5.1 (trusted publishing)
+        run: npm i -g npm@^11.5.1 && npm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Tag matches package.json and server.json
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          V=$(node -p "require('./package.json').version")
+          test "v$V" = "$TAG"
+          test "$(node -p "require('./server.json').version")" = "$V"
+          test "$(node -p "require('./server.json').packages[0].version")" = "$V"
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Build (tsc for cjs and esm, also the typecheck)
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Check
+        run: pnpm run check
+
+      - name: Pack (dry run)
+        run: npm pack --dry-run
+
+      - name: Publish
+        run: npm publish --provenance --access public
