@@ -286,7 +286,7 @@ const client = new TflClient({
 
 ### Server Component (recommended for status boards)
 
-Minimal list (full branded board: [tfl-components explorer](https://tfl.manglekuo.com/docs/explorer)):
+Minimal list (full branded board: [tfl-components explorer](https://tfl-ts.dev/docs/explorer)):
 
 ```typescript
 // app/status/page.tsx
@@ -485,8 +485,8 @@ Read these on GitHub (or under `node_modules/tfl-ts/examples/` after install). T
 | Resource | Purpose |
 |----------|---------|
 | [examples/README.md](../examples/README.md) | Index: tube vs bus mapping rules |
-| Live React boards | [tfl.manglekuo.com](https://tfl.manglekuo.com/) |
-| Explorer | [tfl.manglekuo.com/docs/explorer](https://tfl.manglekuo.com/docs/explorer) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components) |
+| Live React boards | [tfl-ts.dev](https://tfl-ts.dev/) |
+| Explorer | [tfl-ts.dev/docs/explorer](https://tfl-ts.dev/docs/explorer) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components) |
 
 **Bus ≠ tube:** do not call `getLineColor` / `getLineCssProps` for bus route numbers.
 

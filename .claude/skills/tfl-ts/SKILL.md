@@ -78,7 +78,7 @@ Works in Node.js 18+, browsers, and edge runtimes. Zero runtime dependencies.
 ## Example 1: Tube line status board
 
 Full branded board (partition disruptions / good service, colour bars, night badge):
-[tfl-components](https://github.com/ghcpuman902/tfl-components) · try it in the [API explorer](https://tfl.manglekuo.com/docs/explorer)
+[tfl-components](https://github.com/ghcpuman902/tfl-components) · try it in the [API explorer](https://tfl-ts.dev/docs/explorer)
 
 ```typescript
 import TflClient from 'tfl-ts';
@@ -189,7 +189,7 @@ River-bus arrivals live on `NaptanFerryPort` ids (`930G…`, e.g. Westminster Pi
 ## Example 2b: Nearby bus stops by GPS
 
 Full bus UI mapping (boardable `490…` IDs, route chips, countdown):
-[tfl-components](https://github.com/ghcpuman902/tfl-components) · [API explorer](https://tfl.manglekuo.com/docs/explorer)
+[tfl-components](https://github.com/ghcpuman902/tfl-components) · [API explorer](https://tfl-ts.dev/docs/explorer)
 
 ```typescript
 import TflClient from 'tfl-ts';
@@ -356,8 +356,8 @@ The client retries transient errors automatically (configurable via `maxRetries`
 - Library → UI index: [examples/README.md](../../../examples/README.md)
 - Full agent reference: [docs/agent.md](../../../docs/agent.md)
 - Local MCP server: [docs/mcp.md](../../../docs/mcp.md)
-- Live React boards: [tfl.manglekuo.com](https://tfl.manglekuo.com/) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
-- API explorer: [tfl.manglekuo.com/docs/explorer](https://tfl.manglekuo.com/docs/explorer)
+- Live React boards: [tfl-ts.dev](https://tfl-ts.dev/) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
+- API explorer: [tfl-ts.dev/docs/explorer](https://tfl-ts.dev/docs/explorer)
 - Error handling: [ERROR.md](../../../ERROR.md)
 - v2 migration: [docs/MIGRATION-v2.md](../../../docs/MIGRATION-v2.md)
 - Realtime polling: [docs/REALTIME.md](../../../docs/REALTIME.md)

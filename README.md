@@ -7,15 +7,17 @@
 [![CI](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/ghcpuman902/tfl-ts/actions/workflows/ci.yml)
 [![ghcpuman902/tfl-ts MCP server](https://glama.ai/mcp/servers/ghcpuman902/tfl-ts/badges/score.svg)](https://glama.ai/mcp/servers/ghcpuman902/tfl-ts)
 
-> **tfl-ts** is a typed TypeScript client for the Transport for London (TfL) Unified API: friendly wrappers, 84 raw REST endpoints, and offline station topology for 20 rail lines.
+> **tfl-ts** is a typed TypeScript client for the Transport for London (TfL) API, with offline station data and a read-only MCP server. No runtime dependencies.
 >
-> Docs and examples: [tfl.manglekuo.com/docs](https://tfl.manglekuo.com/docs) · npm: [tfl-ts](https://www.npmjs.com/package/tfl-ts)
+> It covers 84 raw REST endpoints and ships offline station order for 20 rail lines.
+>
+> Docs and examples: [tfl-ts.dev/docs](https://tfl-ts.dev/docs) · npm: [tfl-ts](https://www.npmjs.com/package/tfl-ts)
 
 <img src="https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/assets/tfl-cli.gif" alt="tfl CLI checking central and victoria, then listing the journey endpoints" width="640">
 
-<img src="https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/assets/board.png" alt="Board at tfl.manglekuo.com, with line status and live arrivals" width="640">
+<img src="https://raw.githubusercontent.com/ghcpuman902/tfl-ts/main/assets/board.png" alt="Board at tfl-ts.dev, with line status and live arrivals" width="640">
 
-Built with tfl-ts → [Board](https://tfl.manglekuo.com)
+Built with tfl-ts → [Board](https://tfl-ts.dev)
 
 ## How this compares
 
@@ -46,9 +48,9 @@ Station order ships with tfl-ts, in `tfl-ts/meta`.
 Get a Primary key from the [TfL API Portal](https://api-portal.tfl.gov.uk/). Subscribe to "500 Requests per min", then Profile → Show.
 
 ```bash
-pnpm add tfl-ts
+npm i tfl-ts   # or: pnpm add tfl-ts
 export TFL_APP_KEY=your-primary-key
-pnpm exec tfl raw line.statusByIds --ids victoria
+npx tfl raw line.statusByIds --ids victoria
 ```
 
 ```json
@@ -106,7 +108,7 @@ const busStops = await client.stopPoint.searchBusStops('Trafalgar Sq');
 
 ### Next.js
 
-Server Component with ISR (~60s). Boards and explorer: [tfl-components](https://github.com/ghcpuman902/tfl-components) · [tfl.manglekuo.com/docs/explorer](https://tfl.manglekuo.com/docs/explorer). Tube boards use official line colours; bus boards use route-number chips. Do not mix. See [examples/README.md](examples/README.md).
+Server Component with ISR (~60s). Boards and explorer: [tfl-components](https://github.com/ghcpuman902/tfl-components) · [tfl-ts.dev/docs/explorer](https://tfl-ts.dev/docs/explorer). Tube boards use official line colours; bus boards use route-number chips. Do not mix. See [examples/README.md](examples/README.md).
 
 ```typescript
 import TflClient, { sortLinesBySeverityAndOrder } from 'tfl-ts';
@@ -119,8 +121,8 @@ const sorted = sortLinesBySeverityAndOrder(tube);
 ```
 
 ```bash
-pnpm dlx shadcn@latest add https://tfl.manglekuo.com/r/tube-status-board.json
-pnpm dlx shadcn@latest add https://tfl.manglekuo.com/r/tfl-roundel.json
+pnpm dlx shadcn@latest add https://tfl-ts.dev/r/tube-status-board.json
+pnpm dlx shadcn@latest add https://tfl-ts.dev/r/tfl-roundel.json
 ```
 
 The roundel ships a placeholder unless `NEXT_PUBLIC_ALLOW_TFL_ROUNDEL=true` (you accept trademark responsibility).
@@ -363,4 +365,4 @@ MIT. Not affiliated with Transport for London.
 | npm | [tfl-ts](https://www.npmjs.com/package/tfl-ts) |
 | GitHub | [ghcpuman902/tfl-ts](https://github.com/ghcpuman902/tfl-ts) |
 | Issues | [Report bugs](https://github.com/ghcpuman902/tfl-ts/issues) |
-| Live demo | [tfl.manglekuo.com](https://tfl.manglekuo.com/) |
+| Live demo | [tfl-ts.dev](https://tfl-ts.dev/) |

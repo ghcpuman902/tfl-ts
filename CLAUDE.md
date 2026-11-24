@@ -106,6 +106,6 @@ Read a shipped doc offline: `pnpm exec tfl docs cat <id>` (e.g. `docs/mcp.md`). 
 
 For status boards and bus arrivals UIs, start with [examples/README.md](examples/README.md) (markdown + copy-paste TypeScript on GitHub). Tube uses official line colours; bus uses route-number chips. Do not mix. React/Tailwind optional.
 
-- Live boards and explorer: [tfl.manglekuo.com/docs/explorer](https://tfl.manglekuo.com/docs/explorer) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
+- Live boards and explorer: [tfl-ts.dev/docs/explorer](https://tfl-ts.dev/docs/explorer) · [ghcpuman902/tfl-components](https://github.com/ghcpuman902/tfl-components)
 
 Runnable console demos: `playground/demo/`
