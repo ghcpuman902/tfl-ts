@@ -1,7 +1,7 @@
 {
   "name": "tfl-ts",
   "mcpName": "io.github.ghcpuman902/tfl-ts",
-  "version": "2.17.0",
+  "version": "2.17.1",
   "description": "tfl-ts: typed TypeScript client for the Transport for London (TfL) API, with offline station data and a read-only MCP server. No runtime dependencies.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

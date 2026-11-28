@@ -1,9 +1,11 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
+import { readFileSync } from 'fs';
 import path from 'path';
 import { createInterface } from 'readline';
 
 const ROOT = path.join(__dirname, '../..');
 const BIN = path.join(ROOT, 'dist/cjs/bin/tfl.js');
+const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8')) as { version: string };
 
 type Response = { id: number; result?: Record<string, unknown>; error?: { code: number } };
 
@@ -56,7 +58,7 @@ describe('compiled `tfl mcp` over stdio with no key (run pnpm run build before p
     });
     expect(response.result).toMatchObject({
       protocolVersion: '2025-06-18',
-      serverInfo: { name: 'tfl-ts' },
+      serverInfo: { name: 'tfl-ts', version: pkg.version },
       capabilities: { tools: {}, resources: {}, prompts: {} },
     });
     child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
