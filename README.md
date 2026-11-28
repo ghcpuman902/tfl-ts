@@ -347,6 +347,11 @@ OpenAPI snapshot (committed)
 ## Security
 
 - **No runtime dependencies and no install scripts.** The package defines no `preinstall`, `install` or `postinstall`. Check it yourself: `npm view tfl-ts@latest scripts dependencies`.
+- **Published builds are traceable.** From version 2.17.0 onward, releases are published from GitHub Actions with npm provenance, with no long-lived publish token. Verify:
+  ```sh
+  npm audit signatures
+  ```
+  (run in a project that depends on `tfl-ts`; it checks registry signatures and provenance attestations).
 - **Read-only MCP tools.** `tfl mcp` runs over stdio, opens no network port, and only calls the official TfL API. All seven tools are marked `readOnlyHint: true`; the three static tools never call TfL. See [docs/mcp.md](docs/mcp.md).
 - **Independent scans:** [Socket](https://socket.dev/npm/package/tfl-ts) · [deps.dev](https://deps.dev/npm/tfl-ts)
 - **Report a vulnerability privately** through GitHub ("Report a vulnerability" on the [Security tab](https://github.com/ghcpuman902/tfl-ts/security)). See [SECURITY.md](https://github.com/ghcpuman902/tfl-ts/blob/main/SECURITY.md).
