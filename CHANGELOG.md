@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.17.1 — 2026-11-28
+
+### MCP serverInfo.version
+
+`initialize` reported MCP `serverInfo.version` as `1.4.1`, a leftover constant, instead of the package version. The server now reads the version from `package.json`, so a published install reports the same version as npm. `server.json` stays in lockstep. A regression test checks `serverInfo.version` matches `package.json` (and `server.json`).
+
 ## 2.17.0 — 2026-11-24
 
 ### Countdown tracker (opt-in)
