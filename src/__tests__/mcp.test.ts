@@ -1,5 +1,15 @@
+import { readFileSync } from 'fs';
+import path from 'path';
 import { TflMcpServer } from '../mcp/server';
 import { DOC_MANIFEST } from '../docs';
+
+const pkg = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf8')) as {
+  version: string;
+};
+const serverManifest = JSON.parse(readFileSync(path.join(__dirname, '../../server.json'), 'utf8')) as {
+  version: string;
+  packages: Array<{ version: string }>;
+};
 
 const parseToolPayload = (response: { result?: unknown } | null): Record<string, unknown> => {
   const result = response?.result as { content: Array<{ type: string; text: string }> };
@@ -54,11 +64,15 @@ describe('TflMcpServer', () => {
           resources: { listChanged: false },
           prompts: { listChanged: false },
         },
-        serverInfo: { name: 'tfl-ts', version: '1.4.1' },
+        serverInfo: { name: 'tfl-ts', version: pkg.version },
       },
     });
     const instructions = (response?.result as { instructions?: string }).instructions ?? '';
     expect(instructions).toContain('docs');
+    const serverInfo = (response?.result as { serverInfo: { version: string } }).serverInfo;
+    expect(serverInfo.version).toBe(pkg.version);
+    expect(serverManifest.version).toBe(pkg.version);
+    expect(serverManifest.packages[0]?.version).toBe(pkg.version);
   });
 
   test('lists a small, curated tool set', async () => {

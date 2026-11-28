@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { createInterface } from 'readline';
 import TflClient from '../index';
 import {
@@ -7,6 +9,7 @@ import {
   listDocs,
   readDocSlice,
   requireFindMatches,
+  resolveDocsPackageRoot,
 } from '../docs';
 import { TflConfigError, TflError } from '../errors';
 import { Lines } from '../generated/meta/Line';
@@ -71,7 +74,17 @@ interface LiveEnvelope<T> {
 }
 
 const SERVER_NAME = 'tfl-ts';
-const SERVER_VERSION = '1.4.1';
+
+const readPackageVersion = (): string => {
+  const pkgPath = join(resolveDocsPackageRoot(__dirname), 'package.json');
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: unknown };
+  if (typeof pkg.version !== 'string' || pkg.version.length === 0) {
+    throw new Error('tfl-ts package.json is missing a version.');
+  }
+  return pkg.version;
+};
+
+const SERVER_VERSION = readPackageVersion();
 const DEFAULT_PROTOCOL_VERSION = '2025-06-18';
 const SUPPORTED_PROTOCOL_VERSIONS = new Set([
   '2024-11-05',
