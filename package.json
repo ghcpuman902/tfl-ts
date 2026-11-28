@@ -143,7 +143,7 @@
     "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.3",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.10",
     "esbuild": "0.25.9",
     "eslint": "^10.5.0",
     "globals": "^17.6.0",
